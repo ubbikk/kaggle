@@ -8,6 +8,7 @@ from sklearn.cross_validation import cross_val_score, KFold
 from sklearn.metrics import log_loss
 import numpy as np
 import xgboost as xgb
+import pandas as pd
 
 sns.set(color_codes=True)
 os.chdir('/home/dpetrovskyi/PycharmProjects/kaggle/src')
@@ -154,26 +155,6 @@ def too_small_prices(obj, cutoff):
     return filter(lambda s: s < cutoff, p)
 
 
-# def convert_to_features_naive(obj):
-#     features_to_copy = [u'longitude',u'latitude' ,u'bedrooms' ,u'bathrooms', 'price', u'interest_level']
-#     ff =  features_with_at_least_occurences(obj, 1000)
-#     res = {k:{} for k in obj.keys()}
-#
-#     for k,v in obj.iteritems():
-#         for s in features_to_copy:
-#             res[k][s] = v[s]
-#
-#         for f in ff:
-#             res[k][f] = 0
-#
-#         for f in v['features']:
-#             res[k][f] = 1
-#
-#     return res
-
-# def add_some_additional_fields(obj):
-
-
 def convert_to_features_with_additional_fields(obj):
     target_name = 'interest_level'
     for k,v in obj.iteritems():
@@ -215,13 +196,13 @@ def convert_to_features_very_naive(obj):
 
     return np.array(data), np.array(target).reshape(sz,)
 
-def convert_to_features_naive_csr(obj):
+
+def transform_to_csr(obj, ff, with_target=True, col_num=None):
     target_name = 'interest_level'
     target = []
     for k,v in obj.iteritems():
         v['photo_num'] = len(v['photos'])
     features_to_copy = [u'longitude', u'latitude', u'bedrooms', u'bathrooms', 'price', 'photo_num']
-    ff = features_with_at_least_occurences(obj, 1000)
     feature_to_col = {ff[i]: len(features_to_copy) + i for i in range(len(ff))}
     for i in range(len(features_to_copy)):
         feature_to_col[features_to_copy[i]] = i
@@ -232,7 +213,9 @@ def convert_to_features_naive_csr(obj):
     counter = -1
     for k, v in obj.iteritems():
         counter += 1
-        target += [v[target_name]]
+        if with_target:
+            target += [v[target_name]]
+
         for f in features_to_copy:
             rows += [counter]
             cols += [feature_to_col[f]]
@@ -247,8 +230,33 @@ def convert_to_features_naive_csr(obj):
             data += [1]
 
     rows_cols = np.array([rows, cols]).reshape(2, len(rows))
+    if with_target:
+        return csr_matrix((data, rows_cols), shape=(len(obj), col_num)), np.array(target).reshape(len(target), )
+    else:
+        return csr_matrix((data, rows_cols), shape=(len(obj), col_num))
 
-    return csr_matrix((data, rows_cols)), np.array(target).reshape(len(target), )
+def convert_to_features_naive_csr(obj):
+    ff = features_with_at_least_occurences(obj, 1000)
+    return transform_to_csr(obj, ff, with_target=True)
+
+
+def perform_xgboost():
+    train = load_train()
+    test = load_test()
+    ff = features_with_at_least_occurences(train, 1000)
+    data_train, target_train = transform_to_csr(train, ff, with_target=True, col_num=6+len(ff))
+    data_test = transform_to_csr(test, ff, with_target=False, col_num=6+len(ff))
+    estimator = xgb.XGBClassifier(n_estimators=1000)
+    estimator.fit(data_train, target_train)
+    probs = estimator.predict_proba(data_test)
+    classes = estimator.classes_
+
+    list_id = [v['listing_id'] for k,v in test.iteritems()]
+    # arr = np.hstack((np.array(list_id).reshape(len(test), 1), probs))
+    df = pd.DataFrame(data=probs, index=list_id, columns=[]+[x for x in classes])
+    df.index.name = 'listing_id'
+    df.to_csv('/home/dpetrovskyi/PycharmProjects/kaggle/src/results.csv', index=True)
+
 
 
 def explore_target(obj):
@@ -263,3 +271,4 @@ def explore_target(obj):
     return res
 
 # perform_cross_val(xgb.XGBClassifier(n_estimators=300), *convert_to_features_naive_csr(load_train()))
+perform_xgboost()
