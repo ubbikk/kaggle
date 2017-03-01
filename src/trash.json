@@ -1,0 +1,47 @@
+{
+  u
+  'version': u
+  '0.0.14',
+  u
+  'results': {
+    u
+    'stub': {
+      u
+      'status': u
+      'ok',
+      u
+      'entities': [
+        {
+          u
+          'mentionsCount': 1,
+          u
+          'type': u
+          'Entity',
+          u
+          'name': u
+          'Im',
+          u
+          'sentiment': {
+            u
+            'positive': 0.0,
+            u
+            'neutral': 1.0,
+            u
+            'negative': 0.0
+          },
+          u
+          'aliases': []
+        }
+      ],
+      u
+      'sentiment': {
+        u
+        'positive': 0.0,
+        u
+        'neutral': 0.37037037037037035,
+        u
+        'negative': 0.6296296296296297
+      }
+    }
+  }
+}

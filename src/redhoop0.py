@@ -207,6 +207,9 @@ def transform_to_csr(obj, ff, with_target=True, col_num=None):
     for i in range(len(features_to_copy)):
         feature_to_col[features_to_copy[i]] = i
 
+    if col_num is None:
+        col_num = len(feature_to_col)
+
     rows = []
     cols = []
     data = []
@@ -270,5 +273,45 @@ def explore_target(obj):
 
     return res
 
+def explore_building_id(obj):
+    res={}
+    for v in obj.values():
+        b_id = v[u'building_id']
+        if b_id not in res:
+            res[b_id]=1
+        else:
+            res[b_id]+=1
+
+    return res
+
+def common_in_dicts(a, b):
+    k_counter=0
+    a_occurences_counter=0
+    b_occurences_counter=0
+    for k in a.keys():
+        if k in b:
+            k_counter+=1
+            a_occurences_counter+=a[k]
+            b_occurences_counter+=b[k]
+
+    return k_counter, a_occurences_counter, b_occurences_counter
+
+def build_id_len_distribution(obj):
+    d = explore_building_id(obj)
+    num_to_num_of_id = {}
+    for b_id, num in d.iteritems():
+        if num not in num_to_num_of_id:
+            num_to_num_of_id[num] = 1
+        else:
+            num_to_num_of_id[num] +=1
+
+    b = [[k,v] for k,v in num_to_num_of_id.iteritems()]
+    b = pd.DataFrame(data=b, columns=['mentions', 'buildings'])
+    # b.sort(key=lambda s:s[0])
+    sns.jointplot(x="mentions", y="buildings", data=b);
+
+
+
 # perform_cross_val(xgb.XGBClassifier(n_estimators=300), *convert_to_features_naive_csr(load_train()))
-perform_xgboost()
+# perform_xgboost()
+build_id_len_distribution(load_train())
