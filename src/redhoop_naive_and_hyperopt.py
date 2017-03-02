@@ -4,6 +4,9 @@ import seaborn as sns
 import pandas as pd
 from collections import OrderedDict
 
+from hyperopt import STATUS_OK, STATUS_FAIL
+from hyperopt import Trials
+from hyperopt import tpe
 from matplotlib import pyplot
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
@@ -15,6 +18,8 @@ from sklearn.metrics import log_loss
 from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
+from hyperopt import hp, pyll, fmin
+
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -68,14 +73,45 @@ def basic_preprocess(df):
 
     return df
 
-#(0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_cross_val(folds):
+def get_the_best_loss(trials):
+    try:
+        return trials.best_trial['result']['loss']
+    except:
+        return None
+
+
+def do_test(folds):
     df = load_train()
+    space= {
+        'n_estimators':hp.qnormal('n_estimators', 1000, 200, 10),
+        'learning_rate':hp.normal('learning_rate',0.1, 0.05)
+    }
+    trials = Trials()
+    best = fmin(lambda s:simple_cross_val(folds, s, df, trials), space=space, algo=tpe.suggest, trials=trials, max_evals=100)
+
+    print best
+    print get_the_best_loss(trials)
+
+def blja_test():
+    space= {
+        'n_estimators':hp.qnormal('n_estimators', 1000, 200, 10),
+        'learning_rate':hp.normal('learning_rate',0.1, 0.05)
+    }
+    for x in range(1000):
+        print pyll.stochastic.sample(space)
+
+#(0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
+def simple_cross_val(folds, s, df, trials):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_year", "created_month", "created_day"]
 
     res = []
+    learning_rate = s['learning_rate']
+    n_estimators = int(s['n_estimators'])
+    print 'n_estimators={}, learning_rate={}'.format(s['n_estimators'], learning_rate)
+    if n_estimators<=0 or learning_rate<=0:
+        return {'loss':100, 'status': STATUS_FAIL}
     for h in range(folds):
         train_df, test_df = split_df(df, 0.7)
 
@@ -88,7 +124,7 @@ def simple_cross_val(folds):
 
         train_arr, test_arr = train_df.values, test_df.values
 
-        estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+        estimator = xgb.XGBClassifier(n_estimators=n_estimators, objective='multi:softprob', learning_rate=learning_rate)
         # estimator = RandomForestClassifier(n_estimators=1000)
         estimator.fit(train_arr, train_target)
 
@@ -101,10 +137,13 @@ def simple_cross_val(folds):
         # print estimator.feature_importances_
         proba = estimator.predict_proba(test_arr)
         l = log_loss(test_target, proba)
-        print l
+        # print l
         res.append(l)
 
-    return np.mean(res), res
+    loss = np.mean(res)
+    print 'current_loss={}, best={}'.format(loss, get_the_best_loss(trials))
+    print '\n\n'
+    return {'loss': loss, 'status': STATUS_OK}
 
 
 def explore_target():
@@ -115,4 +154,6 @@ def explore_target():
     # print man_id_cross_val(3)
     # submit_mngr_id()
 
-print simple_cross_val(5)
+# print simple_cross_val(5)
+do_test(3)
+# blja_test()

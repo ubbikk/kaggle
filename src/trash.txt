@@ -1,0 +1,182 @@
+/usr/bin/python2.7 /home/dpetrovskyi/PycharmProjects/kaggle/src/redhoop_naive_and_hyperopt.py
+/usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/usr/local/lib/python2.7/dist-packages/gensim/utils.py:1015: UserWarning: Pattern library is not installed, lemmatization won't be available.
+  warnings.warn("Pattern library is not installed, lemmatization won't be available.")
+n_estimators=1340.0, learning_rate=0.0328992180743
+current_loss=0.619288221024, best=None
+
+
+
+n_estimators=680.0, learning_rate=0.111981743747
+current_loss=0.620308148323, best=0.619288221024
+
+
+
+n_estimators=740.0, learning_rate=0.0706614093033
+current_loss=0.616802700877, best=0.619288221024
+
+
+
+n_estimators=980.0, learning_rate=0.078659511993
+current_loss=0.616524186161, best=0.616802700877
+
+
+
+n_estimators=850.0, learning_rate=0.077946390868
+current_loss=0.614943586285, best=0.616524186161
+
+
+
+n_estimators=1260.0, learning_rate=0.173084925322
+current_loss=0.621911739794, best=0.614943586285
+
+
+
+n_estimators=750.0, learning_rate=0.0995365786644
+current_loss=0.615387369418, best=0.614943586285
+
+
+
+n_estimators=1310.0, learning_rate=0.0621378657987
+current_loss=0.612808405588, best=0.614943586285
+
+
+
+n_estimators=870.0, learning_rate=0.0863680363948
+current_loss=0.61340496504, best=0.612808405588
+
+
+
+n_estimators=710.0, learning_rate=0.0602473308325
+current_loss=0.619656859696, best=0.612808405588
+
+
+
+n_estimators=1220.0, learning_rate=0.0643624964686
+current_loss=0.616867151771, best=0.612808405588
+
+
+
+n_estimators=1150.0, learning_rate=0.169657717274
+current_loss=0.61934502082, best=0.612808405588
+
+
+
+n_estimators=1110.0, learning_rate=0.172135539716
+current_loss=0.616962327185, best=0.612808405588
+
+
+
+n_estimators=1220.0, learning_rate=0.13983225302
+current_loss=0.618094104666, best=0.612808405588
+
+
+
+n_estimators=1100.0, learning_rate=0.101192633823
+current_loss=0.609992097953, best=0.612808405588
+
+
+
+n_estimators=740.0, learning_rate=0.0143328798485
+current_loss=0.646532048086, best=0.609992097953
+
+
+
+n_estimators=810.0, learning_rate=0.00728688420025
+current_loss=0.669707154084, best=0.609992097953
+
+
+
+n_estimators=850.0, learning_rate=0.109804259143
+current_loss=0.617957948974, best=0.609992097953
+
+
+
+n_estimators=1190.0, learning_rate=0.0341412573328
+current_loss=0.616394112209, best=0.609992097953
+
+
+
+n_estimators=720.0, learning_rate=0.0668300365795
+current_loss=0.613203311161, best=0.609992097953
+
+
+
+n_estimators=1620.0, learning_rate=0.104439525514
+current_loss=0.619490822281, best=0.609992097953
+
+
+
+n_estimators=1430.0, learning_rate=0.0948215938588
+current_loss=0.611685612268, best=0.609992097953
+
+
+
+n_estimators=520.0, learning_rate=0.0932155545859
+current_loss=0.620197025119, best=0.609992097953
+
+
+
+n_estimators=1470.0, learning_rate=0.118113521132
+current_loss=0.613798059591, best=0.609992097953
+
+
+
+n_estimators=1040.0, learning_rate=0.0942147620614
+current_loss=0.611507496626, best=0.609992097953
+
+
+
+n_estimators=1050.0, learning_rate=0.125157496331
+current_loss=0.614489232315, best=0.609992097953
+
+
+
+n_estimators=1040.0, learning_rate=0.09005627725
+current_loss=0.611101056726, best=0.609992097953
+
+
+
+n_estimators=1080.0, learning_rate=0.0847006019693
+current_loss=0.613675114963, best=0.609992097953
+
+
+
+n_estimators=980.0, learning_rate=0.0896004928308
+current_loss=0.618307781024, best=0.609992097953
+
+
+
+n_estimators=1020.0, learning_rate=0.101149465026
+current_loss=0.614941438272, best=0.609992097953
+
+
+
+n_estimators=1110.0, learning_rate=0.107499892664
+current_loss=0.619772665407, best=0.609992097953
+
+
+
+n_estimators=1090.0, learning_rate=0.115937711557
+current_loss=0.608595217121, best=0.609992097953
+
+
+
+n_estimators=1120.0, learning_rate=0.11697562929
+current_loss=0.611630976984, best=0.608595217121
+
+
+
+n_estimators=1080.0, learning_rate=0.129621929795
+current_loss=0.617425955655, best=0.608595217121
+
+
+
+n_estimators=1140.0, learning_rate=-0.0649918253515
+n_estimators=940.0, learning_rate=0.1156152061
+current_loss=0.615683180044, best=0.608595217121
+
+
+
+n_estimators=1070.0, learning_rate=0.124842373062
