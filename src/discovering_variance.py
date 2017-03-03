@@ -121,14 +121,17 @@ def validation_loss():
 
     return l
 
-def do_test(num):
+def do_test(num, fp):
     df = load_train()
 
     res = []
     for i in range(1, num+1):
         l = man_id_loss(df)
         res.append(l)
-        print '#{}: {}, mean={}, var={}'.format(i, l, np.mean(res), np.var(res))
+        print '#{}: {}, mean={}, var={}'.format(i, l, np.mean(res), np.std(res))
+
+    with open(fp, 'w+') as f:
+        json.dump(res)
 
 
 def man_id_loss(df):
