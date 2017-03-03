@@ -149,7 +149,10 @@ def do_test(folds):
     df = load_train()
     space= {
         'n_estimators':hp.qnormal('n_estimators', 1000, 200, 10),
-        'learning_rate':hp.normal('learning_rate',0.1, 0.05)
+        'learning_rate':hp.normal('learning_rate',0.1, 0.05),
+        'gamma':hp.choice('gamma', [0,0.1, 0.01, 0.2]),
+        'max_depth':hp.choice('max_depth', [2,3,4,5]),
+        'min_child_weight':hp.choice('min_child_weight', [1,2,3])
     }
     trials = Trials()
     best = fmin(lambda s:man_id_cross_val(folds, s, df, trials), space=space, algo=tpe.suggest, trials=trials, max_evals=10000)
@@ -157,9 +160,12 @@ def do_test(folds):
     print best
     print get_the_best_loss(trials)
 
+counter = 0
 
 #(0.59205695719975504, [0.58851806059109535, 0.59472482939365567, 0.5929279816145141])
 def man_id_cross_val(folds, s, df, trials):
+    global counter
+    counter+=1
     # df = load_train()
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -169,8 +175,12 @@ def man_id_cross_val(folds, s, df, trials):
 
     res = []
     learning_rate = s['learning_rate']
+    gamma = s['gamma']
     n_estimators = int(s['n_estimators'])
-    print 'n_estimators={}, learning_rate={}'.format(s['n_estimators'], learning_rate)
+    max_depth = int(s['max_depth'])
+    min_child_weight = int(s['min_child_weight'])
+
+    print 'n_estimators={}, learning_rate={}, gamma={}, max_depth={}, min_child_weight={}'.format(s['n_estimators'], learning_rate, gamma, max_depth, min_child_weight)
     if n_estimators<=0 or learning_rate<=0:
         return {'loss':100, 'status': STATUS_FAIL}
 
@@ -188,7 +198,14 @@ def man_id_cross_val(folds, s, df, trials):
 
         train_arr, test_arr = train_df.values, test_df.values
 
-        estimator = xgb.XGBClassifier(n_estimators=n_estimators, objective='multi:softprob', learning_rate=learning_rate)
+        estimator = xgb.XGBClassifier(
+            n_estimators=n_estimators,
+            objective='multi:softprob',
+            learning_rate=learning_rate,
+            max_depth=max_depth,
+            min_child_weight=min_child_weight,
+            gamma=gamma
+        )
         estimator.fit(train_arr, train_target)
 
         # plot feature importance
@@ -203,7 +220,7 @@ def man_id_cross_val(folds, s, df, trials):
         res.append(l)
 
     loss = np.mean(res)
-    print 'current_loss={}, best={}'.format(loss, get_the_best_loss(trials))
+    print '#{}: current_loss={}, best={}'.format(counter, loss, get_the_best_loss(trials))
     print '\n\n'
     return {'loss': loss, 'status': STATUS_OK}
 
