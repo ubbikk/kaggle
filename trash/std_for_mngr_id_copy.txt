@@ -1,8 +1,3 @@
-/usr/bin/python2.7 /home/dpetrovskyi/PycharmProjects/kaggle/src/discovering_variance.py
-/usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
-  "This module will be removed in 0.20.", DeprecationWarning)
-/usr/local/lib/python2.7/dist-packages/gensim/utils.py:1015: UserWarning: Pattern library is not installed, lemmatization won't be available.
-  warnings.warn("Pattern library is not installed, lemmatization won't be available.")
 #1: 0.591683489741, mean=0.591683489741, var=0.0
 #2: 0.60181700648, mean=0.596750248111, var=0.00506675836982
 #3: 0.59259616615, mean=0.595365554124, var=0.00457705674634

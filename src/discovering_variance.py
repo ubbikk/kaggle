@@ -131,7 +131,7 @@ def do_test(num, fp):
         print '#{}: {}, mean={}, var={}'.format(i, l, np.mean(res), np.std(res))
 
     with open(fp, 'w+') as f:
-        json.dump(res)
+        json.dump(res, f)
 
 
 def man_id_loss(df):
@@ -153,7 +153,8 @@ def man_id_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000)
+    #n_estimators=450.0, learning_rate=0.203085848069, gamma=0.1, max_depth=3, min_child_weight=1
+    estimator = xgb.XGBClassifier(n_estimators=450, learning_rate=0.203085848069, gamma=0.1, max_depth=3, min_child_weight=1)
     estimator.fit(train_arr, train_target)
 
     # print estimator.feature_importances_
@@ -226,4 +227,4 @@ def process_manager_id(train_df, test_df):
 
     return train_df, test_df
 
-do_test(1000)
+do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/std_man_id_tuned_1000.json')
