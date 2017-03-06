@@ -27,7 +27,7 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
 # sns.set(color_codes=True)
 # sns.set(style="whitegrid", color_codes=True)
 
-os.chdir('/home/dpetrovskyi/PycharmProjects/kaggle/src')
+os.chdir('/home/ubik/PycharmProjects/kaggle/src')
 # pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
@@ -121,12 +121,26 @@ def validation_loss():
 
     return l
 
-def do_test(num, fp):
+def do_test_mngr_id_tuned(num, fp):
     df = load_train()
 
     res = []
     for i in range(1, num+1):
         l = man_id_loss(df)
+        res.append(l)
+        print '#{}: {}, mean={}, var={}'.format(i, l, np.mean(res), np.std(res))
+
+    with open(fp, 'w+') as f:
+        json.dump(res, f)
+
+
+
+def do_test(num, fp):
+    df = load_train()
+
+    res = []
+    for i in range(1, num+1):
+        l = default_loss(df)
         res.append(l)
         print '#{}: {}, mean={}, var={}'.format(i, l, np.mean(res), np.std(res))
 
@@ -153,8 +167,8 @@ def man_id_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    #n_estimators=450.0, learning_rate=0.203085848069, gamma=0.1, max_depth=3, min_child_weight=1
-    estimator = xgb.XGBClassifier(n_estimators=450, learning_rate=0.203085848069, gamma=0.1, max_depth=3, min_child_weight=1)
+    #n_estimators=490.0, learning_rate=0.240443030133, gamma=0.2, max_depth=3, min_child_weight=3
+    estimator = xgb.XGBClassifier(n_estimators=490, learning_rate=0.240443030133, gamma=0.2, max_depth=3, min_child_weight=3)
     estimator.fit(train_arr, train_target)
 
     # print estimator.feature_importances_
@@ -162,38 +176,30 @@ def man_id_loss(df):
     l = log_loss(test_target, proba)
     return l
 
-
-def man_id_trash(folds):
-    df = load_train()
+def default_loss(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_year", "created_month", "created_day"]
-    mngr_features_only = ['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-    features_and_mngr = features + mngr_features_only
 
-    res = []
-    for h in range(folds):
-        train_df, test_df = split_df(df, 0.7)
+    train_df, test_df = split_df(df, 0.7)
 
-        train_df, test_df = process_manager_id(train_df, test_df)
-        train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
-        del train_df[TARGET]
-        del test_df[TARGET]
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    del train_df[TARGET]
+    del test_df[TARGET]
 
-        train_df = train_df[features_and_mngr]
-        test_df = test_df[features_and_mngr]
+    train_df = train_df[features]
+    test_df = test_df[features]
 
-        train_arr, test_arr = train_df.values, test_df.values
+    train_arr, test_arr = train_df.values, test_df.values
 
-        estimator = xgb.XGBClassifier(n_estimators=1000)
-        estimator.fit(train_arr, train_target)
+    #n_estimators=490.0, learning_rate=0.240443030133, gamma=0.2, max_depth=3, min_child_weight=3
+    estimator = xgb.XGBClassifier(n_estimators=1000)
+    estimator.fit(train_arr, train_target)
 
-        # print estimator.feature_importances_
-        proba = estimator.predict_proba(test_arr)
-        l = log_loss(test_target, proba)
-        res.append(l)
-
-    return np.mean(res)
+    # print estimator.feature_importances_
+    proba = estimator.predict_proba(test_arr)
+    l = log_loss(test_target, proba)
+    return l
 
 
 def process_manager_id(train_df, test_df):
@@ -227,4 +233,4 @@ def process_manager_id(train_df, test_df):
 
     return train_df, test_df
 
-do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/std_man_id_tuned_1000.json')
+do_test(1000, '/home/ubik/PycharmProjects/kaggle/trash/losses_xgb_naive.json')

@@ -1,4 +1,4 @@
-fp = '../trash/std_for_mngr_id.json'
+fp = '../trash/losses_for_mngr_id.json'
 
 def do_work():
     with open(fp) as f:
