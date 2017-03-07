@@ -15,7 +15,6 @@ from sklearn.metrics import log_loss
 from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
-import reverse_geocoder as rg
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -26,6 +25,17 @@ from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
 MANAGER_ID = 'manager_id'
+BUILDING_ID = 'building_id'
+LATITUDE='latitude'
+LONGITUDE='longitude'
+PRICE='price'
+BATHROOMS='bathrooms'
+BEDROOMS='bedrooms'
+DESCRIPTION='description'
+DISPLAY_ADDRESS='display_address'
+STREET_ADDRESS='street_address'
+LISTING_ID='listing_id'
+PRICE_PER_BEDROOM = 'price_per_bedroom'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -70,42 +80,48 @@ def basic_preprocess(df):
     return df
 
 #(0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_validation(folds):
-    df = load_train()
+def simple_loss(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_year", "created_month", "created_day"]
 
-    res = []
-    for h in range(folds):
-        train_df, test_df = split_df(df, 0.7)
 
-        train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
-        del train_df[TARGET]
-        del test_df[TARGET]
+    train_df, test_df = split_df(df, 0.7)
 
-        train_df = train_df[features]
-        test_df = test_df[features]
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    del train_df[TARGET]
+    del test_df[TARGET]
 
-        train_arr, test_arr = train_df.values, test_df.values
+    train_df = train_df[features]
+    test_df = test_df[features]
 
-        estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
-        # estimator = RandomForestClassifier(n_estimators=1000)
-        estimator.fit(train_arr, train_target)
+    train_arr, test_arr = train_df.values, test_df.values
 
-        # plot feature importance
-        # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-        # sns.barplot(ffs, [x for x in estimator.feature_importances_])
-        # sns.plt.show()
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+    # estimator = RandomForestClassifier(n_estimators=1000)
+    estimator.fit(train_arr, train_target)
+
+    # plot feature importance
+    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+    # sns.plt.show()
 
 
-        # print estimator.feature_importances_
-        proba = estimator.predict_proba(test_arr)
-        l = log_loss(test_target, proba)
-        print l
-        res.append(l)
+    # print estimator.feature_importances_
+    proba = estimator.predict_proba(test_arr)
+    return log_loss(test_target, proba)
 
-    return np.mean(res), res
+
+def do_test(num):
+    neww=[]
+    df = load_train()
+
+    for x in range(num):
+        loss = simple_loss(df)
+        neww.append(loss)
+    print np.mean(neww), neww
+
+
 
 
 def explore_target():
@@ -114,3 +130,6 @@ def explore_target():
     print df.mean()
 
 
+
+
+do_test(10)

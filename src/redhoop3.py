@@ -25,6 +25,16 @@ from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
 MANAGER_ID = 'manager_id'
+BUILDING_ID = 'building_id'
+LATITUDE='latitude'
+LONGITUDE='longitude'
+PRICE='price'
+BATHROOMS='bathrooms'
+BEDROOMS='bedrooms'
+DESCRIPTION='description'
+DISPLAY_ADDRESS='display_address'
+STREET_ADDRESS='street_address'
+LISTING_ID='listing_id'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -107,9 +117,87 @@ def simple_validation(folds):
     return np.mean(res), res
 
 
+def bldng_id_validation(folds):
+    df = load_train()
+    features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
+                'num_features', 'num_photos', 'word_num_in_descr',
+                "created_year", "created_month", "created_day"]
+
+    # bldng_features_only = ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low', 'bldng_skill']
+    features_and_bldng = features + ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low', 'bldng_skill']
+
+    res = []
+    for h in range(folds):
+        train_df, test_df = split_df(df, 0.7)
+
+        train_df, test_df = process_building_id(train_df, test_df)
+        train_df = train_df[features_and_bldng + [TARGET]]
+        test_df = test_df[features_and_bldng + [TARGET]]
+
+
+        train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+        del train_df[TARGET]
+        del test_df[TARGET]
+
+        train_arr, test_arr = train_df.values, test_df.values
+
+        estimator = xgb.XGBClassifier(n_estimators=1000)
+        estimator.fit(train_arr, train_target)
+
+        # plot feature importance
+        # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+        # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+        # sns.plt.show()
+
+
+        # print estimator.feature_importances_
+        proba = estimator.predict_proba(test_arr)
+        l = log_loss(test_target, proba)
+        print l
+        res.append(l)
+
+    return np.mean(res), res
+
+
+def process_building_id(train_df, test_df):
+    cutoff = 20
+    """@type train_df: pd.DataFrame"""
+    df = train_df[[BUILDING_ID, TARGET]]
+    df = pd.get_dummies(df, columns=[TARGET])
+    agg = OrderedDict([
+        (BUILDING_ID, {'count': 'count'}),
+        ('interest_level_high', {'high': 'mean'}),
+        ('interest_level_medium', {'medium': 'mean'}),
+        ('interest_level_low', {'low': 'mean'})
+    ])
+    df = df.groupby(BUILDING_ID).agg(agg)
+
+    df.columns = ['bldng_id_count', 'bldng_id_high', 'bldng_id_medium', 'bldng_id_low']
+
+    big = df['bldng_id_count'] >= cutoff
+    small = ~big
+    bl = df[['bldng_id_high', 'bldng_id_medium', 'bldng_id_low']][big].mean()
+    df.loc[small, ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low']] = bl.values
+
+    df = df[['bldng_id_high', 'bldng_id_medium', 'bldng_id_low']]
+    train_df = pd.merge(train_df, df, left_on=BUILDING_ID, right_index=True)
+
+    test_df = pd.merge(test_df, df, left_on=BUILDING_ID, right_index=True, how='left')
+    test_df.loc[test_df['bldng_id_high'].isnull(), ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low']] = bl.values
+
+    train_df['bldng_skill'] = train_df['bldng_id_high'] * 2 + train_df['bldng_id_medium']
+    test_df['bldng_skill'] = test_df['bldng_id_high'] * 2 + test_df['bldng_id_medium']
+
+    return train_df, test_df
+
+
+
 def explore_target():
     df = load_train()[[TARGET]]
     df = pd.get_dummies(df)
     print df.mean()
+
+
+print bldng_id_validation(5)
 
 

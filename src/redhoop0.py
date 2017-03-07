@@ -314,4 +314,5 @@ def build_id_len_distribution(obj):
 
 # perform_cross_val(xgb.XGBClassifier(n_estimators=300), *convert_to_features_naive_csr(load_train()))
 # perform_xgboost()
-build_id_len_distribution(load_train())
+# build_id_len_distribution(load_train())
+print score_for_const(load_train())
