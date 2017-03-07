@@ -91,6 +91,7 @@ def bldng_id_validation(df):
     res = []
     train_df, test_df = split_df(df, 0.7)
 
+    train_df, test_df = fill_zero_bid(train_df, test_df)
     train_df, test_df = process_building_id(train_df, test_df)
     train_df = train_df[features_and_bldng + [TARGET]]
     test_df = test_df[features_and_bldng + [TARGET]]
@@ -159,6 +160,15 @@ def fill_zero_bid(train_df, test_df):
 
     merged.loc[bl.index, BUILDING_ID]=bl[BUILDING_ID]
 
+    train_df = merged[merged['name']=='train']
+    test_df = merged[merged['name']=='test']
+
+    for col in temp_cols:
+        del train_df[col]
+        del test_df[col]
+
+    return train_df, test_df
+
 
 def test():
     fill_zero_bid(load_train(), load_test())
@@ -217,6 +227,6 @@ def explore_target():
     print df.mean()
 
 
-# do_test(50, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/building_id_1.json')
-test()
+do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/building_id_2.json')
+# test()
 
