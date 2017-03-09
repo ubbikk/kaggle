@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
+src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
 import sys
 
@@ -168,4 +168,4 @@ def explore_target():
 
 
 # train_df, test_df = load_train(), load_test()
-do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/density_nv.json')
+do_test(300, '/home/ubik/PycharmProjects/kaggle/trash/density_nv.json')
