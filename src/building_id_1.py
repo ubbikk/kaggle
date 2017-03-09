@@ -16,7 +16,7 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 
-src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
+src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
 import sys
 sys.path.append(src_folder)
@@ -168,6 +168,6 @@ def explore_target():
     print df.mean()
 
 
-do_test(50, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/building_id_1.json')
+do_test(300, '/home/ubik/PycharmProjects/kaggle/trash/building_id_1.json')
 
 
