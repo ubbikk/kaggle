@@ -15,6 +15,7 @@ from sklearn.metrics import log_loss
 from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
+from scipy.spatial import KDTree
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -81,15 +82,43 @@ def basic_preprocess(df):
     return df
 
 
-def process_neighbours(train_df, test_df):
+# def process_neighbours_density(train_df, test_df):
+#     r=0.001
+#     new_col = 'num_in_distance_{}'.format(r)
+#     merged = pd.concat([train_df, test_df])
+#     df = merged[[LATITUDE, LONGITUDE]]
+#     tree = KDTree(df.values)
+#     merged[new_col]=tree.query_ball_point(df.values, r=r)
+#     merged[new_col]= merged[new_col].apply(len)
+#
+#     return merged.loc[train_df.index,:], merged.loc[test_df.index, :]
 
+def process_neighbours_density_merged(merged):
+    r=0.001
+    new_col = 'num_in_distance_{}'.format(r)
+    df = merged[[LATITUDE, LONGITUDE]]
+    tree = KDTree(df.values)
+    merged[new_col]=tree.query_ball_point(df.values, r=r)
+    merged[new_col]= merged[new_col].apply(len)
+
+    return merged
+
+def explore_neighbours(train_df, test_df):
+    r=0.001
+    df = train_df[[LATITUDE, LONGITUDE, TARGET]]
+    df = pd.get_dummies(df, columns=[TARGET])
+    tree = KDTree(df[[LATITUDE, LONGITUDE]].values)
+    t=test_df[[LATITUDE, LONGITUDE]]
+    t['res']=tree.query_ball_point(t.values, r=r)
 
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
 def simple_loss(df):
+    r=0.001
+    density_feature = 'num_in_distance_{}'.format(r)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day", density_feature]
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -120,6 +149,7 @@ def simple_loss(df):
 def do_test(num, fp):
     neww = []
     df = load_train()
+    df = process_neighbours_density_merged(df)
     for x in range(num):
         loss = simple_loss(df)
         print loss
@@ -138,3 +168,4 @@ def explore_target():
 
 
 # train_df, test_df = load_train(), load_test()
+do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/density_nv.json')
