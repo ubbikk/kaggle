@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
+src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
 import sys
 sys.path.append(src_folder)
@@ -36,6 +36,7 @@ DESCRIPTION='description'
 DISPLAY_ADDRESS='display_address'
 STREET_ADDRESS='street_address'
 LISTING_ID='listing_id'
+BID_ZERO='bid_zero'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -86,11 +87,12 @@ def bldng_id_validation(df):
                 "created_year", "created_month", "created_day"]
 
     # bldng_features_only = ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low', 'bldng_skill']
-    features_and_bldng = features + ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low', 'bldng_skill']
+    features_and_bldng = features + ['bldng_id_high', 'bldng_id_medium', 'bldng_id_low', 'bldng_skill', BID_ZERO]
 
     res = []
     train_df, test_df = split_df(df, 0.7)
 
+    train_df, test_df = add_bidzero_col(train_df, test_df)
     train_df, test_df = fill_zero_bid(train_df, test_df)
     train_df, test_df = process_building_id(train_df, test_df)
     train_df = train_df[features_and_bldng + [TARGET]]
@@ -128,6 +130,12 @@ def most_frequent(l):
     m.sort(key=lambda s: s[1], reverse=True)
     return m[0][0]
 
+def add_bidzero_col(train_df, test_df):
+    for df in (train_df, test_df):
+        df[BID_ZERO]= df[BUILDING_ID].apply(lambda s: 1 if s=='0' else 0)
+
+    return train_df, test_df
+
 def fill_zero_bid(train_df, test_df):
     #part1
     """@type train_df: pd.DataFrame"""
@@ -144,6 +152,8 @@ def fill_zero_bid(train_df, test_df):
     bl = bid_not_zero_df.groupby(lat_lon)[BUILDING_ID].apply(most_frequent).to_frame()
     bl = pd.merge(bid_zero_df, bl, left_on=lat_lon, right_index=True, how='left')
     merged.loc[bid_zero_df.index, BUILDING_ID]=bl[BUILDING_ID+'_y']
+
+    # merged.loc[merged[BUILDING_ID].isnull(), BUILDING_ID]='0'
 
     #part2
     bid_zero_df = merged[merged[BUILDING_ID].isnull()]
@@ -171,7 +181,11 @@ def fill_zero_bid(train_df, test_df):
 
 
 def test():
-    fill_zero_bid(load_train(), load_test())
+    train_df_cp = load_train()
+    test_df_cp = load_test()
+    train_df = train_df_cp.copy()
+    test_df = test_df_cp.copy()
+    train_df, test_df = fill_zero_bid(train_df, test_df)
 
 
 def process_building_id(train_df, test_df):
@@ -227,6 +241,6 @@ def explore_target():
     print df.mean()
 
 
-do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/building_id_2.json')
+do_test(50, '/home/ubik/PycharmProjects/kaggle/trash/building_id_2_part2.json')
 # test()
 
