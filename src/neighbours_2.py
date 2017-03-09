@@ -67,24 +67,6 @@ def load_train():
 def load_test():
     return basic_preprocess(pd.read_json(test_file))
 
-def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
-
-    good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
-    good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
-
-    train_df = train_df[good_lat & good_long]
-
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
-    bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
-    test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
-
-    return train_df, test_df
-
 
 def basic_preprocess(df):
     df['num_features'] = df[u'features'].apply(len)
@@ -100,13 +82,76 @@ def basic_preprocess(df):
     return df
 
 
+# def process_neighbours_density(train_df, test_df):
+#     r=0.001
+#     new_col = 'num_in_distance_{}'.format(r)
+#     merged = pd.concat([train_df, test_df])
+#     df = merged[[LATITUDE, LONGITUDE]]
+#     tree = KDTree(df.values)
+#     merged[new_col]=tree.query_ball_point(df.values, r=r)
+#     merged[new_col]= merged[new_col].apply(len)
+#
+#     return merged.loc[train_df.index,:], merged.loc[test_df.index, :]
+
+def process_neighbours_density_merged(merged):
+    r = 0.001
+    new_col = 'num_in_distance_{}'.format(r)
+    df = merged[[LATITUDE, LONGITUDE]]
+    tree = KDTree(df.values)
+    merged[new_col] = tree.query_ball_point(df.values, r=r)
+    merged[new_col] = merged[new_col].apply(len)
+
+    return merged
+
+
+def process_neighbours(train_df, test_df, r, cutoff_for_mean):
+    # r = 0.001
+    # cutoff_for_mean = 0
+
+    df = train_df[[LATITUDE, LONGITUDE, TARGET]]
+    df = pd.get_dummies(df, columns=[TARGET])
+    dummies_cols = ['interest_level_high', 'interest_level_low', 'interest_level_medium']
+
+    tree = KDTree(df[[LATITUDE, LONGITUDE]].values)
+
+    df['tmp'] = tree.query_ball_point(df[[LATITUDE, LONGITUDE]].values, r=r)
+    test_df['tmp'] = tree.query_ball_point(test_df[[LATITUDE, LONGITUDE]].values, r=r)
+
+    df['index_copy'] = np.arange(len(df))
+    df.apply(lambda x: x['tmp'].remove(x['index_copy']), axis=1)
+    # del df['index_copy']
+
+    global_mean = df[dummies_cols].mean()
+    def neighbours_mean(x, col):
+        t = df.iloc[x,:][col]
+        if len(t) <= cutoff_for_mean:
+            return global_mean[col]
+        return t.mean()
+
+    for f in (df, test_df):
+        for col in dummies_cols:
+            f['dencity_{}'.format(col)]=f['tmp'].apply(lambda x: neighbours_mean(x, col))
+
+    del test_df['tmp']
+    for col in dummies_cols:
+        new_col = 'dencity_{}'.format(col)
+        train_df[new_col] = df[new_col]
+
+    return train_df, test_df
+
+
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_loss(df):
+def neighbours_loss(df):
+    r = 0.0002
+    cutoff_for_mean=20
+    density_feature = 'num_in_distance_{}'.format(r)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day"]#, density_feature
+    features+=['dencity_interest_level_high',  'dencity_interest_level_low',  'dencity_interest_level_medium']
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df = process_neighbours(train_df, test_df, r, cutoff_for_mean)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -132,18 +177,32 @@ def simple_loss(df):
     return log_loss(test_target, proba)
 
 
-def do_test(num, fp):
+# def do_test_density_only(num, fp):
+#     neww = []
+#     df = load_train()
+#     df = process_neighbours_density_merged(df)
+#     for x in range(num):
+#         loss = simple_loss(df)
+#         print loss
+#         neww.append(loss)
+#
+#     print '\n\n\n\n'
+#     print 'avg = {}'.format(np.mean(neww))
+#     with open(fp, 'w+') as f:
+#         json.dump(neww, f)
+
+def do_test_process_neighbours(num, fp):
     neww = []
     df = load_train()
     for x in range(num):
-        loss = simple_loss(df)
+        loss = neighbours_loss(df)
         print loss
         neww.append(loss)
-        with open(fp, 'w+') as f:
-            json.dump(neww, f)
 
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
+    with open(fp, 'w+') as f:
+        json.dump(neww, f)
 
 
 def explore_target():
@@ -151,5 +210,6 @@ def explore_target():
     df = pd.get_dummies(df)
     print df.mean()
 
-
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()
+# do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/density_nv.json')
+do_test_process_neighbours(30, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/neighbours_r_0_001.json')
