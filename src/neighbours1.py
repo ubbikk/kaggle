@@ -66,24 +66,6 @@ def load_train():
 def load_test():
     return basic_preprocess(pd.read_json(test_file))
 
-def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
-
-    good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
-    good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
-
-    train_df = train_df[good_lat & good_long]
-
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
-    bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
-    test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
-
-    return train_df, test_df
-
 
 def basic_preprocess(df):
     df['num_features'] = df[u'features'].apply(len)
@@ -97,6 +79,10 @@ def basic_preprocess(df):
     df['bc_price'] = bc_price
 
     return df
+
+
+def process_neighbours(train_df, test_df):
+
 
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
@@ -138,11 +124,11 @@ def do_test(num, fp):
         loss = simple_loss(df)
         print loss
         neww.append(loss)
-        with open(fp, 'w+') as f:
-            json.dump(neww, f)
 
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
+    with open(fp, 'w+') as f:
+        json.dump(neww, f)
 
 
 def explore_target():
@@ -151,4 +137,4 @@ def explore_target():
     print df.mean()
 
 
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()

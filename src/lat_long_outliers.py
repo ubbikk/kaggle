@@ -106,6 +106,7 @@ def simple_loss(df):
                 "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df = process_outliers_lat_long(train_df, test_df)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -145,10 +146,12 @@ def do_test(num, fp):
     print 'avg = {}'.format(np.mean(neww))
 
 
+
 def explore_target():
     df = load_train()[[TARGET]]
     df = pd.get_dummies(df)
     print df.mean()
 
 
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()
+do_test(300, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/lat_long_outliers.json')

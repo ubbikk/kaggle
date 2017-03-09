@@ -153,22 +153,22 @@ def fill_zero_bid(train_df, test_df):
     bl = pd.merge(bid_zero_df, bl, left_on=lat_lon, right_index=True, how='left')
     merged.loc[bid_zero_df.index, BUILDING_ID]=bl[BUILDING_ID+'_y']
 
-    # merged.loc[merged[BUILDING_ID].isnull(), BUILDING_ID]='0'
+    merged.loc[merged[BUILDING_ID].isnull(), BUILDING_ID]='0'
 
     #part2
-    bid_zero_df = merged[merged[BUILDING_ID].isnull()]
-    bid_not_zero_df = merged[~merged[BUILDING_ID].isnull()]
-    bid_not_zero_df= bid_not_zero_df[[BUILDING_ID, LATITUDE, LONGITUDE]]
-
-    tree = KDTree(bid_not_zero_df[[LATITUDE, LONGITUDE]].as_matrix())
-    bl = bid_zero_df[[LATITUDE, LONGITUDE]]
-    bl['zip'] = zip(bl[LATITUDE], bl[LONGITUDE])
-    bl['zip'] = bl['zip'].apply(np.array)
-    bl['query_res'] = bl['zip'].apply(lambda x: tree.query(x))
-    bl['ind']= bl['query_res'].apply(lambda x: x[1])
-    bl[BUILDING_ID]= bl['ind'].apply(lambda x: bid_not_zero_df.iloc[x, 0])
-
-    merged.loc[bl.index, BUILDING_ID]=bl[BUILDING_ID]
+    # bid_zero_df = merged[merged[BUILDING_ID].isnull()]
+    # bid_not_zero_df = merged[~merged[BUILDING_ID].isnull()]
+    # bid_not_zero_df= bid_not_zero_df[[BUILDING_ID, LATITUDE, LONGITUDE]]
+    #
+    # tree = KDTree(bid_not_zero_df[[LATITUDE, LONGITUDE]].as_matrix())
+    # bl = bid_zero_df[[LATITUDE, LONGITUDE]]
+    # bl['zip'] = zip(bl[LATITUDE], bl[LONGITUDE])
+    # bl['zip'] = bl['zip'].apply(np.array)
+    # bl['query_res'] = bl['zip'].apply(lambda x: tree.query(x))
+    # bl['ind']= bl['query_res'].apply(lambda x: x[1])
+    # bl[BUILDING_ID]= bl['ind'].apply(lambda x: bid_not_zero_df.iloc[x, 0])
+    #
+    # merged.loc[bl.index, BUILDING_ID]=bl[BUILDING_ID]
 
     train_df = merged[merged['name']=='train']
     test_df = merged[merged['name']=='test']
@@ -220,17 +220,17 @@ def process_building_id(train_df, test_df):
     return train_df, test_df
 
 def do_test(num, fp):
-    neww=[]
+    neww = []
     df = load_train()
     for x in range(num):
         loss = bldng_id_validation(df)
         print loss
         neww.append(loss)
+        with open(fp, 'w+') as f:
+            json.dump(neww, f)
 
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
-    with open(fp, 'w+') as f:
-        json.dump(neww, f)
 
 
 
@@ -241,6 +241,6 @@ def explore_target():
     print df.mean()
 
 
-do_test(50, '/home/ubik/PycharmProjects/kaggle/trash/building_id_2_part2.json')
+# do_test(50, '/home/ubik/PycharmProjects/kaggle/trash/building_id_2_part2.json')
 # test()
 
