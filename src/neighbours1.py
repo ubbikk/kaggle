@@ -112,8 +112,7 @@ def explore_neighbours(train_df, test_df):
 
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_loss(df):
-    r=0.001
+def simple_loss(df, r):
     density_feature = 'num_in_distance_{}'.format(r)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -150,7 +149,7 @@ def do_test(num, fp,r):
     df = load_train()
     df = process_neighbours_density_merged(df, r)
     for x in range(num):
-        loss = simple_loss(df)
+        loss = simple_loss(df, r)
         print loss
         neww.append(loss)
 
