@@ -17,11 +17,11 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
+# src_folder = '/home/ubik/PycharmProjects/kaggle/src'
+# os.chdir(src_folder)
+# import sys
+#
+# sys.path.append(src_folder)
 
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
@@ -167,8 +167,11 @@ def explore_target():
 
 
 # train_df, test_df = load_train(), load_test()
-for r in (0.0003, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5):
+for r in (0.0001, 0.0003, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5):
     try:
-        do_test(200, '/home/ubik/PycharmProjects/kaggle/trash/density_nv_{}.json'.format(r), r)
+        fp = '/home/ubik/PycharmProjects/kaggle/trash/density_nv_{}.json'.format(r)
+        print r
+        print fp
+        do_test(200, fp, r)
     except:
         pass
