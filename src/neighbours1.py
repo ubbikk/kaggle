@@ -93,8 +93,7 @@ def basic_preprocess(df):
 #
 #     return merged.loc[train_df.index,:], merged.loc[test_df.index, :]
 
-def process_neighbours_density_merged(merged):
-    r=0.001
+def process_neighbours_density_merged(merged, r):
     new_col = 'num_in_distance_{}'.format(r)
     df = merged[[LATITUDE, LONGITUDE]]
     tree = KDTree(df.values)
@@ -146,10 +145,10 @@ def simple_loss(df):
     return log_loss(test_target, proba)
 
 
-def do_test(num, fp):
+def do_test(num, fp,r):
     neww = []
     df = load_train()
-    df = process_neighbours_density_merged(df)
+    df = process_neighbours_density_merged(df, r)
     for x in range(num):
         loss = simple_loss(df)
         print loss
@@ -168,4 +167,8 @@ def explore_target():
 
 
 # train_df, test_df = load_train(), load_test()
-do_test(300, '/home/ubik/PycharmProjects/kaggle/trash/density_nv.json')
+for r in (0.0003, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5):
+    try:
+        do_test(200, '/home/ubik/PycharmProjects/kaggle/trash/density_nv_{}.json'.format(r), r)
+    except:
+        pass

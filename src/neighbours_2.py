@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
+src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
 import sys
 
@@ -142,8 +142,8 @@ def process_neighbours(train_df, test_df, r, cutoff_for_mean):
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
 def neighbours_loss(df):
-    r = 0.0002
-    cutoff_for_mean=20
+    r = 0.01
+    cutoff_for_mean=100
     density_feature = 'num_in_distance_{}'.format(r)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -212,4 +212,4 @@ def explore_target():
 
 # train_df, test_df = load_train(), load_test()
 # do_test(100, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/density_nv.json')
-do_test_process_neighbours(30, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/neighbours_r_0_001.json')
+do_test_process_neighbours(30, '/home/ubik/PycharmProjects/kaggle/trash/neighbours_r_0_001.json')
