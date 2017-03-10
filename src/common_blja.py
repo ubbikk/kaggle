@@ -16,6 +16,7 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from categorical_utils import processM
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -26,7 +27,6 @@ sys.path.append(src_folder)
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
-TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
 BUILDING_ID = 'building_id'
 LATITUDE = 'latitude'
@@ -48,7 +48,7 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
 # sns.set(color_codes=True)
 # sns.set(style="whitegrid", color_codes=True)
 
-pd.set_option('display.max_columns', 500)
+# pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
@@ -135,8 +135,8 @@ def simple_loss(df):
 
 def do_test(num, fp):
     neww = []
+    df = load_train()
     for x in range(num):
-        df = load_train()
         loss = simple_loss(df)
         print loss
         neww.append(loss)
@@ -154,3 +154,5 @@ def explore_target():
 
 
 train_df, test_df = load_train(), load_test()
+target_vals= ['low', 'medium', 'high']
+train_df, test_df = processM(train_df, test_df, BUILDING_ID, TARGET, target_vals, 10)

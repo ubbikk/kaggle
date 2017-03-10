@@ -16,6 +16,7 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from categorical_utils import processM, cols_forM
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -102,12 +103,14 @@ def basic_preprocess(df):
 
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_loss(df):
+def with_m_loss(df, m):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day"]+\
+               cols_forM(MANAGER_ID, TARGET, TARGET_VALUES, m)
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df = processM(train_df, test_df, MANAGER_ID, TARGET, TARGET_VALUES, m)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -133,11 +136,11 @@ def simple_loss(df):
     return log_loss(test_target, proba)
 
 
-def do_test(num, fp):
+def do_test(num, fp, m):
     neww = []
     for x in range(num):
         df = load_train()
-        loss = simple_loss(df)
+        loss = with_m_loss(df, m)
         print loss
         neww.append(loss)
         with open(fp, 'w+') as f:
@@ -147,10 +150,9 @@ def do_test(num, fp):
     print 'avg = {}'.format(np.mean(neww))
 
 
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
+for m in (100, 200, 300, 500,1000, 1500, 3, 5, 10, 20, 30, 50):
+    do_test(200, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/manager_m_{}.json'.format(m), m)
 
 
-train_df, test_df = load_train(), load_test()
+
+
