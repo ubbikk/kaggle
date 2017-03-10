@@ -167,10 +167,7 @@ def explore_target():
 
 # train_df, test_df = load_train(), load_test()
 for r in (0.0001, 0.0003, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5):
-    try:
-        fp = '/home/ubik/PycharmProjects/kaggle/trash/density_nv_{}.json'.format(r)
-        print r
-        print fp
-        do_test(200, fp, r)
-    except:
-        pass
+    fp = '/home/ubik/PycharmProjects/kaggle/trash/density_nv_{}.json'.format(r)
+    print r
+    print fp
+    do_test(200, fp, r)
