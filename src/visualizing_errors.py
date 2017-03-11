@@ -16,17 +16,17 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
-from categorical_utils import processM
 
-src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
+# src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
+# os.chdir(src_folder)
+# import sys
+#
+# sys.path.append(src_folder)
 
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
+TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
 BUILDING_ID = 'building_id'
 LATITUDE = 'latitude'
@@ -48,7 +48,7 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
 # sns.set(color_codes=True)
 # sns.set(style="whitegrid", color_codes=True)
 
-# pd.set_option('display.max_columns', 500)
+pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
@@ -110,6 +110,7 @@ def simple_loss(df):
     train_df, test_df = split_df(df, 0.7)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+
     del train_df[TARGET]
     del test_df[TARGET]
 
@@ -118,25 +119,19 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+    estimator = xgb.XGBClassifier(n_estimators=10000, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
-    estimator.fit(train_arr, train_target)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss')
 
-    # plot feature importance
-    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
-    # sns.plt.show()
-
-
-    # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
     return log_loss(test_target, proba)
 
 
 def do_test(num, fp):
     neww = []
-    df = load_train()
     for x in range(num):
+        df = load_train()
         loss = simple_loss(df)
         print loss
         neww.append(loss)
@@ -146,13 +141,13 @@ def do_test(num, fp):
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
 
+def test():
+    df =load_train()
+    loss = simple_loss(df)
+    print loss
 
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
+test()
 
 
-train_df, test_df = load_train(), load_test()
-target_vals= ['low', 'medium', 'high']
-train_df, test_df = processM(train_df, test_df, BUILDING_ID, TARGET, target_vals, 10)
+
+# train_df, test_df = load_train(), load_test()
