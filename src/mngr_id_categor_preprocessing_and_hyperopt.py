@@ -6,6 +6,9 @@ import seaborn as sns
 import pandas as pd
 from collections import OrderedDict
 
+from hyperopt import STATUS_OK
+from hyperopt import Trials
+from hyperopt import tpe
 from matplotlib import pyplot
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
@@ -18,6 +21,8 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from hyperopt import hp, pyll, fmin
+from math import log
 
 src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -25,6 +30,7 @@ import sys
 
 sys.path.append(src_folder)
 
+from categorical_utils import process_with_lambda, cols, get_exp_lambda, visualize_exp_lambda
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
@@ -47,8 +53,8 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
             u'price', u'street_address']
 
-# sns.set(color_codes=True)
-# sns.set(style="whitegrid", color_codes=True)
+sns.set(color_codes=True)
+sns.set(style="whitegrid", color_codes=True)
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
@@ -70,21 +76,22 @@ def load_train():
 def load_test():
     return basic_preprocess(pd.read_json(test_file))
 
+
 def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
+    min_lat = 40
+    max_lat = 41
+    min_long = -74.1
+    max_long = -73
 
     good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
     good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
 
     train_df = train_df[good_lat & good_long]
 
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
+    bed_lat = (test_df[LATITUDE] >= max_lat) | (test_df[LATITUDE] <= min_lat)
     bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
     test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
+    test_df[LONGITUDE][bed_long] = train_df[LONGITUDE].mean()
 
     return train_df, test_df
 
@@ -103,13 +110,15 @@ def basic_preprocess(df):
     return df
 
 
-# (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_loss(df):
+def with_lambda_loss(df, k, f):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day"] + \
+               cols(MANAGER_ID, TARGET, TARGET_VALUES)
 
     train_df, test_df = split_df(df, 0.7)
+    lamdba_f = get_exp_lambda(k, f)
+    train_df, test_df = process_with_lambda(train_df, test_df, MANAGER_ID, TARGET, TARGET_VALUES, lamdba_f)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -132,31 +141,60 @@ def simple_loss(df):
 
     # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
-    return log_loss(test_target, proba)
+    loss = log_loss(test_target, proba)
+    return loss
 
 
-def do_test(num, fp):
-    neww = []
-    train_df = load_train()
-    for x in range(num):
-        t=time()
-        df=train_df.copy()
-        loss = simple_loss(df)
+def loss_for_batch(df, s, runs, flder):
+    f=s['f']
+    k=s['k']
+    print 'Running for k={}, f={}'.format(k,f)
+    l = []
+    fp = os.path.join(flder, 'k={}_f={}.json'.format(k, f))
+    for x in range(runs):
+        t = time()
+        loss = with_lambda_loss(df.copy(), k, f)
+        l.append(loss)
+        with open(fp, 'w+') as fl:
+            json.dump(l, fl)
+        t = time() - t
         print loss
-        print 'time: {}'.format(time()-t)
+        print 'time: {}'.format(t)
         print
-        neww.append(loss)
-        with open(fp, 'w+') as f:
-            json.dump(neww, f)
 
-    print '\n\n\n\n'
-    print 'avg = {}'.format(np.mean(neww))
+    avg_loss = np.mean(l)
+    var = np.var(l)
+
+    print '\n\n'
+    print 'summary for k={}, f={}'.format(k,f)
+    print 'AVG={}'.format(avg_loss)
+    print 'std={}'.format(np.std(l))
+    print '\n\n'
+
+    return {'loss': avg_loss, 'loss_variance': var, 'status': STATUS_OK}
 
 
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
+def get_the_best_loss(trials):
+    try:
+        return trials.best_trial['result']['loss']
+    except:
+        return None
 
 
-train_df, test_df = load_train(), load_test()
+def do_test(runs, fldr):
+    df = load_train()
+    space = {
+        'k': hp.qnormal('k', 25, 10, 1),
+        'f': hp.loguniform('f', log(0.1), log(5))
+    }
+    trials = Trials()
+    best = fmin(lambda s: loss_for_batch(df,s, runs,fldr), space=space, algo=tpe.suggest, trials=trials, max_evals=10000)
+
+    print
+    print 'curr={}'.format(best)
+    print 'best={}'.format(get_the_best_loss(trials))
+
+
+
+
+do_test(2, '/home/ubik/PycharmProjects/kaggle/trash/test')

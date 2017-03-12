@@ -205,4 +205,4 @@ def explore_target():
     print df.mean()
 
 
-do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/mng_and_per_bedroom.json')
+do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/mng_and_per_bedroom_with_err.json')

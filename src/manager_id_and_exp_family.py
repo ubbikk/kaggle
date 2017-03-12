@@ -175,8 +175,9 @@ def do_test():
 
 
 
-
-do_test_k_f(25, 0.1, '')
+k=20
+f=0.2
+do_test_k_f(k, f, '/home/ubik/PycharmProjects/kaggle/trash/with_lambda/k={}_f={}.json'.format(k,f))
 
 # def do_test1():
 #     for k,v in [()]
