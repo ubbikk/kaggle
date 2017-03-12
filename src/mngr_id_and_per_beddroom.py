@@ -184,7 +184,7 @@ def process_manager_id(train_df, test_df):
 
     big = df['man_id_count'] >= cutoff
     small = ~big
-    bl = df[['man_id_high', 'man_id_medium', 'man_id_low']][big].mean()
+    bl = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()#[big]
     df.loc[small, ['man_id_high', 'man_id_medium', 'man_id_low']] = bl.values
 
     df = df[['man_id_high', 'man_id_medium', 'man_id_low']]
