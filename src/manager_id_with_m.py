@@ -151,7 +151,7 @@ def do_test(num, fp, m):
 
 
 for m in (50, 100, 200, 300, 500,1000, 1500, 3, 5, 10, 20, 30):
-    do_test(200, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/manager_m_{}.json'.format(m), m)
+    do_test(200, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/manager_with_m/manager_m_{}.json'.format(m), m)
 
 
 
