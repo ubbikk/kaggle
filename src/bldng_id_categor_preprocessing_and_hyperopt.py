@@ -112,7 +112,7 @@ def basic_preprocess(df):
 
 
 def with_lambda_loss(df, k, f):
-    col = MANAGER_ID
+    col = BUILDING_ID
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_year", "created_month", "created_day"] + \
@@ -204,4 +204,4 @@ def do_test(runs, fldr):
 
 
 
-do_test(25, '/home/ubik/PycharmProjects/kaggle/trash/test')
+do_test(25, '/home/ubik/PycharmProjects/kaggle/trash/building_id_exp_family_hyperopt_25')

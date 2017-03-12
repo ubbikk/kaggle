@@ -47,8 +47,8 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
             u'price', u'street_address']
 
-# sns.set(color_codes=True)
-# sns.set(style="whitegrid", color_codes=True)
+sns.set(color_codes=True)
+sns.set(style="whitegrid", color_codes=True)
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
@@ -120,7 +120,7 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
     estimator.fit(train_arr, train_target)
 
@@ -151,12 +151,5 @@ def do_test(num, fp):
 
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
-
-
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
-
 
 train_df, test_df = load_train(), load_test()
