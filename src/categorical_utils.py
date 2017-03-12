@@ -30,7 +30,7 @@ def process_with_lambda(train_df, test_df, col, target_col, target_vals, lambda_
     new_cols=[]
     for v in target_vals:
         def norm_posterior(x):
-            cnt = x['count_{}'.format(v)]
+            cnt = sum([x['count_{}'.format(yy)] for yy in target_vals])
             cnt= float(cnt)
             posterior = x['posterior_{}'.format(v)]
             prior = priors[dummy_col(target_col, v)]
@@ -77,7 +77,7 @@ def processM(train_df, test_df, col, target_col, target_vals, m):
     new_cols=[]
     for v in target_vals:
         def norm_posterior(x):
-            cnt = x['count_{}'.format(v)]
+            cnt = sum([x['count_{}'.format(yy)] for yy in target_vals])
             cnt= float(cnt)
             posterior = x['posterior_{}'.format(v)]
             prior = priors[dummy_col(target_col, v)]
