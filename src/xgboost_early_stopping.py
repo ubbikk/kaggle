@@ -4,7 +4,7 @@ import seaborn as sns
 import pandas as pd
 from collections import OrderedDict
 
-from matplotlib import pyplot
+import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
@@ -22,7 +22,7 @@ os.chdir(src_folder)
 import sys
 
 sys.path.append(src_folder)
-
+#
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
@@ -110,6 +110,7 @@ def simple_loss(df):
     train_df, test_df = split_df(df, 0.7)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+
     del train_df[TARGET]
     del test_df[TARGET]
 
@@ -118,19 +119,24 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+    estimator = xgb.XGBClassifier(n_estimators=5000, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
-    estimator.fit(train_arr, train_target)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', early_stopping_rounds=100)
 
-    # plot feature importance
-    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
-    # sns.plt.show()
-
-
-    # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
-    return log_loss(test_target, proba)
+    loss = log_loss(test_target, proba)
+    print loss
+    plot_errors(estimator.evals_result())
+    return loss
+
+def plot_errors(results):
+    fig, ax = plt.subplots()
+    to_plot0 = results['validation_0']['mlogloss']
+    to_plot1 = results['validation_1']['mlogloss']
+    ax.plot(range(len(to_plot0)), to_plot0, label='train')
+    ax.plot(range(len(to_plot0)), to_plot1, label='test')
+    ax.legend()
 
 
 def do_test(num, fp):
@@ -146,11 +152,13 @@ def do_test(num, fp):
     print '\n\n\n\n'
     print 'avg = {}'.format(np.mean(neww))
 
+def test():
+    df =load_train()
+    loss = simple_loss(df)
+    print loss
 
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
+# test()
 
 
-train_df, test_df = load_train(), load_test()
+
+# train_df, test_df = load_train(), load_test()

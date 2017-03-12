@@ -118,7 +118,19 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='multi:softprob')
+    params = {
+        'eta':.01,
+        'colsample_bytree':.8,
+        'subsample':.8,
+        'seed':0,
+        'nthread':16,
+        'objective':'multi:softprob',
+        'eval_metric':'mlogloss',
+        'num_class':3,
+        'silent':1
+    }
+
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss', colsample_bytree=0.8, subsample=0.8)
     # estimator = RandomForestClassifier(n_estimators=1000)
     estimator.fit(train_arr, train_target)
 
@@ -153,4 +165,6 @@ def explore_target():
     print df.mean()
 
 
-train_df, test_df = load_train(), load_test()
+do_test(20, '/home/ubik/PycharmProjects/kaggle/trash/new_params_1.json')
+
+# train_df, test_df = load_train(), load_test()

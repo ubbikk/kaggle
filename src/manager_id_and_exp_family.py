@@ -16,6 +16,7 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from categorical_utils import process_with_lambda, cols, get_exp_lambda
 
 src_folder = '/home/ubik/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
@@ -102,12 +103,15 @@ def basic_preprocess(df):
 
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
-def simple_loss(df):
+def with_lambda_loss(df, k, f):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day"]+ \
+               cols(MANAGER_ID, TARGET, TARGET_VALUES)
 
     train_df, test_df = split_df(df, 0.7)
+    lamdba_f = get_exp_lambda(k, f)
+    train_df, test_df = process_with_lambda(train_df, test_df, MANAGER_ID, TARGET, TARGET_VALUES, lamdba_f)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -133,24 +137,28 @@ def simple_loss(df):
     return log_loss(test_target, proba)
 
 
-def do_test(num, fp):
-    neww = []
-    for x in range(num):
-        df = load_train()
-        loss = simple_loss(df)
-        print loss
-        neww.append(loss)
-        with open(fp, 'w+') as f:
-            json.dump(neww, f)
+def do_test():
+    for k in (20, 10, 5, 2, 30, 50):
+        for f in (5.0, 1.0, 2.5, 10, 0.5):
+            print 'k={}, f={}'.format(k,f)
+            fp='/home/ubik/PycharmProjects/kaggle/trash/with_lambda/k={}_f={}.json'.format(k,f)
+            l=[]
+            for t in range(200):
+                loss = with_lambda_loss(load_train(), k,f)
+                l.append(loss)
 
-    print '\n\n\n\n'
-    print 'avg = {}'.format(np.mean(neww))
+                with open(fp, 'w+') as fl:
+                    json.dump(l, fl)
 
-
-def explore_target():
-    df = load_train()[[TARGET]]
-    df = pd.get_dummies(df)
-    print df.mean()
+                print loss
 
 
-train_df, test_df = load_train(), load_test()
+            print
+            print 'avg={}'.format(np.mean(l))
+            print '\n\n'
+
+do_test()
+
+
+
+
