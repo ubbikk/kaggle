@@ -6,6 +6,7 @@ import seaborn as sns
 import pandas as pd
 from collections import OrderedDict
 
+from hyperopt import STATUS_FAIL
 from hyperopt import STATUS_OK
 from hyperopt import Trials
 from hyperopt import tpe
@@ -148,6 +149,9 @@ def with_lambda_loss(df, k, f):
 def loss_for_batch(df, s, runs, flder):
     f=s['f']
     k=s['k']
+    if k<=1 or f<=0.1:
+        return {'loss': 1000,  'status': STATUS_FAIL}
+
     print 'Running for k={}, f={}'.format(k,f)
     l = []
     fp = os.path.join(flder, 'k={}_f={}.json'.format(k, f))
