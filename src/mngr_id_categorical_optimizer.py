@@ -99,7 +99,6 @@ def with_lambda_loss(df, k, f):
 
     import numpy as np
     import pandas as pd
-    import seaborn as sns
     import xgboost as xgb
     from hyperopt import STATUS_FAIL
     from hyperopt import STATUS_OK
@@ -113,7 +112,6 @@ def with_lambda_loss(df, k, f):
     import math
 
     try:
-        print 'blja\n\n\n'
         import dill as pickle
         print('Went with dill')
     except ImportError:
