@@ -123,4 +123,4 @@ def do_test(runs, flder):
     print 'best={}'.format(get_the_best_loss(trials))
 
 
-do_test(2, sys.argv[1])
+do_test(25, sys.argv[1])

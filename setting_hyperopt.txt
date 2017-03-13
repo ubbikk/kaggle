@@ -1,5 +1,3 @@
-python -u mngr_id_categor_preprocessing_and_hyperopt_distributed.py
-hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/Desktop/hyperopt_trash
 
 
 
@@ -45,3 +43,4 @@ sudo hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family -
 vim kaggle/src/mngr_id_categor_preprocessing_and_hyperopt_distributed.py  и меняем пути к логам
 
 hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/kg/trash
+python -u mngr_id_categor_preprocessing_and_hyperopt_distributed.py /home/dpetrovskyi/kg/trash
