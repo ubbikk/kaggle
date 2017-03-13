@@ -18,6 +18,7 @@ from sklearn.metrics import log_loss
 from functools import partial
 import math
 import mngr_id_categorical_optimizer
+import sys
 
 
 TARGET = u'interest_level'
@@ -122,4 +123,4 @@ def do_test(runs, flder):
     print 'best={}'.format(get_the_best_loss(trials))
 
 
-do_test(2, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/test')
+do_test(2, sys.argv[1])
