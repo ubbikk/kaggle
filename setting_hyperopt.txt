@@ -2,17 +2,45 @@ python -u mngr_id_categor_preprocessing_and_hyperopt_distributed.py
 hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/Desktop/hyperopt_trash
 
 
+
+
 mkdir kg
 cd kg
+sudo apt-get install git
 git clone https://github.com/ubbikk/kaggle
 cd kaggle
-
-scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
-scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
 
 wget https://bootstrap.pypa.io/get-pip.py
 sudo python get-pip.py
 sudo pip install scipy
-sudo pip install xgboost
 sudo pip install pandas
 sudo pip install hyperopt
+sudo pip install dill
+
+/////sudo pip install xgboost
+sudo apt-get install gcc
+sudo apt-get install make
+sudo apt-get install g++
+git clone http://github.com/dmlc/xgboost
+cd xgboost
+git submodule update --init
+build: ./build.sh
+cd python-package
+sudo python setup.py install
+cd ../..
+
+scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
+scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
+
+cd src
+
+
+new tab
+
+cd kg
+mkdir trash
+
+sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr/bin/
+vim kaggle/src/mngr_id_categor_preprocessing_and_hyperopt_distributed.py  и меняем пути к логам
+
+hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/kg/trash
