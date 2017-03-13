@@ -2319,3 +2319,89 @@ std=0.0129795592931
 
 
 
+
+
+
+summary for k=32.0, f=1.00636900045
+current_loss=0.624161334817, best=0.589509521784
+
+time: 436.517915964
+std=0.0366441872761
+
+
+
+
+
+
+summary for k=22.0, f=0.886101504926
+current_loss=0.636362716791, best=0.589509521784
+
+time: 476.908391953
+std=0.0253929597038
+
+
+
+
+
+
+summary for k=14.0, f=1.14120845354
+current_loss=0.888518971518, best=0.589509521784
+
+time: 482.053630114
+std=0.0144142606527
+
+
+
+
+
+
+summary for k=50.0, f=0.968287945231
+current_loss=0.594309978238, best=0.589509521784
+
+time: 457.133496046
+std=0.00753309735941
+
+
+
+
+
+
+summary for k=27.0, f=2.10406749623
+current_loss=0.794514181157, best=0.589509521784
+
+time: 459.668550968
+std=0.0222887407854
+
+
+
+Traceback (most recent call last):
+  File "/home/ubik/PycharmProjects/kaggle/src/bldng_id_categor_preprocessing_and_hyperopt.py", line 207, in <module>
+  File "/home/ubik/PycharmProjects/kaggle/src/bldng_id_categor_preprocessing_and_hyperopt.py", line 198, in do_test
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 307, in fmin
+    return_argmin=return_argmin,
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/base.py", line 635, in fmin
+    return_argmin=return_argmin)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 320, in fmin
+    rval.exhaust()
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 199, in exhaust
+    self.run(self.max_evals - n_done, block_until_done=self.async)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 173, in run
+    self.serial_evaluate()
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 92, in serial_evaluate
+    result = self.domain.evaluate(spec, ctrl)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/base.py", line 840, in evaluate
+    rval = self.fn(pyll_rval)
+  File "/home/ubik/PycharmProjects/kaggle/src/bldng_id_categor_preprocessing_and_hyperopt.py", line 198, in <lambda>
+  File "/home/ubik/PycharmProjects/kaggle/src/bldng_id_categor_preprocessing_and_hyperopt.py", line 162, in loss_for_batch
+  File "/home/ubik/PycharmProjects/kaggle/src/bldng_id_categor_preprocessing_and_hyperopt.py", line 136, in with_lambda_loss
+  File "/usr/local/lib/python2.7/dist-packages/xgboost/sklearn.py", line 445, in fit
+    verbose_eval=verbose)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost/training.py", line 205, in train
+    xgb_model=xgb_model, callbacks=callbacks)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost/training.py", line 76, in _train_internal
+    bst.update(dtrain, i, obj)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost/core.py", line 806, in update
+    _check_call(_LIB.XGBoosterUpdateOneIter(self.handle, iteration, dtrain.handle))
+KeyboardInterrupt
+
+Process finished with exit code 1
