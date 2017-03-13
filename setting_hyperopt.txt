@@ -1,0 +1,18 @@
+python -u mngr_id_categor_preprocessing_and_hyperopt_distributed.py
+hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/Desktop/hyperopt_trash
+
+
+mkdir kg
+cd kg
+git clone https://github.com/ubbikk/kaggle
+cd kaggle
+
+scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
+scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
+
+wget https://bootstrap.pypa.io/get-pip.py
+sudo python get-pip.py
+sudo pip install scipy
+sudo pip install xgboost
+sudo pip install pandas
+sudo pip install hyperopt

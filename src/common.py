@@ -19,11 +19,11 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
+# src_folder = '/home/ubik/PycharmProjects/kaggle/src'
+# os.chdir(src_folder)
+# import sys
+#
+# sys.path.append(src_folder)
 
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 

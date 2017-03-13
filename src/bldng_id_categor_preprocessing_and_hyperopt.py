@@ -25,11 +25,11 @@ from scipy.spatial import KDTree
 from hyperopt import hp, pyll, fmin
 from math import log
 
-src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
+# src_folder = '/home/ubik/PycharmProjects/kaggle/src'
+# os.chdir(src_folder)
+# import sys
+#
+# sys.path.append(src_folder)
 
 from categorical_utils import process_with_lambda, cols, get_exp_lambda, visualize_exp_lambda
 from v2w import avg_vector_df, load_model, avg_vector_df_and_pca

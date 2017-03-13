@@ -1,0 +1,839 @@
+/usr/bin/python2.7 /home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py
+/usr/local/lib/python2.7/dist-packages/sklearn/cross_validation.py:44: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.
+  "This module will be removed in 0.20.", DeprecationWarning)
+/usr/local/lib/python2.7/dist-packages/gensim/utils.py:1015: UserWarning: Pattern library is not installed, lemmatization won't be available.
+  warnings.warn("Pattern library is not installed, lemmatization won't be available.")
+/home/dpetrovskyi/PycharmProjects/kaggle/src/categorical_utils.py:19: SettingWithCopyWarning:
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  train_df[temp_target]= train_df[target_col]
+
+
+
+summary for k=24.0, f=0.456690500633
+current_loss=0.609944926971, best=None
+
+time: 796.508313179
+std=0.0297012954532
+
+
+
+
+
+
+summary for k=17.0, f=2.15843217567
+current_loss=0.613614317594, best=0.609944926971
+
+time: 809.229660034
+std=0.00853068564365
+
+
+
+
+
+
+summary for k=25.0, f=1.3399264325
+current_loss=0.631658811167, best=0.609944926971
+
+time: 792.195883989
+std=0.0165598162273
+
+
+
+
+
+
+summary for k=15.0, f=0.14119444578
+current_loss=0.593240291824, best=0.609944926971
+
+time: 791.576647043
+std=0.00563642106259
+
+
+
+
+
+
+summary for k=30.0, f=1.47510608382
+current_loss=0.630497346792, best=0.593240291824
+
+time: 782.089820862
+std=0.0232376504259
+
+
+
+
+
+
+summary for k=22.0, f=0.886324800392
+current_loss=0.62109145577, best=0.593240291824
+
+time: 793.286622047
+std=0.0247382925854
+
+
+
+
+
+
+summary for k=7.0, f=0.246998683435
+current_loss=0.619294853849, best=0.593240291824
+
+time: 798.602604151
+std=0.00829582279414
+
+
+
+
+
+
+summary for k=24.0, f=0.648025286369
+current_loss=0.61231026436, best=0.593240291824
+
+time: 792.985522985
+std=0.0240915386743
+
+
+
+
+
+
+summary for k=32.0, f=2.05160988772
+current_loss=0.61009185184, best=0.593240291824
+
+time: 762.000976086
+std=0.00755963302532
+
+
+
+
+
+
+summary for k=31.0, f=0.133348161014
+current_loss=0.594608934531, best=0.593240291824
+
+time: 721.184252977
+std=0.00484658915739
+
+
+
+
+
+
+summary for k=30.0, f=0.199744681123
+current_loss=0.595119261558, best=0.593240291824
+
+time: 729.995141029
+std=0.0103726743792
+
+
+
+
+
+
+summary for k=26.0, f=0.331184999037
+current_loss=0.600334113039, best=0.593240291824
+
+time: 728.282225132
+std=0.0200772515509
+
+
+
+
+
+
+summary for k=42.0, f=3.06975288929
+current_loss=0.605869206098, best=0.593240291824
+
+time: 726.995192051
+std=0.00554717746487
+
+
+
+
+
+
+summary for k=30.0, f=1.58109347285
+current_loss=0.637558391662, best=0.593240291824
+
+time: 716.619370222
+std=0.0219404717482
+
+
+
+
+
+
+summary for k=14.0, f=0.328823006763
+current_loss=0.601282741699, best=0.593240291824
+
+time: 724.014209032
+std=0.0133859585969
+
+
+
+
+
+
+summary for k=34.0, f=2.99951287946
+current_loss=0.6075593023, best=0.593240291824
+
+time: 728.111851931
+std=0.00556564373624
+
+
+
+
+
+
+summary for k=14.0, f=1.51155551419
+current_loss=0.617390164219, best=0.593240291824
+
+time: 732.935878992
+std=0.00789563300246
+
+
+
+
+
+
+summary for k=27.0, f=0.344154127932
+current_loss=0.598597792653, best=0.593240291824
+
+time: 722.37343812
+std=0.0207906580478
+
+
+
+
+
+
+summary for k=38.0, f=0.105775650709
+current_loss=0.59493338255, best=0.593240291824
+
+time: 719.598877192
+std=0.00429928409692
+
+
+
+
+
+
+summary for k=20.0, f=0.110771079106
+current_loss=0.597296165862, best=0.593240291824
+
+time: 728.369879961
+std=0.0135636241824
+
+
+
+
+
+
+summary for k=36.0, f=0.162273003467
+current_loss=0.598701610015, best=0.593240291824
+
+time: 727.205332994
+std=0.0150985803657
+
+
+
+
+
+
+summary for k=8.0, f=0.151950548302
+current_loss=0.605213049665, best=0.593240291824
+
+time: 730.056417942
+std=0.00795824346142
+
+
+
+
+
+
+summary for k=55.0, f=0.105636947391
+current_loss=0.602756044957, best=0.593240291824
+
+time: 722.944949865
+std=0.0144844310086
+
+
+
+
+
+
+summary for k=42.0, f=0.14815773325
+current_loss=0.598279528335, best=0.593240291824
+
+time: 725.327078104
+std=0.00574745595733
+
+
+
+
+
+
+summary for k=9.0, f=4.79118806803
+current_loss=0.604063337365, best=0.593240291824
+
+time: 735.464978218
+std=0.00625378492864
+
+
+
+
+
+
+summary for k=28.0, f=0.561794461036
+current_loss=0.609964535381, best=0.593240291824
+
+time: 726.468930006
+std=0.0330851601294
+
+
+
+
+
+
+summary for k=21.0, f=0.236671883661
+current_loss=0.605430103642, best=0.593240291824
+
+time: 722.963237047
+std=0.0230729395448
+
+
+
+
+
+
+summary for k=18.0, f=0.443214210897
+current_loss=0.602690827922, best=0.593240291824
+
+time: 718.311307192
+std=0.0167875165083
+
+
+
+
+
+
+summary for k=13.0, f=0.948337853159
+current_loss=0.628015376783, best=0.593240291824
+
+time: 730.247756004
+std=0.00893271887273
+
+
+
+
+
+
+summary for k=34.0, f=0.190612929016
+current_loss=0.594383997305, best=0.593240291824
+
+time: 723.624865055
+std=0.00507116159637
+
+
+
+
+
+
+summary for k=40.0, f=0.220982060967
+current_loss=0.59779420775, best=0.593240291824
+
+time: 726.443963051
+std=0.0137632082318
+
+
+
+
+
+
+summary for k=17.0, f=0.452415473428
+current_loss=0.604616375166, best=0.593240291824
+
+time: 720.528157949
+std=0.0184527729623
+
+
+
+
+
+
+summary for k=48.0, f=0.170557634827
+current_loss=0.602208289205, best=0.593240291824
+
+time: 721.780697823
+std=0.0201399345279
+
+
+
+
+
+
+summary for k=11.0, f=0.891988222108
+current_loss=0.62858517418, best=0.593240291824
+
+time: 725.8880229
+std=0.00999938894299
+
+
+
+
+
+
+summary for k=5.0, f=0.290647061366
+current_loss=0.651866674285, best=0.593240291824
+
+time: 721.671633005
+std=0.00729488340527
+
+
+
+
+
+
+summary for k=23.0, f=0.599648044049
+current_loss=0.611648111439, best=0.593240291824
+
+time: 715.369894028
+std=0.0320138107579
+
+
+
+
+
+
+summary for k=34.0, f=1.17839234446
+current_loss=0.625023736547, best=0.593240291824
+
+time: 722.278834105
+std=0.0293907561797
+
+
+
+
+
+
+summary for k=29.0, f=0.270720750087
+current_loss=0.601796539631, best=0.593240291824
+
+time: 724.226160049
+std=0.0177853364963
+
+
+
+
+
+
+summary for k=19.0, f=0.197468244166
+current_loss=0.59239640556, best=0.593240291824
+
+time: 727.348273993
+std=0.00589905414849
+
+
+
+
+
+
+summary for k=16.0, f=0.736243436152
+current_loss=0.622306592075, best=0.59239640556
+
+time: 732.421355963
+std=0.0190878528255
+
+
+
+
+
+
+summary for k=19.0, f=0.405545027998
+current_loss=0.605968387511, best=0.59239640556
+
+time: 757.006568909
+std=0.0232044908884
+
+
+
+
+
+
+summary for k=16.0, f=0.123999405045
+current_loss=0.600071801357, best=0.59239640556
+
+time: 726.501262903
+std=0.0135367500676
+
+
+
+
+
+
+summary for k=12.0, f=0.532182184905
+current_loss=0.622176287697, best=0.59239640556
+
+time: 719.823879957
+std=0.0175670024704
+
+
+
+
+
+
+summary for k=15.0, f=0.180386718777
+current_loss=0.601738014563, best=0.59239640556
+
+time: 714.919457912
+std=0.0159265554765
+
+
+
+
+
+
+summary for k=24.0, f=0.211752199054
+current_loss=0.595762893716, best=0.59239640556
+
+time: 720.306372881
+std=0.00622331023754
+
+
+
+
+
+
+summary for k=25.0, f=0.395210372191
+current_loss=0.605054047547, best=0.59239640556
+
+time: 721.562189102
+std=0.026444949714
+
+
+
+
+
+
+summary for k=22.0, f=0.701908336818
+current_loss=0.611654127962, best=0.59239640556
+
+time: 718.189494848
+std=0.0221161856282
+
+
+
+
+
+
+summary for k=19.0, f=1.90298748093
+current_loss=0.611675399932, best=0.59239640556
+
+time: 732.734431028
+std=0.00778920471657
+
+
+
+
+
+
+summary for k=10.0, f=0.285298336814
+current_loss=0.613790631445, best=0.59239640556
+
+time: 720.19210887
+std=0.0150656457689
+
+
+
+
+
+
+summary for k=14.0, f=0.136122473479
+current_loss=0.59461039266, best=0.59239640556
+
+time: 725.875045061
+std=0.00777707864787
+
+
+
+
+
+
+summary for k=17.0, f=4.80944274179
+current_loss=0.600162240159, best=0.59239640556
+
+time: 730.073520184
+std=0.0045885379309
+
+
+
+
+
+
+summary for k=15.0, f=1.23958737323
+current_loss=0.621710580303, best=0.59239640556
+
+time: 728.822692871
+std=0.00813599396592
+
+
+
+
+
+
+summary for k=20.0, f=0.367999136534
+current_loss=0.601736750566, best=0.59239640556
+
+time: 718.254944801
+std=0.020941251173
+
+
+
+
+
+
+summary for k=13.0, f=2.60442862559
+current_loss=0.605941355591, best=0.59239640556
+
+time: 726.454632044
+std=0.00732724363815
+
+
+
+
+
+
+summary for k=16.0, f=0.104180020175
+current_loss=0.59912457972, best=0.59239640556
+
+time: 725.533203125
+std=0.0133594027029
+
+
+
+
+
+
+summary for k=18.0, f=3.69705699209
+current_loss=0.601539658648, best=0.59239640556
+
+time: 725.62907505
+std=0.00709888803104
+
+
+
+
+
+
+summary for k=26.0, f=0.508083808064
+current_loss=0.60546759424, best=0.59239640556
+
+time: 723.211601973
+std=0.025732694674
+
+
+
+
+
+
+summary for k=21.0, f=0.147718211171
+current_loss=0.59538724269, best=0.59239640556
+
+time: 724.525789022
+std=0.00460703930238
+
+
+
+
+
+
+summary for k=12.0, f=0.115853274098
+current_loss=0.602039955728, best=0.59239640556
+
+time: 725.231060028
+std=0.0136214801354
+
+
+
+
+
+
+summary for k=32.0, f=0.256206446874
+current_loss=0.593269210568, best=0.59239640556
+
+time: 727.519623995
+std=0.00664807357751
+
+
+
+
+
+
+summary for k=18.0, f=1.03985158538
+current_loss=0.621580923815, best=0.59239640556
+
+time: 718.077556133
+std=0.00865378282751
+
+
+
+
+
+
+summary for k=15.0, f=0.193372899951
+current_loss=0.594425808582, best=0.59239640556
+
+time: 748.699337006
+std=0.00825830340853
+
+
+
+
+
+
+summary for k=33.0, f=0.24639354437
+current_loss=0.597758503978, best=0.59239640556
+
+time: 1007.15281892
+std=0.0119610089478
+
+
+
+
+
+
+summary for k=37.0, f=0.315191199142
+current_loss=0.601747737691, best=0.59239640556
+
+time: 1017.15306807
+std=0.0141674592507
+
+
+
+
+
+
+summary for k=31.0, f=0.160586005916
+current_loss=0.59422340678, best=0.59239640556
+
+time: 929.926702976
+std=0.00607692624709
+
+
+
+
+
+
+summary for k=28.0, f=0.238442440441
+current_loss=0.595958494916, best=0.59239640556
+
+time: 880.970979929
+std=0.0118423221819
+
+
+
+
+
+
+summary for k=36.0, f=0.137052978175
+current_loss=0.596706892715, best=0.59239640556
+
+time: 888.651965141
+std=0.00532549752368
+
+
+
+
+
+
+summary for k=44.0, f=0.268546653353
+current_loss=0.598294682078, best=0.59239640556
+
+time: 846.707177162
+std=0.0114055646401
+
+
+
+
+
+
+summary for k=31.0, f=0.213964205685
+current_loss=0.593736435442, best=0.59239640556
+
+time: 892.85977006
+std=0.00530756126132
+
+
+
+
+
+
+summary for k=26.0, f=0.173356531492
+current_loss=0.59369840465, best=0.59239640556
+
+time: 1047.57111096
+std=0.00434337307224
+
+
+
+
+
+
+summary for k=23.0, f=0.771622892019
+current_loss=0.609479506952, best=0.59239640556
+
+time: 827.928699017
+std=0.0182014439831
+
+
+
+
+
+
+summary for k=6.0, f=0.102200422357
+current_loss=0.619333038913, best=0.59239640556
+
+time: 805.8550179
+std=0.00716828843885
+
+
+
+Traceback (most recent call last):
+  File "/home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py", line 207, in <module>
+    do_test(25, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/mngr_exp_family_hyperopt_25')
+  File "/home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py", line 198, in do_test
+    best = fmin(lambda s: loss_for_batch(df,s,trials, runs,fldr), space=space, algo=tpe.suggest, trials=trials, max_evals=10000)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 307, in fmin
+    return_argmin=return_argmin,
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/base.py", line 635, in fmin
+    return_argmin=return_argmin)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 320, in fmin
+    rval.exhaust()
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 199, in exhaust
+    self.run(self.max_evals - n_done, block_until_done=self.async)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 173, in run
+    self.serial_evaluate()
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/fmin.py", line 92, in serial_evaluate
+    result = self.domain.evaluate(spec, ctrl)
+  File "/usr/local/lib/python2.7/dist-packages/hyperopt/base.py", line 840, in evaluate
+    rval = self.fn(pyll_rval)
+  File "/home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py", line 198, in <lambda>
+    best = fmin(lambda s: loss_for_batch(df,s,trials, runs,fldr), space=space, algo=tpe.suggest, trials=trials, max_evals=10000)
+  File "/home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py", line 162, in loss_for_batch
+    loss = with_lambda_loss(df.copy(), k, f)
+  File "/home/dpetrovskyi/PycharmProjects/kaggle/src/mngr_id_categor_preprocessing_and_hyperopt.py", line 136, in with_lambda_loss
+    estimator.fit(train_arr, train_target)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost-0.6-py2.7.egg/xgboost/sklearn.py", line 464, in fit
+    verbose_eval=verbose)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost-0.6-py2.7.egg/xgboost/training.py", line 204, in train
+    xgb_model=xgb_model, callbacks=callbacks)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost-0.6-py2.7.egg/xgboost/training.py", line 74, in _train_internal
+    bst.update(dtrain, i, obj)
+  File "/usr/local/lib/python2.7/dist-packages/xgboost-0.6-py2.7.egg/xgboost/core.py", line 819, in update
+    _check_call(_LIB.XGBoosterUpdateOneIter(self.handle, iteration, dtrain.handle))
+KeyboardInterrupt
+
+Process finished with exit code 1
