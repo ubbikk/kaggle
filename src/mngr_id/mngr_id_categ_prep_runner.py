@@ -1,25 +1,16 @@
-import json
 import os
-from collections import OrderedDict
+import sys
+from functools import partial
 from math import log
-from time import time
 
 import numpy as np
 import pandas as pd
-import xgboost as xgb
-from hyperopt import STATUS_FAIL
-from hyperopt import STATUS_OK
-from hyperopt import Trials
 from hyperopt import hp, fmin
 from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
 from scipy.stats import boxcox
-from sklearn.metrics import log_loss
-from functools import partial
-import math
-import mngr_id_categorical_optimizer
-import sys
 
+import mngr_id_categorical_optimizer
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -46,8 +37,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 
 def split_df(df, c):
