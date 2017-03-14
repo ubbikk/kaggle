@@ -118,6 +118,7 @@ def dummy_col(col_name, val):
 
 
 def perform():
+    np.random.seed(1001)
     train_df, test_df = load_train(), load_test()
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -148,7 +149,6 @@ def perform():
 
     proba = estimator.predict_proba(test_arr)
     classes = [x for x in estimator.classes_]
-    print classes
     for cl in classes:
         test_df[cl] = proba[:, classes.index(cl)]
 
