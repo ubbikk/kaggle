@@ -10,7 +10,7 @@ from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
 from scipy.stats import boxcox
 
-from tuning_xgboost_params_mngr_and_bid import tuning_xgboost_params_mngr_and_bid_optimizer
+import tuning_xgboost_params_mngr_and_bid_optimizer
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
