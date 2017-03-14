@@ -20,14 +20,6 @@ from scipy.stats import boxcox
 from scipy.spatial import KDTree
 import math
 
-src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
-#
-from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
-
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
@@ -55,8 +47,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 
 def split_df(df, c):
@@ -198,7 +190,6 @@ def simple_loss(df):
     return best_iteration, best_test_loss, current_loss, test_loss_on_1000
 
 def test(num):
-    fp='/home/dpetrovskyi/PycharmProjects/kaggle/src/bid_mngr_and_earlystopping/statistics.json'
     df =load_train()
     results=[]
     for i in range(num):
@@ -223,7 +214,7 @@ def test(num):
         print 'test_loss_on_1000    {}'.format(test_loss_on_1000)
         print 'time                 {}'.format(time()-t)
 
-        with open(fp, 'w+') as f:
+        with open('statistics', 'w+') as f:
             json.dump(results, f)
 
     print '\ndone'
