@@ -44,4 +44,4 @@ sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr
 
 ///vim kaggle/src/mngr_id_categor_preprocessing_and_hyperopt_distributed.py  и меняем пути к логам
 
-hyperopt-mongo-worker --mongo=10.20.0.144:27017/redhop_mngr_id_exp_family --poll-interval=0.1 --workdir=/home/dpetrovskyi/kg/trash
+hyperopt-mongo-worker --mongo=10.20.0.144:27017/xgboost_tuning_bid_mngr --poll-interval=0.1 --workdir=/home/dpetrovskyi/kg/trash

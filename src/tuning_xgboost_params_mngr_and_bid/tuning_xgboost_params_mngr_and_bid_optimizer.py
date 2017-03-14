@@ -174,6 +174,33 @@ def get_exp_lambda(k,f):
 
 
 def loss_for_batch(s, df=None, runs=None):
+    import json
+    import os
+    from collections import OrderedDict
+    from math import log
+    from time import time
+
+    import numpy as np
+    import pandas as pd
+    import xgboost as xgb
+    from hyperopt import STATUS_FAIL
+    from hyperopt import STATUS_OK
+    from hyperopt import Trials
+    from hyperopt import hp, fmin
+    from hyperopt import tpe
+    from hyperopt.mongoexp import MongoTrials
+    from scipy.stats import boxcox
+    from sklearn.metrics import log_loss
+    from functools import partial
+    import math
+
+    try:
+        import dill as pickle
+        print('Went with dill')
+    except ImportError:
+        import pickle
+
+
     t = time()
 
     learning_rate=s['learning_rate']
