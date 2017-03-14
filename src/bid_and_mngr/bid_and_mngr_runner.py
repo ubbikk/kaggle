@@ -60,4 +60,4 @@ def write_losses_test(num, fp):
         print 'time = {}'.format(time()-t)
 
 
-write_losses_test(500, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/bid_and_mngr/bid_and_mngr.json')
+write_losses_test(500, '../../trash/bid_and_mngr/bid_and_mngr.json')
