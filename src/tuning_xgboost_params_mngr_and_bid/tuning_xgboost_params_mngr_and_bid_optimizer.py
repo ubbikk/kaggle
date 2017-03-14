@@ -204,13 +204,9 @@ def loss_for_batch(s, df=None, runs=None):
     t = time()
 
     learning_rate=s['learning_rate']
-    print learning_rate
     max_depth=int(s['max_depth'])
-    print max_depth
-    colsample_bytree=['colsample_bytree']
-    print colsample_bytree
+    colsample_bytree=s['colsample_bytree']
     subsample=s['subsample']
-    print subsample
 
     if learning_rate>1 or learning_rate<=0.0001:
         return {'loss': 1000, 'status': STATUS_FAIL}
