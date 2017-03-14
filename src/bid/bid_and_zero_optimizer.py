@@ -167,8 +167,7 @@ def get_exp_lambda(k,f):
 
 def loss_for_batch(s, df=None, runs=None, flder=None, log_file=None):
     def log(ss):
-        with open(log_file, 'a') as f:
-            f.write('\n'.join(ss))
+        print ss
 
 
     t = time()
