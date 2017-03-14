@@ -10,7 +10,7 @@ from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
 from scipy.stats import boxcox
 
-from bid import bid_and_zero_optimizer
+import bid_and_zero_optimizer
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']

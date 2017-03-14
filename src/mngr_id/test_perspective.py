@@ -61,8 +61,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 
 def split_df(df, c):
@@ -176,4 +176,4 @@ def do_test(runs, fldr, params):
 
 
 params = [(19.0, 0.197468244166), (15.0, 0.14119444578), (32.0, 0.256206446874), (26.0, 0.173356531492)]
-do_test(200, '/home/ubik/PycharmProjects/kaggle/trash/test_perspective_mngr', params)
+do_test(200, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/test_perspective_mngr', params)
