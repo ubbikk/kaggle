@@ -188,7 +188,7 @@ def with_lambda_loss(df, k, f):
     col = DISPLAY_ADDRESS_NORMALIZED
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day", BID_ZERO] + \
+                "created_year", "created_month", "created_day"] + \
                cols(col, TARGET, TARGET_VALUES)
 
     train_df, test_df = split_df(df, 0.7)
