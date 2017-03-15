@@ -173,7 +173,7 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df[features].values, test_df[features].values
 
-    estimator = xgb.XGBClassifier(n_estimators=100, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
