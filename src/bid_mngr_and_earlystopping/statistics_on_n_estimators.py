@@ -173,27 +173,31 @@ def simple_loss(df):
 
     train_arr, test_arr = train_df[features].values, test_df[features].values
 
-    estimator = xgb.XGBClassifier(n_estimators=5000, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=100, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
     # best_iteration = estimator.best_iteration
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
     # best_test_loss = results_on_test[best_iteration]
 
 
     proba = estimator.predict_proba(test_arr)
     current_loss = log_loss(test_target, proba)
-    return results_on_test
+    return results_on_train, results_on_test
 
 def test(num):
     df =load_train()
     results=[]
     for i in range(num):
         t=time()
-        results_on_test = simple_loss(df)
-        results.append(results_on_test)
+        results_on_train, results_on_test = simple_loss(df)
+        results.append({
+            'train':results_on_train,
+            'test':results_on_test
+        })
 
         print '\n\n'
         print '#{}'.format(i)
