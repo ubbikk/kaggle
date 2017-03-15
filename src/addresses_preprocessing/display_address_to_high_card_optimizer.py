@@ -180,8 +180,9 @@ def with_lambda_loss(df, k, f):
 
     try:
         import dill as pickle
-        print('Went with dill')
+        # print('Went with dill')
     except ImportError:
+        print 'Picckle blja'
         import pickle
 
     col = DISPLAY_ADDRESS_NORMALIZED
@@ -217,7 +218,7 @@ def get_exp_lambda(k,f):
     return res
 
 
-def loss_for_batch(s, df=None, runs=None, flder=None):
+def loss_for_batch(s, df=None, runs=None):
     def log(ss):
         print ss
 
@@ -231,13 +232,10 @@ def loss_for_batch(s, df=None, runs=None, flder=None):
 
     # print 'Running for k={}, f={}'.format(k,f)
     l = []
-    fp = os.path.join(flder, 'k={}_f={}.json'.format(k, f))
     for x in range(runs):
         loss = with_lambda_loss(df.copy(), k, f)
         print loss
         l.append(loss)
-        # with open(fp, 'w+') as fl:
-        #     json.dump(l, fl)
 
     t = time() - t
 

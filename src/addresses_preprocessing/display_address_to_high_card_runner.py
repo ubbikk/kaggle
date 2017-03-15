@@ -94,7 +94,7 @@ def get_the_best_loss(trials):
         return None
 
 
-def do_test(runs, flder):
+def do_test(runs):
     df = load_train()
     space = {
         'k': hp.qnormal('k', 25, 10, 1),
@@ -102,7 +102,7 @@ def do_test(runs, flder):
     }
     trials = MongoTrials('mongo://10.20.0.144:27017/display_address_to_high_card/jobs', exp_key='exp1')
 
-    objective = partial(display_address_to_high_card_optimizer.loss_for_batch, df=df, runs=runs, flder=flder)
+    objective = partial(display_address_to_high_card_optimizer.loss_for_batch, df=df, runs=runs)
     best = fmin(objective, space=space, algo=tpe.suggest, trials=trials,
                 max_evals=10000)
 
@@ -111,4 +111,4 @@ def do_test(runs, flder):
     print 'best={}'.format(get_the_best_loss(trials))
 
 
-do_test(25, sys.argv[1])
+do_test(25)
