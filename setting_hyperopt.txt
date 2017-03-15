@@ -4,8 +4,10 @@
 
 mkdir kg
 cd kg
-sudo apt-get install git
-git clone https://github.com/ubbikk/kaggle
+sudo apt-get -y install git
+sudo apt-get -y install gcc
+sudo apt-get -y install make
+sudo apt-get -y install g++
 
 wget https://bootstrap.pypa.io/get-pip.py
 sudo python get-pip.py
@@ -15,33 +17,35 @@ sudo pip install -U scikit-learn
 sudo pip install hyperopt
 sudo pip install dill
 
-sudo apt-get install gcc
-sudo apt-get install make
-sudo apt-get install g++
+
 git clone http://github.com/dmlc/xgboost
 cd xgboost
 git submodule update --init
 ./build.sh
 cd python-package
 sudo python setup.py install
-cd ../kaggle
+
+cd ../..
+git clone https://github.com/ubbikk/kaggle
+cd kaggle
 
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
 
-cd src
-python -u mngr_id_categor_preprocessing_and_hyperopt_distributed.py /home/dpetrovskyi/kg/trash
 
 
 
-new tab
 
-cd kg
+cd ../
 mkdir trash
 
 sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr/bin/
 sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr/local/bin/
 
-///vim kaggle/src/mngr_id_categor_preprocessing_and_hyperopt_distributed.py  и меняем пути к логам
-
 hyperopt-mongo-worker --mongo=10.20.0.144:27017/xgboost_tuning_bid_mngr --poll-interval=0.1 --workdir=/home/dpetrovskyi/kg/trash
+
+
+home(new tab)
+
+cd src
+python -u runner.py /home/dpetrovskyi/kg/trash
