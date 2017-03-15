@@ -7,5 +7,5 @@ def get_trials(key):
 def get_best_loss(trials):
     return trials.best_trial['result']['loss']
 
-def get_vals(trials):
-    return trials.best_trial['misc']['vals']
+def get_vals(t):
+    return t['misc']['vals']
