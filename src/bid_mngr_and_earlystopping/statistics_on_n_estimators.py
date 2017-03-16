@@ -188,6 +188,14 @@ def simple_loss(df):
     current_loss = log_loss(test_target, proba)
     return results_on_train, results_on_test
 
+def xgboost_per_tree_results(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
+    return {
+        'train':results_on_train,
+        'test':results_on_test
+    }
+
 def test(num):
     df =load_train()
     results=[]

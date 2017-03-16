@@ -41,6 +41,7 @@ DISPLAY_ADDRESS = 'display_address'
 STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
+F_COL=u'features'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -147,6 +148,46 @@ def simple_loss(df):
     proba = estimator.predict_proba(test_arr)
     return log_loss(test_target, proba)
 
+def loss_with_per_tree_stats(df):
+    features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
+                'num_features', 'num_photos', 'word_num_in_descr',
+                "created_year", "created_month", "created_day"]
+
+    train_df, test_df = split_df(df, 0.7)
+
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    del train_df[TARGET]
+    del test_df[TARGET]
+
+    train_df = train_df[features]
+    test_df = test_df[features]
+
+    train_arr, test_arr = train_df.values, test_df.values
+
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
+    # estimator = RandomForestClassifier(n_estimators=1000)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
+
+    # plot feature importance
+    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+    # sns.plt.show()
+
+
+    # print estimator.feature_importances_
+    proba = estimator.predict_proba(test_arr)
+
+    return log_loss(test_target, proba), xgboost_per_tree_results(estimator)
+
+def xgboost_per_tree_results(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
+    return {
+        'train':results_on_train,
+        'test':results_on_test
+    }
+
 
 def do_test(num, fp):
     l = []
@@ -156,10 +197,27 @@ def do_test(num, fp):
         df=train_df.copy()
 
         loss = simple_loss(df)
+        t=time()-t
         l.append(loss)
 
         out(l, loss, x, t)
         write_results(l, fp)
+
+def do_test_with_xgboost_stats_per_tree(num, fp):
+    l = []
+    results =[]
+    train_df = load_train()
+    for x in range(num):
+        t=time()
+        df=train_df.copy()
+
+        loss, res = loss_with_per_tree_stats(df)
+        t=time()-t
+        l.append(loss)
+        results.append(res)
+
+        out(l, loss, x, t)
+        write_results(results, fp)
 
 
 train_df, test_df = load_train(), load_test()
