@@ -154,4 +154,4 @@ def explore_target():
 
 
 
-do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/baseline_logloss.json')
+do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/trash/baseline1_simple_feat_xgb_1000.json')
