@@ -3,6 +3,7 @@ from collections import OrderedDict
 import math
 import seaborn as sns
 import pandas as pd
+from ggplot import *
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -144,10 +145,23 @@ def get_top_N_vals_of_column(df, col, N):
     return bl.index[:N].values
 
 
-def visualize_condit_distrib_of_target_on_top_N_values_of_col(df, col, target_col, N):
+def visualize_condit_counts_of_target_on_top_N_values_of_col(df, col, target_col, N):
     top_N = get_top_N_vals_of_column(df, col, N)
     df = df[df[col].apply(lambda s: s in top_N)]
     sns.factorplot(target_col, col=col, data=df, kind='count', estimator='mean')
+
+def visualize_condit_distrib_of_target_on_top_N_values_of_col(df, col, target_col, N):
+    top_N = get_top_N_vals_of_column(df, col, N)
+    df = df[df[col].apply(lambda s: s in top_N)]
+    target_vals=df[target_col].values
+    df = pd.get_dummies(df, columns=[target_col])
+    df = df.groupby(col).mean()
+    for col_val in top_N:
+        yy = [df.loc[col_val, dummy_col(target_col, t)] for t in target_vals]
+        bl=pd.DataFrame({'x':target_vals, 'y': yy})
+        print 'plotting'
+        sns.barplot(x='x', y='y', data=bl)
+        sns.plt.show()
 
 
 def blja_test():
@@ -156,7 +170,7 @@ def blja_test():
     from common import TARGET
 
     train_df = load_train()
-    visualize_condit_distrib_of_target_on_top_N_values_of_col(train_df, MANAGER_ID, TARGET, 1)
+    visualize_condit_distrib_of_target_on_top_N_values_of_col(train_df, MANAGER_ID, TARGET, 3)
 
 # blja_test()
 
