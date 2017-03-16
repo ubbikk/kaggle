@@ -140,9 +140,10 @@ def basic_preprocess(df):
 
 # (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
 def simple_loss(df):
+    additional_features = [PRICE_PER_BATH, PRICE_PER_BED, PRICE_PER_ROOM]
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]+ADDITIONAL_BED_BATH_FEATURES
+                "created_year", "created_month", "created_day"]+additional_features
 
 
     train_df, test_df = split_df(df, 0.7)
@@ -186,4 +187,4 @@ def do_test(num, fp):
 # train_df, test_df = load_train(), load_test()
 # add_additional_bed_bathrooms_feature(train_df, test_df)
 
-do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/src/bath_bedrooms_features/results_1000.json')
+do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/src/bath_bedrooms_features/price_per_bath_bed_room.json')
