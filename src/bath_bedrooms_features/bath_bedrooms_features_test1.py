@@ -252,4 +252,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 # train_df, test_df = load_train(), load_test()
 # add_additional_bed_bathrooms_feature(train_df, test_df)
 
-do_test_with_xgboost_stats_per_tree(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/src/bath_bedrooms_features/results_1500.json.json')
+do_test_with_xgboost_stats_per_tree(1000, 'results_1500.json.json')
