@@ -2,6 +2,8 @@ import pandas as pd
 from collections import OrderedDict
 import math
 import seaborn as sns
+import pandas as pd
+
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
 
@@ -132,8 +134,35 @@ def explore_value_counts(df, col_name, cutoffs):
     sns.factorplot(x='count_label', data=tmp, kind='count', order=cutoffs_labels(cutoffs))
 
 
+def add_count_column(df, col):
+    """:type:pd.DataFrame"""
+    df['count_of_{}'.format(col)]=df.groupby(col)[col].transform('count')
 
-# def visualize_exp_lambda():
+
+def get_top_N_vals_of_column(df, col, N):
+    bl=df.groupby(col)[col].count().sort_values(ascending=False)
+    return bl.index[:N].values
+
+
+def visualize_condit_distrib_of_target_on_top_N_values_of_col(df, col, target_col, N):
+    top_N = get_top_N_vals_of_column(df, col, N)
+    df = df[df[col].apply(lambda s: s in top_N)]
+    sns.factorplot(target_col, col=col, data=df, kind='count', estimator='mean')
+
+
+def blja_test():
+    from common import load_train
+    from common import MANAGER_ID
+    from common import TARGET
+
+    train_df = load_train()
+    visualize_condit_distrib_of_target_on_top_N_values_of_col(train_df, MANAGER_ID, TARGET, 1)
+
+# blja_test()
+
+
+
+    # def visualize_exp_lambda():
 #     import matplotlib.pyplot as plt
 #
 #     fig, ax = plt.subplots()

@@ -57,6 +57,19 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../data/redhoop/train.json'
 test_file = '../data/redhoop/test.json'
 
+def out(l, loss, num, t):
+    print '\n\n'
+    print '#{}'.format(num)
+    print 'loss {}'.format(loss)
+    print
+    print 'avg_loss {}'.format(np.mean(l))
+    print 'std {}'.format(np.std(l))
+    print 'time {}'.format(t)
+
+def write_results(l, fp):
+    with open(fp, 'w+') as f:
+        json.dump(l, f)
+
 
 def split_df(df, c):
     msk = np.random.rand(len(df)) < c
@@ -136,20 +149,17 @@ def simple_loss(df):
 
 
 def do_test(num, fp):
-    neww = []
+    l = []
     train_df = load_train()
     for x in range(num):
         t=time()
         df=train_df.copy()
-        loss = simple_loss(df)
-        print loss
-        print 'time: {}'.format(time()-t)
-        print
-        neww.append(loss)
-        with open(fp, 'w+') as f:
-            json.dump(neww, f)
 
-    print '\n\n\n\n'
-    print 'avg = {}'.format(np.mean(neww))
+        loss = simple_loss(df)
+        l.append(loss)
+
+        out(l, loss, x, t)
+        write_results(l, fp)
+
 
 train_df, test_df = load_train(), load_test()
