@@ -187,4 +187,4 @@ def do_test(num, fp):
 # train_df, test_df = load_train(), load_test()
 # add_additional_bed_bathrooms_feature(train_df, test_df)
 
-do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/src/bath_bedrooms_features/price_per_bath_bed_room.json')
+do_test(1000, '/home/dpetrovskyi/PycharmProjects/kaggle/src/bath_bedrooms_features/.json')

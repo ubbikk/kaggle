@@ -17,6 +17,7 @@ from scipy.stats import boxcox
 from sklearn.metrics import log_loss
 from functools import partial
 import math
+import re
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -44,11 +45,28 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
 
 NORMALIZATION_MAP = {
     'street': ['St', 'St.', 'Street', 'St,'],
-    'avenue': ['Avenue', 'Ave', 'Ave.'],
+    'avenue': ['Avenue', 'Ave', 'Ave.', 'ave,', 'av'],
     'square': ['Square'],
     'east': ['e', 'east'],
-    'west': ['w', 'west']
+    'west': ['w', 'west'],
+    'place':['place', 'pl'],
+    'boulevard':['boulevard', 'blvd'],
+    'road':['road', 'rd', 'rd,'],
+    'parkway':['parkway', 'pkwy']
 }
+
+BAD_SYMBOLS_REGEX= re.compile('[\.*-+&\\/\$#-,]')
+
+
+#TODO
+#strange cases not_empty DISPLAY_ADDRESS ==> empty DISPLAY_ADDRESS_NORMALIZED, id = 102318, 99461 (one token case?!!)
+# remove trash symbols like &* etc for example many cases start with &  - '& lexington avenue' or '& madison avenue', '+ park avenue, - 310 east 44 street
+# remove all special symbols??
+
+# remove 'strange inserts' eg '*** Low Fee **' etc
+
+# 27 1/2 Morton Street ==> 1 morton street
+# replace 'at'\'and' ==>  at east 19,  and 9 avenue
 
 
 def reverse_norm_map(m):
@@ -113,7 +131,12 @@ def cols(col, target_col, target_vals):
 def dummy_col(col_name, val):
     return '{}_{}'.format(col_name, val)
 
+def normalize_raw_str(s):
+    return BAD_SYMBOLS_REGEX.sub('', s)
+
+
 def normalize_tokens(s):
+    s=normalize_raw_str(s)
     tokens = s.split()
     for i in range(len(tokens)):
         tokens[i] = if_starts_with_digit_return_digit_prefix(tokens[i])
@@ -143,6 +166,8 @@ def normalize(s):
     s=s.lower()
 
     tokens = s.split()
+    if len(tokens)==1:
+        return tokens[0]
     if len(tokens) == 2:
         return ' '.join(tokens)
     if tokens[0].replace('.', '').replace('-', '').isdigit():

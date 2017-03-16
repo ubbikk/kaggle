@@ -26,3 +26,20 @@ def get_best_loss(trials):
 
 def get_vals(t):
     return t['misc']['vals']
+
+def get_params(t):
+    vals= get_vals(t)
+    vals = dict(vals)
+    return {k:v[0] for k,v in vals.iteritems()}
+
+def get_loss(t):
+    if 'loss' in t['result']:
+        return t['result']['loss']
+    return None
+
+def get_best_params(trials, num):
+    trials = filter(lambda t: get_loss(t) is not None, trials)
+    s = [(get_loss(t), get_params(t)) for t in trials]
+    s.sort(key=lambda x:x[0])
+
+    return s[:num]
