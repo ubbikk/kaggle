@@ -152,16 +152,23 @@ def visualize_condit_counts_of_target_on_top_N_values_of_col(df, col, target_col
 
 def visualize_condit_distrib_of_target_on_top_N_values_of_col(df, col, target_col, N):
     top_N = get_top_N_vals_of_column(df, col, N)
-    df = df[df[col].apply(lambda s: s in top_N)]
-    target_vals=df[target_col].values
+    """:type: pd.DataFrame"""
+    df = df.copy()
+    df['target_copy'] = df[target_col]
     df = pd.get_dummies(df, columns=[target_col])
-    df = df.groupby(col).mean()
-    for col_val in top_N:
-        yy = [df.loc[col_val, dummy_col(target_col, t)] for t in target_vals]
-        bl=pd.DataFrame({'x':target_vals, 'y': yy})
-        print 'plotting'
-        sns.barplot(x='x', y='y', data=bl)
-        sns.plt.show()
+    df[target_col] = df['target_copy']
+    df = df[df[col].apply(lambda s: s in top_N)]
+    target_values =set(df[target_col].values)
+    for c in target_values:
+        dum = dummy_col(target_col, c)
+        df[dum]=df.groupby(col)[dum].transform('mean')
+
+    df['count_blja'] = df.apply(lambda s: s[dummy_col(target_col, s[target_col])], axis=1)
+    df=df[[target_col, col, 'count_blja']]
+
+    g = sns.FacetGrid(df, col=col)
+    g.map(sns.barplot, target_col, "count_blja")
+    g.add_legend()
 
 
 def blja_test():
