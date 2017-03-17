@@ -65,6 +65,9 @@ def processM(train_df, test_df, col, target_col, target_vals, m):
 def dummy_col(col_name, val):
     return '{}_{}'.format(col_name, val)
 
+def get_dummy_cols(col_name, col_values):
+    return ['{}_{}'.format(col_name, val) for val in col_values]
+
 
 def get_exp_lambda(k,f):
     def res(n):

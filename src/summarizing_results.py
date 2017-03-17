@@ -5,8 +5,15 @@ from scipy.stats import ttest_ind
 from collections import OrderedDict
 
 
-def explore_res(fp):
+def explore_res_fp(fp):
     res = json.load(open(fp))
+    return [
+        ('loss', np.mean(res)),
+        ('std', np.std(res)),
+        ('len', len(res))
+    ]
+
+def explore_res_arr(res):
     return [
         ('loss', np.mean(res)),
         ('std', np.std(res)),
