@@ -57,14 +57,15 @@ ny_data_file = 'ny.csv'
 rv_train_file = 'train_rv.json'
 rv_test_file = 'test_rv.json'
 
-
-def out(l, loss, loss1K, num, t):
+def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
     print '#{}'.format(num)
-    print 'loss {}'.format(loss)
     if loss1K is not None:
         print 'loss1K {}'.format(loss1K)
-    print
+        print 'avg_loss1K {}'.format(np.mean(l_1K))
+        print
+
+    print 'loss {}'.format(loss)
     print 'avg_loss {}'.format(np.mean(l))
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
@@ -248,19 +249,20 @@ def process_zip_codes(df):
 
 def do_test_with_xgboost_stats_per_tree(num, fp):
     l = []
-    results = []
+    results =[]
+    l_1K=[]
     train_df = load_train()
-    train_df, zip_columns = process_zip_codes(train_df)
     for x in range(num):
-        t = time()
-        df = train_df.copy()
+        t=time()
+        df=train_df.copy()
 
         loss, loss1K, res = loss_with_per_tree_stats(df)
-        t = time() - t
+        t=time()-t
         l.append(loss)
+        l_1K.append(loss1K)
         results.append(res)
 
-        out(l, loss, loss1K, x, t)
+        out(l, loss, l_1K, loss1K, x, t)
         write_results(results, fp)
 
 
