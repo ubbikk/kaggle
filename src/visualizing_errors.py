@@ -17,13 +17,6 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
-src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-os.chdir(src_folder)
-import sys
-
-sys.path.append(src_folder)
-#
-from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -45,8 +38,8 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
             u'price', u'street_address']
 
-# sns.set(color_codes=True)
-# sns.set(style="whitegrid", color_codes=True)
+sns.set(color_codes=True)
+sns.set(style="whitegrid", color_codes=True)
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
