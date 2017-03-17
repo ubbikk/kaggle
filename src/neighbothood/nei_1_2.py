@@ -90,10 +90,15 @@ def add_fields_from_nearest_neighbour(df, ny_data):
     res = tree.query(df[[LATITUDE, LONGITUDE]].values)
     df[DISTANCE_TO_NEAREST_NEIGBOUR] = res[0]
     df['neigh_index'] = res[1]
-    for col in ['borocode', 'st_name', 'zip_code', 'address_id', 'side_of_st']:
-        df[col] = df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
-    for col in [LATITUDE, LONGITUDE]:
-        df['{}_from_n'.format(col)]=df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
+    # for col in ['borocode', 'st_name', 'zip_code', 'address_id', 'side_of_st']:
+    #     df[col] = df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
+    # for col in [LATITUDE, LONGITUDE]:
+    #     df['{}_from_n'.format(col)]=df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
+
+    df['zip_code'] = df['neigh_index'].apply(lambda s: ny_data.loc[s, 'zip_code'])
+    df.loc[df['zip_code'].isnull(), 'zip_code']=-999
+    df['zip_code']=df['zip_code'].apply(int)
+    df['zip_code']=df['zip_code'].apply(str)
 
 
 def load_train():
@@ -237,12 +242,15 @@ def do_test(num, fp):
 def get_dummy_cols(col_name, col_values):
     return ['{}_{}'.format(col_name, val) for val in col_values]
 
-def process_zip_codes(df):
-    min_occurences = 20
-    df[ZIPCODE] = df[ZIPCODE].apply(lambda s: s if s>min_occurences else -999)
-    df[ZIPCODE] = df[ZIPCODE].apply(lambda s: str(int(s)))
-    vals = set(df[ZIPCODE])
-    return pd.get_dummies(df, columns=[ZIPCODE]), get_dummy_cols(ZIPCODE, vals)
+# def process_zip_codes(df):
+#     min_occurences = 20
+#     df[ZIPCODE] = df[ZIPCODE].apply(lambda s: s if s>min_occurences else -999)
+#     df[ZIPCODE] = df[ZIPCODE].apply(lambda s: str(int(s)))
+#     vals = set(df[ZIPCODE])
+#     return pd.get_dummies(df, columns=[ZIPCODE]), get_dummy_cols(ZIPCODE, vals)
+
+def process_boro_nei(df):
+
 
 
 
