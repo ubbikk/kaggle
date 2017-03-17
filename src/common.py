@@ -52,13 +52,15 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../data/redhoop/train.json'
 test_file = '../data/redhoop/test.json'
 
-def out(l, loss, loss1K, num, t):
+def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
     print '#{}'.format(num)
-    print 'loss {}'.format(loss)
     if loss1K is not None:
         print 'loss1K {}'.format(loss1K)
-    print
+        print 'avg_loss1K {}'.format(np.mean(l_1K))
+        print
+
+    print 'loss {}'.format(loss)
     print 'avg_loss {}'.format(np.mean(l))
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
@@ -202,12 +204,13 @@ def do_test(num, fp):
         t=time()-t
         l.append(loss)
 
-        out(l, loss,None, x, t)
+        out(l, loss,None,None, x, t)
         write_results(l, fp)
 
 def do_test_with_xgboost_stats_per_tree(num, fp):
     l = []
     results =[]
+    l_1K=[]
     train_df = load_train()
     for x in range(num):
         t=time()
@@ -216,9 +219,10 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         loss, loss1K, res = loss_with_per_tree_stats(df)
         t=time()-t
         l.append(loss)
+        l_1K.append(loss1K)
         results.append(res)
 
-        out(l, loss, loss1K, x, t)
+        out(l, loss, l_1K, loss1K, x, t)
         write_results(results, fp)
 
 
