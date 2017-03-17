@@ -175,10 +175,10 @@ def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
 
-def loss_with_per_tree_stats(df):
+def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_year", "created_month", "created_day"]+new_cols
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -231,7 +231,7 @@ def do_test(num, fp):
         t = time() - t
         l.append(loss)
 
-        out(l, loss, None, x, t)
+        out(l, loss, None,None, x, t)
         write_results(l, fp)
 
 def get_dummy_cols(col_name, col_values):
@@ -252,11 +252,12 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
     results =[]
     l_1K=[]
     train_df = load_train()
+    train_df, new_cols = process_zip_codes(train_df)
     for x in range(num):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res = loss_with_per_tree_stats(df)
+        loss, loss1K, res = loss_with_per_tree_stats(df, new_cols)
         t=time()-t
         l.append(loss)
         l_1K.append(loss1K)
@@ -266,7 +267,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'zipcodes.json')
+do_test_with_xgboost_stats_per_tree(1000, 'zipcodes1.json')
 
 
 # train_df, test_df = load_train(), load_test()

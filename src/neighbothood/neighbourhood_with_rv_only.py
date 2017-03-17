@@ -115,16 +115,14 @@ def load_test():
 #     with open(train_geo_file) as g1, open(test_geo_file) as g2:
 #         return json.load(g1), json.load(g2)
 
-def run_and_store(df,fp, num=None):
-    if num is None:
-        num = len(df)
-    df=df.iloc[:num,]
+def run_and_store(df,fp):
+    num=len(df)
     bl = df[[LATITUDE, LONGITUDE]].values
     tpls = [(bl[j,0], bl[j,1]) for j in range(num)]
     res = rg.search(tpls)
-    with open(fp, 'w+') as f:
-        json.dump(res, f)
-    # return res
+    for k in res[0].keys():
+        df[k] = [res[j][k] for j in range(num)]
+    df[['name', 'admin1', 'admin2']].to_json(fp)
 
 def process_outliers_lat_long(train_df, test_df):
     min_lat=40
