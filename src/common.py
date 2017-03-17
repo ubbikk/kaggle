@@ -52,10 +52,12 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../data/redhoop/train.json'
 test_file = '../data/redhoop/test.json'
 
-def out(l, loss, num, t):
+def out(l, loss, loss1K, num, t):
     print '\n\n'
     print '#{}'.format(num)
     print 'loss {}'.format(loss)
+    if loss1K is not None:
+        print 'loss1K {}'.format(loss1K)
     print
     print 'avg_loss {}'.format(np.mean(l))
     print 'std {}'.format(np.std(l))
@@ -142,6 +144,10 @@ def simple_loss(df):
     proba = estimator.predict_proba(test_arr)
     return log_loss(test_target, proba)
 
+def get_loss_at1K(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    return results_on_test[1000]
+
 def loss_with_per_tree_stats(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -158,7 +164,7 @@ def loss_with_per_tree_stats(df):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
@@ -172,7 +178,9 @@ def loss_with_per_tree_stats(df):
     # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
 
-    return log_loss(test_target, proba), xgboost_per_tree_results(estimator)
+    loss = log_loss(test_target, proba)
+    loss1K = get_loss_at1K(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator)
 
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
@@ -194,7 +202,7 @@ def do_test(num, fp):
         t=time()-t
         l.append(loss)
 
-        out(l, loss, x, t)
+        out(l, loss,None, x, t)
         write_results(l, fp)
 
 def do_test_with_xgboost_stats_per_tree(num, fp):
@@ -205,12 +213,12 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         t=time()
         df=train_df.copy()
 
-        loss, res = loss_with_per_tree_stats(df)
+        loss, loss1K, res = loss_with_per_tree_stats(df)
         t=time()-t
         l.append(loss)
         results.append(res)
 
-        out(l, loss, x, t)
+        out(l, loss, loss1K, x, t)
         write_results(results, fp)
 
 
