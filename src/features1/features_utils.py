@@ -1,12 +1,15 @@
 import pandas as pd
 from nltk.tokenize import TweetTokenizer
+from nltk.corpus import stopwords
+
+STOP_WORDS = set(stopwords.words('english'))
 
 F_COL=u'features'
 
 def lower_df(df):
     df[F_COL]=df[F_COL].apply(lambda l: [x.lower() for x in l])
 
-def get_c_map(s):
+def get_c_map_features(s):
     s=s.apply(lambda l: [x.lower() for x in l])
     c_map = {}
     for l in s:
@@ -18,21 +21,21 @@ def get_c_map(s):
 
     return c_map
 
-def get_c_map_ordered(s):
-    c_map = get_c_map(s)
+def get_c_map_ordered_features(s):
+    c_map = get_c_map_features(s)
     c_map=[(k,v) for k,v in c_map.iteritems()]
     c_map.sort(key=lambda s:s[1], reverse=True)
 
     return c_map
 
-def get_top_N_counts(s,N=None):
-    c_map_ordered = get_c_map_ordered(s)
+def get_top_N_counts_features(s, N=None):
+    c_map_ordered = get_c_map_ordered_features(s)
     if N is None:
         N = len(c_map_ordered)
     return c_map_ordered[:N]
 
 def get_top_N_features(s,N):
-    return [x[0] for x in get_top_N_counts(s, N)]
+    return [x[0] for x in get_top_N_counts_features(s, N)]
 
 
 def add_top_N_features_df(df, N):
