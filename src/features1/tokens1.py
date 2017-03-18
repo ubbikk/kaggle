@@ -1,25 +1,12 @@
 import json
-import os
 from time import time
 
-import seaborn as sns
-import pandas as pd
-from collections import OrderedDict
-
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import xgboost as xgb
-from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
-from scipy.spatial import KDTree
-
-
+from sklearn.metrics import log_loss
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -55,41 +42,87 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
 
+import re
+
+import pandas as pd
+from nltk.tokenize import TweetTokenizer
+from nltk.corpus import stopwords
+
+STOP_WORDS = set(stopwords.words('english'))
+
+BAD_SYMBOLS_REGEX= re.compile('[\.*-+&$#,\()\{\}\'~!?:;"\<\>]')
+BAD_TOKEN_PATTERN = re.compile('.*\d.*')
+BAD_TOKENS= {'\\', '-', '/'}
+
+TOKENIZER = TweetTokenizer()
+
+#TODO
+#u'central a/c'
+
+
 def lower_df(df):
     df[F_COL]=df[F_COL].apply(lambda l: [x.lower() for x in l])
 
-def get_c_map_features(s):
-    s=s.apply(lambda l: [x.lower() for x in l])
-    c_map = {}
-    for l in s:
-        for x in l:
-            if x in c_map:
-                c_map[x]+=1
-            else:
-                c_map[x]=1
+def normalize_feature(s):
+    s=s.lower()
+    return BAD_SYMBOLS_REGEX.sub(' ', s)
 
-    return c_map
+def should_skip_token(s):
+    if s in STOP_WORDS:
+        return True
 
-def get_c_map_ordered_features(s):
-    c_map = get_c_map_features(s)
+    if s in BAD_TOKENS:
+        return True
+
+    return re.match(BAD_TOKEN_PATTERN, s) is not None
+
+def normalize_token_df(df):
+    def l_to_tokens_list(l):
+        s = ' '.join(l)
+        s= normalize_feature(s)
+        return TOKENIZER.tokenize(s)
+
+    df[F_COL] = df[F_COL].apply(l_to_tokens_list)
+
+    return df
+
+
+def get_c_map_tokens(df, N=None):
+    lower_df(df)
+    tokenizer = TweetTokenizer()
+    c_map={}
+    for l in df[F_COL]:
+        for f in l:
+            f=normalize_feature(f)
+            for t in tokenizer.tokenize(f):
+                if should_skip_token(t):
+                    continue
+                if t in c_map:
+                    c_map[t]+=1
+                else:
+                    c_map[t]=1
+
+
     c_map=[(k,v) for k,v in c_map.iteritems()]
     c_map.sort(key=lambda s:s[1], reverse=True)
 
-    return c_map
+    if N is None:
+        N=len(c_map)
 
-def get_top_N_counts_features(s, N=None):
-    c_map_ordered = get_c_map_ordered_features(s)
+    return c_map[:N]
+
+def get_top_N_counts_tokens(df, N=None):
+    c_map_ordered = get_c_map_tokens(df)
     if N is None:
         N = len(c_map_ordered)
     return c_map_ordered[:N]
 
-def get_top_N_features(s,N):
-    return [x[0] for x in get_top_N_counts_features(s, N)]
+def get_top_N_tokens(df,N):
+    return [x[0] for x in get_top_N_counts_tokens(df, N)]
 
-
-def add_top_N_features_df(df, N):
-    df[F_COL]= df[F_COL].apply(lambda l: [x.lower() for x in l])
-    top_N = get_top_N_features(df[F_COL], N)
+def add_top_N_tokens_df(df, N):
+    top_N = get_top_N_tokens(df, N)
+    normalize_token_df(df)
     col_to_series={}
     new_cols=[]
     for f in top_N:
@@ -103,6 +136,14 @@ def add_top_N_features_df(df, N):
 
     return pd.DataFrame(col_to_series), new_cols
 
+def add_tokens_list(df, l):
+    normalize_token_df(df)
+    for col in l:
+        f = col_to_val(col)
+        df[col] = df[F_COL].apply(lambda l: 1 if f in l else 0)
+
+    return df
+
 def val_to_col(s):
     return s.replace(' ', '_') + '_'
 
@@ -110,17 +151,9 @@ def col_to_val(col):
     return col.replace('_', ' ').strip()
 
 
-def add_features_list(df, l):
-    lower_df(df)
-    for col in l:
-        f = col_to_val(col)
-        df[col] = df[F_COL].apply(lambda l: 1 if f in l else 0)
-
-    return df
-
-def add_top_N_feat_train_test(train_df, test_df, N):
-    train_df, new_cols = add_top_N_features_df(train_df, N)
-    test_df = add_features_list(test_df, new_cols)
+def add_top_N_tokens_train_test(train_df, test_df, N):
+    train_df, new_cols = add_top_N_tokens_df(train_df, N)
+    test_df = add_tokens_list(test_df, new_cols)
 
     return train_df, test_df, new_cols
 
@@ -223,14 +256,15 @@ def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
 
-def loss_with_per_tree_stats(df):
+def loss_with_per_tree_stats(df, num):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
-    train_df, test_df, new_cols = add_top_N_feat_train_test(train_df, test_df, 100)
+    train_df, test_df, new_cols = add_top_N_tokens_train_test(train_df, test_df, num)
     features+=new_cols
+    print new_cols
 
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
@@ -292,7 +326,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res = loss_with_per_tree_stats(df)
+        loss, loss1K, res = loss_with_per_tree_stats(df, 100)
         t=time()-t
         l.append(loss)
         l_1K.append(loss1K)
@@ -304,4 +338,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
 # train_df, test_df = load_train(), load_test()
 
-do_test_with_xgboost_stats_per_tree(1000, 'top_200_tokens_naive.json')
+do_test_with_xgboost_stats_per_tree(1000, 'top_100_tokens_naive.json')

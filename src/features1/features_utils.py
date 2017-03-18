@@ -79,20 +79,3 @@ def desc_to_file(df, N, fp):
             f.write('\n\n\n\n')
 
 
-def write_tokens_counts(df, fp):
-    lower_df(df)
-    tokenizer = TweetTokenizer()
-    c_map={}
-    for l in df[F_COL]:
-        for f in l:
-            for t in tokenizer.tokenize(f):
-                if t in c_map:
-                    c_map[t]+=1
-                else:
-                    c_map[t]=1
-
-
-    c_map=[(k,v) for k,v in c_map.iteritems()]
-    c_map.sort(key=lambda s:s[1], reverse=True)
-    with open(fp, 'w+') as f:
-        f.write('\n'.join([str(x) for x in c_map]))
