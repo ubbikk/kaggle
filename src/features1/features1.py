@@ -304,4 +304,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
 # train_df, test_df = load_train(), load_test()
 
-do_test_with_xgboost_stats_per_tree(1000, 'top_100_naive.json')
+do_test_with_xgboost_stats_per_tree(1000, 'top_100_features_naive.json')
