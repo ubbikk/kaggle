@@ -326,7 +326,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res = loss_with_per_tree_stats(df, 100)
+        loss, loss1K, res = loss_with_per_tree_stats(df, 200)
         t=time()-t
         l.append(loss)
         l_1K.append(loss1K)
@@ -338,4 +338,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
 # train_df, test_df = load_train(), load_test()
 
-do_test_with_xgboost_stats_per_tree(1000, 'top_100_tokens_naive.json')
+do_test_with_xgboost_stats_per_tree(1000, 'top_200_tokens_naive.json')
