@@ -19,6 +19,8 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 
+
+
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
@@ -33,16 +35,12 @@ DISPLAY_ADDRESS = 'display_address'
 STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
-F_COL = u'features'
-DISTANCE_TO_NEAREST_NEIGBOUR = 'dist_n'
-ZIPCODE='zip_code'
+F_COL=u'features'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
             u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
             u'price', u'street_address']
-
-debug_cols = [LATITUDE, 'latitude_from_n',LONGITUDE, 'longitude_from_n','st_name',  'display_address', 'street_address','zip_code' , 'borocode', DISTANCE_TO_NEAREST_NEIGBOUR]
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -51,11 +49,77 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
+# train_file = '../data/redhoop/train.json'
+# test_file = '../data/redhoop/test.json'
+
 train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
-ny_data_file = 'ny.csv'
-rv_train_file = 'train_rv.json'
-rv_test_file = 'test_rv.json'
+
+def get_c_map(s):
+    c_map = {}
+    for l in s:
+        for x in l:
+            if x in c_map:
+                c_map[x]+=1
+            else:
+                c_map[x]=1
+
+    return c_map
+
+def lower_df(df):
+    df[F_COL]=df[F_COL].apply(lambda l: [x.lower() for x in l])
+
+def get_c_map_ordered(s):
+    c_map = get_c_map(s)
+    c_map=[(k,v) for k,v in c_map.iteritems()]
+    c_map.sort(key=lambda s:s[1], reverse=True)
+
+    return c_map
+
+def get_top_N_counts(s,N):
+    return get_c_map_ordered(s)[:N]
+
+def get_top_N_features(s,N):
+    return [x[0] for x in get_top_N_counts(s, N)]
+
+
+def add_top_N_features_df(df, N):
+    df[F_COL]= df[F_COL].apply(lambda l: [x.lower() for x in l])
+    top_N = get_top_N_features(df[F_COL], N)
+    col_to_series={}
+    new_cols=[]
+    for f in top_N:
+        s = df[F_COL].apply(lambda l: 1 if f in l else 0)
+        new_col = val_to_col(f)
+        col_to_series[new_col] = s
+        new_cols.append(new_col)
+
+    for col in df.columns.values:
+        col_to_series[col] = df[col]
+
+    return pd.DataFrame(col_to_series), new_cols
+
+def val_to_col(s):
+    return s.replace(' ', '_') + '_'
+
+def col_to_val(col):
+    return col.replace('_', ' ').strip()
+
+
+def add_features_list(df, l):
+    lower_df(df)
+    for col in l:
+        f = col_to_val(col)
+        df[col] = df[F_COL].apply(lambda l: 1 if f in l else 0)
+
+    return df
+
+def add_top_N_feat_train_test(train_df, test_df, N):
+    train_df, new_cols = add_top_N_features_df(train_df, N)
+    test_df = add_features_list(test_df, new_cols)
+
+    return train_df, test_df, new_cols
+
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -70,7 +134,6 @@ def out(l, loss, l_1K, loss1K, num, t):
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
 
-
 def write_results(l, fp):
     with open(fp, 'w+') as f:
         json.dump(l, f)
@@ -81,52 +144,28 @@ def split_df(df, c):
     return df[msk], df[~msk]
 
 
-def load_ny_data():
-    return pd.read_csv(ny_data_file)
-
-
-def add_fields_from_nearest_neighbour(df, ny_data):
-    tree = KDTree(ny_data[[LATITUDE, LONGITUDE]].values)
-    res = tree.query(df[[LATITUDE, LONGITUDE]].values)
-    df[DISTANCE_TO_NEAREST_NEIGBOUR] = res[0]
-    df['neigh_index'] = res[1]
-    # for col in ['borocode', 'st_name', 'zip_code', 'address_id', 'side_of_st']:
-    #     df[col] = df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
-    # for col in [LATITUDE, LONGITUDE]:
-    #     df['{}_from_n'.format(col)]=df['neigh_index'].apply(lambda s: ny_data.loc[s, col])
-
-    df['zip_code'] = df['neigh_index'].apply(lambda s: ny_data.loc[s, 'zip_code'])
-    df.loc[df['zip_code'].isnull(), 'zip_code']=-999
-    df['zip_code']=df['zip_code'].apply(int)
-    df['zip_code']=df['zip_code'].apply(str)
-
-
 def load_train():
-    train_df = basic_preprocess(pd.read_json(train_file))
-    ny_data = load_ny_data()
-    add_fields_from_nearest_neighbour(train_df, ny_data)
-    return train_df
+    return basic_preprocess(pd.read_json(train_file))
 
 
 def load_test():
     return basic_preprocess(pd.read_json(test_file))
 
-
 def process_outliers_lat_long(train_df, test_df):
-    min_lat = 40
-    max_lat = 41
-    min_long = -74.1
-    max_long = -73
+    min_lat=40
+    max_lat=41
+    min_long=-74.1
+    max_long=-73
 
     good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
     good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
 
     train_df = train_df[good_lat & good_long]
 
-    bed_lat = (test_df[LATITUDE] >= max_lat) | (test_df[LATITUDE] <= min_lat)
+    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
     bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
     test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long] = train_df[LONGITUDE].mean()
+    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
 
     return train_df, test_df
 
@@ -149,7 +188,7 @@ def basic_preprocess(df):
 def simple_loss(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]
+                "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -186,6 +225,9 @@ def loss_with_per_tree_stats(df):
                 "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df, new_cols = add_top_N_feat_train_test(train_df, test_df, 100)
+    features+=new_cols
+
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -209,19 +251,17 @@ def loss_with_per_tree_stats(df):
 
     # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
-    # proba_1K = estimator.predict_proba(test_arr, ntree_limit=estimator.best_iteration)
 
     loss = log_loss(test_target, proba)
-    loss1K = loss1K = get_loss_at1K(estimator)
+    loss1K = get_loss_at1K(estimator)
     return loss, loss1K, xgboost_per_tree_results(estimator)
-
 
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     results_on_train = estimator.evals_result()['validation_0']['mlogloss']
     return {
-        'train': results_on_train,
-        'test': results_on_test
+        'train':results_on_train,
+        'test':results_on_test
     }
 
 
@@ -229,31 +269,15 @@ def do_test(num, fp):
     l = []
     train_df = load_train()
     for x in range(num):
-        t = time()
-        df = train_df.copy()
+        t=time()
+        df=train_df.copy()
 
         loss = simple_loss(df)
-        t = time() - t
+        t=time()-t
         l.append(loss)
 
-        out(l, loss, None,None, x, t)
+        out(l, loss,None,None, x, t)
         write_results(l, fp)
-
-def get_dummy_cols(col_name, col_values):
-    return ['{}_{}'.format(col_name, val) for val in col_values]
-
-# def process_zip_codes(df):
-#     min_occurences = 20
-#     df[ZIPCODE] = df[ZIPCODE].apply(lambda s: s if s>min_occurences else -999)
-#     df[ZIPCODE] = df[ZIPCODE].apply(lambda s: str(int(s)))
-#     vals = set(df[ZIPCODE])
-#     return pd.get_dummies(df, columns=[ZIPCODE]), get_dummy_cols(ZIPCODE, vals)
-
-def process_boro_nei(df):
-
-
-
-
 
 def do_test_with_xgboost_stats_per_tree(num, fp):
     l = []
@@ -274,7 +298,6 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-# do_test_with_xgboost_stats_per_tree(1000, 'zipcodes.json')
-
-
 # train_df, test_df = load_train(), load_test()
+
+do_test_with_xgboost_stats_per_tree(1000, 'top_100_naive.json')

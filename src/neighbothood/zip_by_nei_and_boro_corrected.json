@@ -710,5 +710,90 @@
   "11239": {
     "boro": "Brooklyn",
     "nei": "Canarsie_and_Flatlands"
+  },
+  "10282": {
+    "boro": "Manhattan",
+    "nei": "Battery_Park"
+  },
+  "10281": {
+    "boro": "Manhattan",
+    "nei": "Battery_Park"
+  },
+  "11249": {
+    "boro": "Brooklyn",
+    "nei": "East_Flatbush"
+  },
+  "11109": {
+    "boro": "Queens",
+    "nei": "Hunters_Point"
+  },
+  "10069": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
   }
+
+
+,
+  "10259": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "10260": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "10265": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "10270": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "10275": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+
+
+
+
+
+
+
+,
+  "-999": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "10048": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+,
+  "11040": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  },
+  "11251": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  },
+  "83": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+
+,
+  "10081": {
+    "boro": "Manhattan",
+    "nei": "Upper_West_Side"
+  }
+
+
 }
