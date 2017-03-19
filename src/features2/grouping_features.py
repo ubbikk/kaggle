@@ -43,46 +43,68 @@ def lambda_two_arr(arr1, arr2):
     return is_in
 
 
-GROUPING_MAP = OrderedDict([
-    ('elevator', {'vals': ['elevator']}),
-    ('hardwood floors', {'vals': ['hardwood']}),
-    ('cats allowed', {'vals': ['cats']}),
-    ('dogs allowed', {'vals': ['dogs']}),
-    ('doorman', {'vals': ['doorman', 'concierge']}),
-    ('dishwasher', {'vals': ['dishwasher']}),
-    ('laundry in building', {'vals': ['laundry']}),
-    ('no fee', {'vals': ['no fee', 'no broker fee', 'no realtor fee']}),
-    ('reduced fee', {'vals': ['reduced fee']}),
-    ('fitness center', {'vals': ['fitness']}),
-    ('pre-war', {'vals': ['pre-war', 'prewar']}),
-    ('roof deck', {'vals': ['roof']}),
-    ('outdoor space', {'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment']}),
-    ('common outdoor space', {'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor']}),
-    ('private outdoor space', {'vals': ['private outdoor', 'private-outdoor', 'privateoutdoor']}),
-    ('dining room', {'vals': ['dining']}),
-    ('high speed internet', {'vals': ['internet']}),
-    ('balcony', {'vals': ['balcony']}),
-    ('swimming pool', {'vals': ['swimming', 'pool']}),
-    ('new construction', {'vals': ['new construction']}),
-    ('terrace', {'vals': ['terrace']}),
-    ('exclusive', {'vals': ['exclusive']}),
-    ('loft', {'vals': ['loft']}),
-    ('garden/patio', {'vals': ['garden']}),
-    ('wheelchair access', {'vals': ['wheelchair']}),
-    ('fireplace', {'vals': ['fireplace']}),
-    ('simplex', {'vals': ['simplex']}),
-    ('lowrise', {'vals': ['lowrise', 'low-rise']}),
-    ('garage', {'vals': ['garage']}),
-    ('reduced fee', {'vals': ['reduced fee', 'reduced-fee', 'reducedfee']}),
-    ('furnished', {'vals': ['furnished']}),
-    ('multi-level', {'vals': ['multi-level', 'multi level', 'multilevel']}),
-    ('high ceilings', {'vals': ['high ceilings', 'highceilings', 'high-ceilings']}),
-    ('parking space', {'vals': ['parking']}),
-    ('terrace', {'vals': ['terrace']}),
-    ('live in super', {'vals': ['super'], 'vals2': ['live', 'site']}),
-    ('renovated', {'vals': ['renovated']}),
-    ('green building', {'vals': ['green building']}),
-    ('storage', {'vals': ['storage']}),
-    ('washer', {'vals': ['washer']}),
-    ('stainless steel appliances', {'vals': ['stainless']})
-])
+GROUPING_MAP=OrderedDict(
+    [('elevator', {'vals': ['elevator'], 'type': 'in'}),
+     ('hardwood floors', {'vals': ['hardwood'], 'type': 'in'}),
+     ('cats allowed', {'vals': ['cats'], 'type': 'in'}),
+     ('dogs allowed', {'vals': ['dogs'], 'type': 'in'}),
+     ('doorman', {'vals': ['doorman', 'concierge'], 'type': 'in'}),
+     ('dishwasher', {'vals': ['dishwasher'], 'type': 'in'}),
+     ('laundry in building', {'vals': ['laundry'], 'type': 'in'}),
+     ('no fee', {'vals': ['no fee', 'no broker fee', 'no realtor fee'], 'type': 'in'}),
+     ('reduced fee', {'vals': ['reduced fee', 'reduced-fee', 'reducedfee'], 'type': 'in'}),
+     ('fitness center', {'vals': ['fitness'], 'type': 'in'}),
+     ('pre-war', {'vals': ['pre-war', 'prewar'], 'type': 'in'}),
+     ('roof deck', {'vals': ['roof'], 'type': 'in'}),
+     ('outdoor space',{'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment'], 'type': 'in'}),
+     ('common outdoor space',{'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor'], 'type': 'in'}),
+     ('private outdoor space', {'vals': ['private outdoor', 'private-outdoor', 'privateoutdoor'], 'type': 'in'}),
+     ('dining room', {'vals': ['dining'], 'type': 'in'}),
+     ('high speed internet', {'vals': ['internet'], 'type': 'in'}),
+     ('balcony', {'vals': ['balcony'], 'type': 'in'}),
+     ('swimming pool', {'vals': ['swimming', 'pool'], 'type': 'in'}),
+     ('new construction', {'vals': ['new construction'], 'type': 'in'}),
+     ('terrace', {'vals': ['terrace'], 'type': 'in'}),
+     ('exclusive', {'vals': ['exclusive'], 'type': 'equal'}),
+     ('loft', {'vals': ['loft'], 'type': 'in'}),
+     ('garden/patio', {'vals': ['garden'], 'type': 'in'}),
+     ('wheelchair access', {'vals': ['wheelchair'], 'type': 'in'}),
+     ('fireplace', {'vals': ['fireplace'], 'type': 'in'}),
+     ('simplex', {'vals': ['simplex'], 'type': 'in'}),
+     ('lowrise', {'vals': ['lowrise', 'low-rise'], 'type': 'in'}),
+     ('garage', {'vals': ['garage'], 'type': 'in'}),
+     ('furnished', {'vals': ['furnished'], 'type': 'equal'}),
+     ('multi-level', {'vals': ['multi-level', 'multi level', 'multilevel'], 'type': 'in'}),
+     ('high ceilings', {'vals': ['high ceilings', 'highceilings', 'high-ceilings'], 'type': 'in'}),
+     ('parking space', {'vals': ['parking'], 'type': 'in'}),
+     ('live in super', {'vals': ['super'], 'vals2': ['live', 'site'], 'type': 'two'}),
+     ('renovated', {'vals': ['renovated'], 'type': 'in'}),
+     ('green building', {'vals': ['green building'], 'type': 'in'}),
+     ('storage', {'vals': ['storage'], 'type': 'in'}),
+     ('washer', {'vals': ['washer'], 'type': 'in'}),
+     ('stainless steel appliances', {'vals': ['stainless'], 'type': 'in'})])
+
+
+def process_features(df):
+    new_cols=[]
+    for col, m in GROUPING_MAP.iteritems():
+        new_cols.append(col)
+        tp = m['type']
+        if tp == 'in':
+            df[col] = df[COL].apply(lambda_in(m['vals']))
+        elif tp=='equal':
+            df[col] = df[COL].apply(lambda_equal(m['vals'][0]))
+        elif tp=='two':
+            df[col] = df[COL].apply(lambda_two_arr(m['vals'], m['vals2']))
+        else:
+            raise Exception()
+
+    return df, new_cols
+
+def process_additional_features(df, l):
+    new_cols=[]
+    for col in l:
+        new_col = '{}__add'.format(col)
+        df[new_col] = df[COL].apply(lambda_equal(col))
+
+    return df, new_cols
