@@ -2,35 +2,12 @@
 
 
 
+
 mkdir kg
 cd kg
-sudo apt-get -y install git
-sudo apt-get -y install gcc
-sudo apt-get -y install make
-sudo apt-get -y install g++
-sudo apt-get -y install python-dev
-sudo apt-get -y install python-tk
-
-wget https://bootstrap.pypa.io/get-pip.py
-sudo python get-pip.py
-sudo pip install scipy
-sudo pip install pandas
-sudo pip install -U scikit-learn
-sudo pip install hyperopt
-sudo pip install dill
-sudo pip install seaborn
-
-
-git clone http://github.com/dmlc/xgboost
-cd xgboost
-git submodule update --init
-./build.sh
-cd python-package
-sudo python setup.py install
-
-cd ../..
 git clone https://github.com/ubbikk/kaggle
 cd kaggle
+sudo bash install_environment.sh
 
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
