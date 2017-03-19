@@ -53,8 +53,8 @@ pd.set_option('display.max_rows', 5000)
 # train_file = '../data/redhoop/train.json'
 # test_file = '../data/redhoop/test.json'
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 def dummy_col(col_name, val):
     return '{}_{}'.format(col_name, val)
