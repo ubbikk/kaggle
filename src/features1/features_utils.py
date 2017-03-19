@@ -5,6 +5,7 @@ from nltk.corpus import stopwords
 STOP_WORDS = set(stopwords.words('english'))
 
 F_COL=u'features'
+TOKENIZER = TweetTokenizer()
 
 def lower_df(df):
     df[F_COL]=df[F_COL].apply(lambda l: [x.lower() for x in l])
@@ -70,6 +71,12 @@ def add_features_list(df, l):
     return df
 
 
+def write_features_counts(df, fp):
+    c_map=get_c_map_ordered_features(df[F_COL])
+    with open(fp, 'w+') as f:
+        f.write('\n'.join([str(x) for x in c_map]))
+
+
 def desc_to_file(df, N, fp):
     N = len(df) if N is None else N
     df = df[:N]
@@ -77,5 +84,27 @@ def desc_to_file(df, N, fp):
         for s in df['description']:
             f.write(s.encode('utf-8'))
             f.write('\n\n\n\n')
+
+
+def c_map_for_description(df):
+    c_map={}
+    for s in df['description']:
+        for x in TOKENIZER.tokenize(s):
+            if x in c_map:
+                c_map[x]+=1
+            else:
+                c_map[x]=1
+
+    c_map=[(k,v) for k,v in c_map.iteritems()]
+    c_map.sort(key=lambda s:s[1], reverse=True)
+
+    return c_map
+
+
+def save_c_map_description(df, fp):
+    c_map=c_map_for_description(df)
+    with open(fp,'w+') as f:
+        f.write('\n'.join([str(x) for x in c_map]))
+
 
 
