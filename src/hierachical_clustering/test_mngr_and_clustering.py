@@ -74,7 +74,7 @@ def process_test_train_clustering_df(train_df, test_df, N):
 
     train_df=pd.merge(train_df, tmp, left_on=MANAGER_ID, right_index=True)
     test_df=pd.merge(test_df, tmp, left_on=MANAGER_ID, right_index=True, how='left')
-    test_df[test_df[new_col].isnull()]=N
+    # test_df[test_df[new_col].isnull()]=N
 
     return train_df, test_df, [new_col]
 
