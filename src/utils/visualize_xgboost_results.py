@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import json
 import numpy as np
 import seaborn as sns
+import math
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -20,8 +21,26 @@ def load_fp(fp):
     with open(fp)as f:
         return json.load(f)
 
-def get_res_at_N(res, N):
+def get_res_at_N_arr(res, N):
     return [x[N] for x in res]
+
+
+def explore_res_fp_xg_Ns(fp, Ns=(1000,)):
+    res_test=[x['test'] for x in load_fp(fp)]
+    sz = len(res_test)
+    print 'Num {}'.format(sz)
+    res1K = get_res_at_N_arr(res_test, 1000)
+    std = np.std(res1K)
+    std = std/math.sqrt(sz)
+    print 'std of avg_los {}'.format(std)
+    print
+    for N in Ns:
+        res_N = get_res_at_N_arr(res_test, N)
+        print 'N {}'.format(N)
+        print 'avg_loss {}'.format(np.mean(res_N))
+        print 'std {}'.format(np.std(res_N))
+        print
+
 
 
 def plot_errors_fp(fp):

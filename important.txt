@@ -1,0 +1,2 @@
+1) Capital alphabet percentage does rank within my top 10 features on a GBM.
+2) median  3BR / 2BA apartments in Flatbush.
