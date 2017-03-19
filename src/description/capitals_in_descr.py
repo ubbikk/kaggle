@@ -50,8 +50,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 def upper_ratio(s):
     if s is None or s =='':
