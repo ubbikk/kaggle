@@ -57,18 +57,23 @@ def add_fields_from_nearest_neighbour(df):
 
 
 def process_price_mean(train_df, test_df):
-    avg_price = train_df[PRICE].mean()
-    agg = OrderedDict([(PRICE, {'avg_price': 'mean'}), (LATITUDE, {'count': 'count'})])
-    df = train_df.groupby(NEI).agg(agg)
-    new_col = 'avg_price_diff'
-    df.columns = [new_col, 'count']
-    df.loc[df['count'] < 100, new_col]=avg_price
+    median_price = train_df[PRICE].median()
+    agg = OrderedDict([(PRICE, {'median_price': 'median'}), (LATITUDE, {'count': 'count'})])
+    key = [NEI, BEDROOMS, BATHROOMS]
+    df = train_df.groupby(key).agg(agg)
 
-    train_df = pd.merge(train_df, df, left_on=NEI, right_index=True)
-    train_df[new_col] = train_df[new_col]-train_df[PRICE]
+    median_col='price_median'
+    df.columns = [median_col, 'count']
+    df.loc[df['count'] < 50, median_col]=median_price
 
-    test_df = pd.merge(test_df, df, left_on=NEI, right_index=True)
-    test_df.loc[test_df[new_col].isnull(), new_col] = avg_price
-    test_df[new_col] = test_df[new_col]-test_df[PRICE]
+    new_col = 'median_price_diff_ratio'
+    train_df = pd.merge(train_df, df, left_on=key, right_index=True)
+    train_df[new_col] = train_df[PRICE] -train_df[median_col]
+    train_df[new_col] = train_df[new_col]/train_df[median_col]
+
+    test_df = pd.merge(test_df, df, left_on=key, right_index=True)
+    test_df.loc[test_df[median_col].isnull(), median_col] = median_price
+    test_df[new_col] = test_df[PRICE]-test_df[median_col]
+    test_df[new_col] = test_df[new_col]/test_df[median_col]
 
     return train_df, test_df, [new_col]
