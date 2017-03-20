@@ -94,18 +94,18 @@ def add_fields_from_nearest_neighbour(df):
 
 
 def process_price_mean(train_df, test_df):
-    avg_price = train_df[PRICE].mean()
-    agg = OrderedDict([(PRICE, {'avg_price': 'mean'}), (LATITUDE, {'count': 'count'})])
+    median_price = train_df[PRICE].mean()
+    agg = OrderedDict([(PRICE, {'median_price': 'median'}), (LATITUDE, {'count': 'count'})])
     df = train_df.groupby(NEI).agg(agg)
-    new_col = 'avg_price_diff'
+    new_col = 'median_price_diff'
     df.columns = [new_col, 'count']
-    df.loc[df['count'] < 100, new_col]=avg_price
+    df.loc[df['count'] < 100, new_col]=median_price
 
     train_df = pd.merge(train_df, df, left_on=NEI, right_index=True)
     train_df[new_col] = train_df[new_col]-train_df[PRICE]
 
     test_df = pd.merge(test_df, df, left_on=NEI, right_index=True)
-    test_df.loc[test_df[new_col].isnull(), new_col] = avg_price
+    test_df.loc[test_df[new_col].isnull(), new_col] = median_price
     test_df[new_col] = test_df[new_col]-test_df[PRICE]
 
     return train_df, test_df, [new_col]
