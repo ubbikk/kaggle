@@ -150,56 +150,56 @@ GROUPING_MAP=OrderedDict(
 
 ADDITIONAL_FEATURES=OrderedDict([
 
-    (u'elevator', 26273)
-    (u'hardwood floors', 23558)
-    (u'cats allowed', 23540)
-    (u'dogs allowed', 22035)
-    (u'doorman', 20967)
-    (u'dishwasher', 20806)
-    (u'laundry in building', 18944)
-    (u'no fee', 18079)
-    (u'fitness center', 13257)
-    (u'laundry in unit', 9435)
-    (u'pre-war', 9149)
-    (u'roof deck', 6555)
-    (u'outdoor space', 5270)
-    (u'dining room', 5150)
-    (u'high speed internet', 4299)
-    (u'balcony', 3058)
-    (u'swimming pool', 2730)
-    (u'new construction', 2608)
-    (u'terrace', 2313)
-    (u'exclusive', 2167)
-    (u'loft', 2101)
-    (u'garden/patio', 1943)
-    (u'wheelchair access', 1358)
-    (u'prewar', 1349)
-    (u'common outdoor space', 1293)
-    (u'hardwood', 1058)
-    (u'fireplace', 919)
-    (u'simplex', 908)
-    (u'lowrise', 789)
-    (u'garage', 756)
-    (u'laundry room', 724)
-    (u'reduced fee', 699)
-    (u'furnished', 690)
-    (u'multi-level', 632)
-    (u'high ceilings', 613)
-    (u'private outdoor space', 534)
-    (u'publicoutdoor', 423)
-    (u'parking space', 418)
-    (u'roof-deck', 397)
-    (u'live in super', 366)
-    (u'renovated', 337)
-    (u'pool', 323)
-    (u'on-site laundry', 316)
-    (u'laundry', 283)
-    (u'green building', 247)
-    (u'storage', 217)
-    (u'high ceiling', 200)
-    (u'washer in unit', 186)
-    (u'dryer in unit', 186)
-    (u'stainless steel appliances', 177)
+    (u'elevator', 26273),
+    (u'hardwood floors', 23558),
+    (u'cats allowed', 23540),
+    (u'dogs allowed', 22035),
+    (u'doorman', 20967),
+    (u'dishwasher', 20806),
+    (u'laundry in building', 18944),
+    (u'no fee', 18079),
+    (u'fitness center', 13257),
+    (u'laundry in unit', 9435),
+    (u'pre-war', 9149),
+    (u'roof deck', 6555),
+    (u'outdoor space', 5270),
+    (u'dining room', 5150),
+    (u'high speed internet', 4299),
+    (u'balcony', 3058),
+    (u'swimming pool', 2730),
+    (u'new construction', 2608),
+    (u'terrace', 2313),
+    (u'exclusive', 2167),
+    (u'loft', 2101),
+    (u'garden/patio', 1943),
+    (u'wheelchair access', 1358),
+    (u'prewar', 1349),
+    (u'common outdoor space', 1293),
+    (u'hardwood', 1058),
+    (u'fireplace', 919),
+    (u'simplex', 908),
+    (u'lowrise', 789),
+    (u'garage', 756),
+    (u'laundry room', 724),
+    (u'reduced fee', 699),
+    (u'furnished', 690),
+    (u'multi-level', 632),
+    (u'high ceilings', 613),
+    (u'private outdoor space', 534),
+    (u'publicoutdoor', 423),
+    (u'parking space', 418),
+    (u'roof-deck', 397),
+    (u'live in super', 366),
+    (u'renovated', 337),
+    (u'pool', 323),
+    (u'on-site laundry', 316),
+    (u'laundry', 283),
+    (u'green building', 247),
+    (u'storage', 217),
+    (u'high ceiling', 200),
+    (u'washer in unit', 186),
+    (u'dryer in unit', 186),
+    (u'stainless steel appliances', 177),
 ]).values()
 
 
