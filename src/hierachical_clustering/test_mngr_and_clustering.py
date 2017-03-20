@@ -182,7 +182,7 @@ def loss_with_per_tree_stats(df):
                 "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
-    train_df, test_df, new_cols = process_test_train_clustering_df(train_df, test_df, 200)
+    train_df, test_df, new_cols = process_test_train_clustering_df(train_df, test_df, 1000)
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -254,4 +254,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
 
 # train_df, test_df = load_train(), load_test()
-do_test_with_xgboost_stats_per_tree(1000, 'mngr_clustering_200.json')
+do_test_with_xgboost_stats_per_tree(1000, 'mngr_clustering_1000.json')
