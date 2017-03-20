@@ -4,3 +4,5 @@
 4)listing_id
 5)NER on desription
 6_Exclamation marks in description
+7)description: move-in? train\road
+8)mng num\avg price
