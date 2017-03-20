@@ -1,2 +1,6 @@
 1) Capital alphabet percentage does rank within my top 10 features on a GBM.
 2) median  3BR / 2BA apartments in Flatbush.
+3)manager_skill
+4)listing_id
+5)NER on desription
+6_Exclamation marks in description
