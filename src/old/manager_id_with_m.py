@@ -1,30 +1,19 @@
 import json
 import os
-import seaborn as sns
-import pandas as pd
-from collections import OrderedDict
 
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
 import numpy as np
+import pandas as pd
 import xgboost as xgb
-from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
-from scipy.spatial import KDTree
-from categorical_utils import processM, cols_forM
+from sklearn.metrics import log_loss
+
+from utils.categorical_utils import processM, cols_forM
 
 src_folder = '/home/dpetrovskyi/PycharmProjects/kaggle/src'
 os.chdir(src_folder)
 import sys
 
 sys.path.append(src_folder)
-
-from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']

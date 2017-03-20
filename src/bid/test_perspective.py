@@ -1,38 +1,14 @@
 import json
 import os
-from time import time
 
-import seaborn as sns
-import pandas as pd
-from collections import OrderedDict
-
-from hyperopt import STATUS_FAIL
-from hyperopt import STATUS_OK
-from hyperopt import Trials
-from hyperopt import tpe
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import xgboost as xgb
-from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
-from scipy.spatial import KDTree
-from hyperopt import hp, pyll, fmin
-from math import log
+from sklearn.metrics import log_loss
 
-# src_folder = '/home/ubik/PycharmProjects/kaggle/src'
-# os.chdir(src_folder)
-# import sys
-#
-# sys.path.append(src_folder)
-
-from categorical_utils import process_with_lambda, cols, get_exp_lambda, visualize_exp_lambda
-from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
+from utils.categorical_utils import process_with_lambda, cols, get_exp_lambda
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
