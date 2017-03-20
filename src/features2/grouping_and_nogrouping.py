@@ -201,7 +201,7 @@ ADDITIONAL_FEATURES=OrderedDict([
     (u'washer in unit', 186),
     (u'dryer in unit', 186),
     (u'stainless steel appliances', 177),
-]).values()
+]).keys()
 
 
 def process_features(df):

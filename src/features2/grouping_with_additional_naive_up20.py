@@ -229,7 +229,7 @@ ADDITIONAL_FEATURES=OrderedDict([
     (u'private backyard', 20),
     (u'pet friendly', 20),
     (u'concierge service', 20)
-]).values()
+]).keys()
 
 
 def process_features(df):
