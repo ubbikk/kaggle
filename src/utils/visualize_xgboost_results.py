@@ -24,6 +24,12 @@ def load_fp(fp):
 def get_res_at_N_arr(res, N):
     return [x[N] for x in res]
 
+def get_test_res(res):
+    return [x['test'] for x in res]
+
+def get_res_at_N_fp(fp, N):
+    return get_res_at_N_arr(get_test_res(load_fp(fp)), N)
+
 
 def explore_res_fp_xg_Ns(fp, Ns=(1000,)):
     res_test=[x['test'] for x in load_fp(fp)]
