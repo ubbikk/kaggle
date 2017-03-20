@@ -63,6 +63,7 @@ def process_additional_features(df, l):
     new_cols=[]
     for col in l:
         new_col = '{}__add'.format(col)
+        new_cols.append(new_col)
         df[new_col] = df[COL].apply(lambda_equal(col))
 
     return df, new_cols
