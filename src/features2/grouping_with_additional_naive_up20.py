@@ -413,6 +413,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
     train_df, new_cols1 = process_features(train_df)
     train_df, new_cols2 = process_additional_features(train_df, ADDITIONAL_FEATURES)
     new_cols = new_cols1+new_cols2
+    print new_cols
 
     for x in range(num):
         t=time()
