@@ -53,8 +53,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -232,4 +232,5 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()
+do_test_with_xgboost_stats_per_tree(1000, "created_hour.json")
