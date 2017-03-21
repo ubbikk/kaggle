@@ -53,8 +53,73 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
+
+MANAGER_ID = 'manager_id'
+CREATED = 'created'
+
+def process_recent_activity(train_df, test_df):
+    train_test_df = pd.concat([train_df, test_df])
+    x, y = get_activity_in_sec_cols(train_test_df)
+
+    past_col = 'past_manager_activity'
+    future_col = 'future_manager_activity'
+    test_df[past_col] = x[test_df.index]
+    test_df[future_col] = y[test_df.index]
+
+    x, y = get_activity_in_sec_cols(train_df)
+    train_df[past_col] = x[train_df.index]
+    train_df[future_col] = y[train_df.index]
+
+    return train_df, test_df, [past_col, future_col]
+
+def get_activity_in_sec_cols(df):
+    groups= df.groupby(MANAGER_ID)[CREATED].groups
+    for k,v in groups.iteritems():
+        v = df.loc[v, CREATED].tolist()
+        v.sort()
+        groups[k] = v
+
+    def find_diff_past(s):
+        g = groups[s[MANAGER_ID]]
+        sz=len(g)
+        if sz==1:
+            return -1
+
+        created = s[CREATED]
+        ind = g.index(created)
+
+        if ind==0:#first
+            if g[1]==created:
+                return 0
+            return -1
+
+        if ind==sz-1:#last
+            return (g[ind]-g[ind-1]).total_seconds()
+
+        return (g[ind]-g[ind-1]).total_seconds()
+
+    def find_diff_future(s):
+        g = groups[s[MANAGER_ID]]
+        sz=len(g)
+        if sz==1:
+            return -1
+
+        created = s[CREATED]
+        ind = g.index(created)
+
+        if ind==0:#first
+            return (g[ind+1]-g[ind]).total_seconds()
+
+        if ind==sz-1:#last
+            if g[ind-1]==created:
+                return 0
+            return -1
+
+        return (g[ind+1]-g[ind]).total_seconds()
+
+    return df.apply(find_diff_past, axis=1), df.apply(find_diff_future, axis=1)
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -164,6 +229,9 @@ def loss_with_per_tree_stats(df):
 
     train_df, test_df = split_df(df, 0.7)
 
+    train_df, test_df, new_cols = process_recent_activity(train_df, test_df)
+    features+=new_cols
+
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -172,7 +240,6 @@ def loss_with_per_tree_stats(df):
     test_df = test_df[features]
 
     train_arr, test_arr = train_df.values, test_df.values
-    print features
 
     estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
@@ -234,4 +301,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-train_df, test_df = load_train(), load_test()
+
+do_test_with_xgboost_stats_per_tree(1000, 'last_mngr_activity.json')
+
+
