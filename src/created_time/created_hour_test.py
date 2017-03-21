@@ -125,7 +125,7 @@ def basic_preprocess(df):
 def simple_loss(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR]
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -160,7 +160,7 @@ def get_loss_at1K(estimator):
 def loss_with_per_tree_stats(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR]
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
 
     train_df, test_df = split_df(df, 0.7)
 
