@@ -6,3 +6,9 @@
 6_Exclamation marks in description
 7)description: move-in? train\road
 8)mng num\avg price
+9) manager activity <24hour
+10)neighborhood map - strict label
+11)neighbourhoods median
+12) entity in description
+13)description freaquent tokens 'amazing, gorgeous'
+14)some NLP adj/adv/verb etc ???, sentiment, w2v clustering

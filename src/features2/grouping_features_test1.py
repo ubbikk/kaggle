@@ -279,17 +279,17 @@ def loss_with_per_tree_stats(df, new_cols):
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
     # plot feature importance
-    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+    N=20
+    # sns.barplot(features[:N], [x for x in estimator.feature_importances_[:N]])
     # sns.plt.show()
+    importance = estimator.feature_importances_
 
 
-    # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
 
     loss = log_loss(test_target, proba)
     loss1K = get_loss_at1K(estimator)
-    return loss, loss1K, xgboost_per_tree_results(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator), importance
 
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
@@ -320,11 +320,13 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
     l_1K=[]
     train_df = load_train()
     train_df, new_cols = process_features(train_df)
+    ii=[]
     for x in range(num):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res = loss_with_per_tree_stats(df, new_cols)
+        loss, loss1K, res, imp = loss_with_per_tree_stats(df, new_cols)
+        ii.append(imp.tolist())
         t=time()-t
         l.append(loss)
         l_1K.append(loss1K)
@@ -332,7 +334,8 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
         out(l, loss, l_1K, loss1K, x, t)
         write_results(results, fp)
+        write_results(ii, 'importance.json')
 
 
 # train_df, test_df = load_train(), load_test()
-do_test_with_xgboost_stats_per_tree(1000, 'results/grouping_feat_50.json')
+do_test_with_xgboost_stats_per_tree(1000, 'results/trash.json')
