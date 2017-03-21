@@ -14,10 +14,12 @@ from sklearn.cross_validation import cross_val_score, KFold
 import numpy as np
 import xgboost as xgb
 from sklearn.metrics import log_loss
+from sklearn.preprocessing import LabelEncoder
 from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+import math
 
 
 
@@ -51,8 +53,94 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
+
+def cols(col, target_col, target_vals):
+    return ['{}_coverted_exp_for_{}={}'.format(col, target_col, v) for v in target_vals]
+
+def dummy_col(col_name, val):
+    return '{}_{}'.format(col_name, val)
+
+def process_with_lambda(train_df, test_df, col, target_col, target_vals, lambda_f):
+    temp_target = '{}_'.format(target_col)
+    train_df[temp_target]= train_df[target_col]
+    train_df= pd.get_dummies(train_df, columns=[target_col])
+    dummies_cols = [dummy_col(target_col, v) for v in target_vals]
+    priors = train_df[dummies_cols].mean()
+    priors_arr = [priors[dummy_col(target_col, v)] for v in target_vals]
+    agg = OrderedDict(
+        [(dummy_col(target_col, v), OrderedDict([('{}_mean'.format(v),'mean')])) for v in target_vals] + [(col, {'cnt':'count'})]
+    )
+    df = train_df[[col]+dummies_cols].groupby(col).agg(agg)
+    df.columns = ['posterior_{}'.format(v) for v in target_vals] + ['cnt']
+    new_cols=[]
+    for v in target_vals:
+        def norm_posterior(x):
+            cnt= float(x['cnt'])
+            posterior = x['posterior_{}'.format(v)]
+            prior = priors[dummy_col(target_col, v)]
+            l = lambda_f(cnt)
+            return (l * posterior) + ((1 - l) * prior)
+
+        new_col = '{}_coverted_exp_for_{}={}'.format(col, target_col, v)
+        df[new_col] =df.apply(norm_posterior, axis=1)
+        new_cols.append(new_col)
+
+    df = df[new_cols]
+
+    train_df = pd.merge(train_df, df, left_on=col, right_index=True)
+
+    test_df = pd.merge(test_df, df, left_on=col, right_index=True, how='left')
+    test_df.loc[test_df[new_cols[0]].isnull(), new_cols] = priors_arr
+
+    for c in dummies_cols:
+        del train_df[c]
+
+    train_df[target_col]= train_df[temp_target]
+    del train_df[temp_target]
+
+    return train_df, test_df, new_cols
+
+
+def get_exp_lambda(k,f):
+    def res(n):
+        return 1/(1+math.exp(float(k-n)/f))
+    return res
+
+
+def process_mngr_categ_preprocessing(train_df, test_df):
+    col = MANAGER_ID
+    k=15.0
+    f=0.14119444578
+    lamdba_f = get_exp_lambda(k, f)
+    return process_with_lambda(train_df, test_df, col, TARGET, TARGET_VALUES, lamdba_f)
+
+
+def process_manager_num(train_df, test_df):
+    mngr_num_col = 'manager_num'
+    df = train_df.groupby(MANAGER_ID)[MANAGER_ID].count()
+    # df[df<=1]=-1
+    df = df.apply(float)
+    df = df.to_frame(mngr_num_col)
+    train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
+    test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+
+    return train_df, test_df, [mngr_num_col]
+
+
+def process_manager_categ(train_df, test_df):
+    new_col = 'manager_label'
+    le = LabelEncoder()
+    le.fit(np.unique(train_df[MANAGER_ID].values))
+    managers_train = set(train_df[MANAGER_ID].values)
+    train_df[new_col] = le.transform(train_df[MANAGER_ID])
+    bad_managers = test_df[MANAGER_ID].apply(lambda m: m not in managers_train)
+    test_df.loc[bad_managers, new_col] = None
+    test_df.loc[~bad_managers, new_col] = le.transform(test_df.loc[~bad_managers, MANAGER_ID])
+
+    return train_df, test_df, [new_col]
+
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -159,6 +247,17 @@ def loss_with_per_tree_stats(df):
 
     train_df, test_df = split_df(df, 0.7)
 
+    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    features+=new_cols
+
+    # train_df, test_df, new_cols = process_manager_categ(train_df, test_df)
+    # features+=new_cols
+
+    print features
+
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -228,4 +327,6 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()
+
+do_test_with_xgboost_stats_per_tree(1000, 'mngr_num_lambda_only.json')
