@@ -18,6 +18,7 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -36,8 +37,6 @@ STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
 F_COL=u'features'
-CREATED_MONTH = "created_month"
-CREATED_DAY = "created_day"
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -51,8 +50,36 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
+
+# def process_manager_num(train_df, test_df):
+#     mngr_num_col = 'manager_num'
+#     df = train_df.groupby(MANAGER_ID)[MANAGER_ID].count()
+#     # df[df<=1]=-1
+#     df = df.apply(float)
+#     df = df.to_frame(mngr_num_col)
+#     train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
+#     test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+#
+#     return train_df, test_df, [mngr_num_col]
+
+def process_manager_categ(train_df, test_df, num):
+    train_df['manager_num'] = train_df.groupby(MANAGER_ID)[MANAGER_ID].transform('count')
+    for i in range(num):
+        train_df.loc[train_df['manager_num']==i, MANAGER_ID]='rare_manager_count={}'.format(i)
+
+    new_col = 'manager_label'
+    le = LabelEncoder()
+    le.fit(np.unique(train_df[MANAGER_ID].values))
+    managers_train = set(train_df[MANAGER_ID].values)
+    train_df[new_col] = le.transform(train_df[MANAGER_ID])
+    bad_managers = test_df[MANAGER_ID].apply(lambda m: m not in managers_train)
+    test_df.loc[bad_managers, new_col] = None
+    test_df.loc[~bad_managers, new_col] = le.transform(test_df.loc[~bad_managers, MANAGER_ID])
+
+    return train_df, test_df, [new_col]
+
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -109,8 +136,8 @@ def basic_preprocess(df):
     df['word_num_in_descr'] = df['description'].apply(lambda x: len(x.split(' ')))
     df["created"] = pd.to_datetime(df["created"])
     df["created_year"] = df["created"].dt.year
-    df[CREATED_MONTH] = df["created"].dt.month
-    df[CREATED_DAY] = df["created"].dt.day
+    df["created_month"] = df["created"].dt.month
+    df["created_day"] = df["created"].dt.day
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
 
@@ -158,6 +185,8 @@ def loss_with_per_tree_stats(df):
                 "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df, new_cols = process_manager_categ(train_df, test_df, 1)
+    features+=new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -228,4 +257,5 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp)
 
 
-train_df, test_df = load_train(), load_test()
+# train_df, test_df = load_train(), load_test()
+do_test_with_xgboost_stats_per_tree(1000, 'manager_categ_group_rare_only1.json')

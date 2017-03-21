@@ -3,6 +3,8 @@ import numpy as np
 from hyperopt.mongoexp import MongoTrials
 from scipy.stats import ttest_ind
 from collections import OrderedDict
+import seaborn as sns
+import pandas as pd
 
 
 def explore_res_fp(fp):
@@ -51,7 +53,7 @@ def get_best_params(trials, num):
 
     return s[:num]
 
-def exploring_importance(fp, features):
+def load_importance(fp, features):
     arr = load_fp(fp)
     sz = len(features)
     res = [np.mean([x[j] for x in arr]) for j in range(sz)]
@@ -59,3 +61,33 @@ def exploring_importance(fp, features):
     res = zip(features, res, stds)
     res.sort(key=lambda s: s[1], reverse=True)
     return res
+
+def explore_importance_old(res, N):
+    res=res[:N]
+    xs = [x[0] for x in res]
+    ys=[x[1] for x in res]
+    sns.barplot(xs, ys)
+    sns.plt.show()
+
+
+def explore_importance_fp(fp, features, N):
+    res = load_importance(fp, features)
+    res=res[:N]
+    xs = [x[0] for x in res]
+    ys=[x[1] for x in res]
+    sns.barplot(xs, ys)
+    sns.plt.show()
+
+def explore_importance_and_std(fp, features, N):
+    arr = load_fp(fp)
+    features=features[:N]
+    importances=[]
+    ff=[]
+    for run_i in range(len(arr)):
+        for fi in range(N):
+            importances.append(arr[run_i][fi])
+            ff.append(features[fi])
+
+    df = pd.DataFrame({'feature':ff, 'importance':importances})
+    sns.barplot(x='feature', y='importance', data=df)
+    sns.plt.show()
