@@ -50,3 +50,12 @@ def get_best_params(trials, num):
     s.sort(key=lambda x:x[0])
 
     return s[:num]
+
+def exploring_importance(fp, features):
+    arr = load_fp(fp)
+    sz = len(features)
+    res = [np.mean([x[j] for x in arr]) for j in range(sz)]
+    stds = [np.std([x[j] for x in arr]) for j in range(sz)]
+    res = zip(features, res, stds)
+    res.sort(key=lambda s: s[1], reverse=True)
+    return res

@@ -18,13 +18,9 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
+from sklearn.preprocessing import LabelEncoder
 
 
-# train_file = '../data/redhoop/train.json'
-# test_file = '../data/redhoop/test.json'
-
-train_file = '../../data/redhoop/train.json'
-test_file = '../../data/redhoop/test.json'
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -54,109 +50,31 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-from collections import OrderedDict
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
-F_COL = u'features'
-COL = 'normalized_features'
+# def process_manager_num(train_df, test_df):
+#     mngr_num_col = 'manager_num'
+#     df = train_df.groupby(MANAGER_ID)[MANAGER_ID].count()
+#     # df[df<=1]=-1
+#     df = df.apply(float)
+#     df = df.to_frame(mngr_num_col)
+#     train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
+#     test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+#
+#     return train_df, test_df, [mngr_num_col]
 
+def process_manager_categ(train_df, test_df):
+    new_col = 'manager_label'
+    le = LabelEncoder()
+    le.fit(np.unique(train_df[MANAGER_ID].values))
+    managers_train = set(train_df[MANAGER_ID].values)
+    train_df[new_col] = le.transform(train_df[MANAGER_ID])
+    bad_managers = test_df[MANAGER_ID].apply(lambda m: m not in managers_train)
+    test_df.loc[bad_managers, new_col] = None
+    test_df.loc[~bad_managers, new_col] = le.transform(test_df.loc[~bad_managers, MANAGER_ID])
 
-def normalize_df(df):
-    df[COL] = df[F_COL].apply(lambda l: [x.lower() for x in l])
-
-
-def lambda_in(in_arr):
-    def is_in(l):
-        for f in l:
-            for t in in_arr:
-                if t in f:
-                    return 1
-
-        return 0
-
-    return is_in
-
-
-def lambda_equal(val):
-    def is_equal(l):
-        for f in l:
-            if f.strip() == val:
-                return 1
-
-        return 0
-
-    return is_equal
-
-
-def lambda_two_arr(arr1, arr2):
-    def is_in(l):
-        for f in l:
-            for x in arr1:
-                for y in arr2:
-                    if x in f and y in f:
-                        return 1
-        return 0
-
-    return is_in
-
-
-GROUPING_MAP=OrderedDict(
-    [('elevator', {'vals': ['elevator'], 'type': 'in'}),
-     ('hardwood floors', {'vals': ['hardwood'], 'type': 'in'}),
-     ('cats allowed', {'vals': ['cats'], 'type': 'in'}),
-     ('dogs allowed', {'vals': ['dogs'], 'type': 'in'}),
-     ('doorman', {'vals': ['doorman', 'concierge'], 'type': 'in'}),
-     ('dishwasher', {'vals': ['dishwasher'], 'type': 'in'}),
-     ('laundry in building', {'vals': ['laundry'], 'type': 'in'}),
-     ('no fee', {'vals': ['no fee', 'no broker fee', 'no realtor fee'], 'type': 'in'}),
-     ('reduced fee', {'vals': ['reduced fee', 'reduced-fee', 'reducedfee'], 'type': 'in'}),
-     ('fitness center', {'vals': ['fitness'], 'type': 'in'}),
-     ('pre-war', {'vals': ['pre-war', 'prewar'], 'type': 'in'}),
-     ('roof deck', {'vals': ['roof'], 'type': 'in'}),
-     ('outdoor space',{'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment'], 'type': 'in'}),
-     ('common outdoor space',{'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor'], 'type': 'in'}),
-     ('private outdoor space', {'vals': ['private outdoor', 'private-outdoor', 'privateoutdoor'], 'type': 'in'}),
-     ('dining room', {'vals': ['dining'], 'type': 'in'}),
-     ('high speed internet', {'vals': ['internet'], 'type': 'in'}),
-     ('balcony', {'vals': ['balcony'], 'type': 'in'}),
-     ('swimming pool', {'vals': ['swimming', 'pool'], 'type': 'in'}),
-     ('new construction', {'vals': ['new construction'], 'type': 'in'}),
-     ('terrace', {'vals': ['terrace'], 'type': 'in'}),
-     ('exclusive', {'vals': ['exclusive'], 'type': 'equal'}),
-     ('loft', {'vals': ['loft'], 'type': 'in'}),
-     ('garden/patio', {'vals': ['garden'], 'type': 'in'}),
-     ('wheelchair access', {'vals': ['wheelchair'], 'type': 'in'}),
-     ('fireplace', {'vals': ['fireplace'], 'type': 'in'}),
-     ('simplex', {'vals': ['simplex'], 'type': 'in'}),
-     ('lowrise', {'vals': ['lowrise', 'low-rise'], 'type': 'in'}),
-     ('garage', {'vals': ['garage'], 'type': 'in'}),
-     ('furnished', {'vals': ['furnished'], 'type': 'equal'}),
-     ('multi-level', {'vals': ['multi-level', 'multi level', 'multilevel'], 'type': 'in'}),
-     ('high ceilings', {'vals': ['high ceilings', 'highceilings', 'high-ceilings'], 'type': 'in'}),
-     ('parking space', {'vals': ['parking'], 'type': 'in'}),
-     ('live in super', {'vals': ['super'], 'vals2': ['live', 'site'], 'type': 'two'}),
-     ('renovated', {'vals': ['renovated'], 'type': 'in'}),
-     ('green building', {'vals': ['green building'], 'type': 'in'}),
-     ('storage', {'vals': ['storage'], 'type': 'in'}),
-     ('washer', {'vals': ['washer'], 'type': 'in'}),
-     ('stainless steel appliances', {'vals': ['stainless'], 'type': 'in'})])
-
-
-def process_features(df):
-    normalize_df(df)
-    new_cols=[]
-    for col, m in GROUPING_MAP.iteritems():
-        new_cols.append(col)
-        tp = m['type']
-        if tp == 'in':
-            df[col] = df[COL].apply(lambda_in(m['vals']))
-        elif tp=='equal':
-            df[col] = df[COL].apply(lambda_equal(m['vals'][0]))
-        elif tp=='two':
-            df[col] = df[COL].apply(lambda_two_arr(m['vals'], m['vals2']))
-        else:
-            raise Exception()
-
-    return df, new_cols
+    return train_df, test_df, [new_col]
 
 
 def out(l, loss, l_1K, loss1K, num, t):
@@ -257,28 +175,14 @@ def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
 
-# features = ['bathrooms', 'bedrooms', 'latitude', 'longitude',
-#             'price', 'num_features', 'num_photos',
-#             'word_num_in_descr', 'created_year',
-#             'created_month', 'created_day', 'elevator',
-#             'hardwood floors', 'cats allowed', 'dogs allowed',
-#             'doorman', 'dishwasher', 'laundry in building',
-#             'no fee', 'reduced fee', 'fitness center', 'pre-war',
-#             'roof deck', 'outdoor space', 'common outdoor space',
-#             'private outdoor space', 'dining room', 'high speed internet',
-#             'balcony', 'swimming pool', 'new construction', 'terrace',
-#             'exclusive', 'loft', 'garden/patio', 'wheelchair access',
-#             'fireplace', 'simplex', 'lowrise', 'garage', 'furnished',
-#             'multi-level', 'high ceilings', 'parking space',
-#             'live in super', 'renovated', 'green building',
-#             'storage', 'washer', 'stainless steel appliances']
-
-def loss_with_per_tree_stats(df, new_cols):
+def loss_with_per_tree_stats(df):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_year", "created_month", "created_day"]+new_cols
+                "created_year", "created_month", "created_day"]
 
     train_df, test_df = split_df(df, 0.7)
+    train_df, test_df, new_cols = process_manager_categ(train_df, test_df)
+    features+=new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -295,17 +199,17 @@ def loss_with_per_tree_stats(df, new_cols):
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
     # plot feature importance
-    N=20
-    # sns.barplot(features[:N], [x for x in estimator.feature_importances_[:N]])
+    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
     # sns.plt.show()
-    importance = estimator.feature_importances_
 
 
+    # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
 
     loss = log_loss(test_target, proba)
     loss1K = get_loss_at1K(estimator)
-    return loss, loss1K, xgboost_per_tree_results(estimator), importance
+    return loss, loss1K, xgboost_per_tree_results(estimator)
 
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
@@ -335,14 +239,11 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
     results =[]
     l_1K=[]
     train_df = load_train()
-    train_df, new_cols = process_features(train_df)
-    ii=[]
     for x in range(num):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res, imp = loss_with_per_tree_stats(df, new_cols)
-        ii.append(imp.tolist())
+        loss, loss1K, res = loss_with_per_tree_stats(df)
         t=time()-t
         l.append(loss)
         l_1K.append(loss1K)
@@ -350,8 +251,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 
         out(l, loss, l_1K, loss1K, x, t)
         write_results(results, fp)
-        write_results(ii, 'importance.json')
 
 
 # train_df, test_df = load_train(), load_test()
-do_test_with_xgboost_stats_per_tree(1000, 'results/trash.json')
+do_test_with_xgboost_stats_per_tree(1000, 'mngr_categ_nv.json')
