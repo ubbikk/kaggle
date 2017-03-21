@@ -114,7 +114,7 @@ def basic_preprocess(df):
     df[CREATED_MONTH] = df["created"].dt.month
     df[CREATED_DAY] = df["created"].dt.day
     df[CREATED_HOUR] = df["created"].dt.hour
-    df[CREATED_MINUTE] = df["created"].dt.MINUTE
+    df[CREATED_MINUTE] = df["created"].dt.minute
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
 
@@ -137,6 +137,7 @@ def simple_loss(df):
     test_df = test_df[features]
 
     train_arr, test_arr = train_df.values, test_df.values
+    print features
 
     estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
     # estimator = RandomForestClassifier(n_estimators=1000)
