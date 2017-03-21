@@ -18,7 +18,6 @@ from xgboost import plot_importance
 from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
-import math
 
 
 
@@ -122,6 +121,38 @@ def basic_preprocess(df):
     return df
 
 
+# (0.61509489625789615, [0.61124170916042475, 0.61371758902339113, 0.61794752159334343, 0.61555861194203254, 0.61700904957028924])
+def simple_loss(df):
+    features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
+                'num_features', 'num_photos', 'word_num_in_descr',
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
+
+    train_df, test_df = split_df(df, 0.7)
+
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    del train_df[TARGET]
+    del test_df[TARGET]
+
+    train_df = train_df[features]
+    test_df = test_df[features]
+
+    train_arr, test_arr = train_df.values, test_df.values
+    print features
+
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
+    # estimator = RandomForestClassifier(n_estimators=1000)
+    estimator.fit(train_arr, train_target)
+
+    # plot feature importance
+    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+    # sns.plt.show()
+
+
+    # print estimator.feature_importances_
+    proba = estimator.predict_proba(test_arr)
+    return log_loss(test_target, proba)
+
 def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
@@ -144,6 +175,7 @@ def loss_with_per_tree_stats(df):
     print features
 
     estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
+    # estimator = RandomForestClassifier(n_estimators=1000)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
@@ -167,6 +199,21 @@ def xgboost_per_tree_results(estimator):
         'train':results_on_train,
         'test':results_on_test
     }
+
+
+def do_test(num, fp):
+    l = []
+    train_df = load_train()
+    for x in range(num):
+        t=time()
+        df=train_df.copy()
+
+        loss = simple_loss(df)
+        t=time()-t
+        l.append(loss)
+
+        out(l, loss,None,None, x, t)
+        write_results(l, fp)
 
 def do_test_with_xgboost_stats_per_tree(num, fp):
     l = []
