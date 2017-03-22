@@ -12,3 +12,10 @@
 12) entity in description
 13)description freaquent tokens 'amazing, gorgeous'
 14)some NLP adj/adv/verb etc ???, sentiment, w2v clustering
+15)dayOfWeek
+16)managers activity normalized\beans
+17)number of listings in that hour\min etc
+18)medians in exact neibourhood
+19)addr_has_number
+20)dummies for bath?
+21)floorplans?

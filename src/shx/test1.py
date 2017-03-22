@@ -56,8 +56,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -189,5 +189,56 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         out(l, loss, l_1K, loss1K, x, t)
         write_results(results, fp)
 
+import fiona
+import shapely
+import shapely.geometry
+import shapefile
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-train_df, test_df = load_train(), load_test()
+shp = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp'
+dbf = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.dbf'
+shx = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shx'
+NEIGHBOURHOOD = "neighbourhood"
+LATITUDE = 'latitude'
+LONGITUDE = 'longitude'
+
+
+def read_records():
+    shape_reader = shapefile.Reader(shp=open(shp, 'rb'), dbf=open(dbf, 'rb'), shx=open(shx, 'rb'))
+    shapeRecords = shape_reader.shapeRecords()
+    return [x.record for x in shapeRecords]
+
+RECORDS = read_records()
+
+def process_df(df):
+    with fiona.open(shp) as fiona_collection:
+        counter=-1
+        df[NEIGHBOURHOOD] = [[] for x in range(len(df))]
+        for shapefile_record in fiona_collection:
+            print counter
+            counter+=1
+            shape = shapely.geometry.asShape( shapefile_record['geometry'] )
+            def append_nei(s):
+                point = shapely.geometry.Point(s[LONGITUDE], s[LATITUDE])
+                if shape.contains(point):
+                    s[NEIGHBOURHOOD].append(RECORDS[counter])
+
+            df.apply(append_nei, axis=1)
+
+
+def write_nei_data():
+    train_df, test_df = load_train(), load_test()
+    train_df = train_df.head(100)
+    test_df = test_df.head(100)
+    process_df(train_df)
+    process_df(test_df)
+    train_df.to_json('train.json')
+    test_df.to_json('test.json')
+
+
+write_nei_data()
+
+
