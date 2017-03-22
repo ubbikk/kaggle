@@ -198,9 +198,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-shp = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shp'
-dbf = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.dbf'
-shx = '/home/dpetrovskyi/Desktop/gis/ZillowNeighborhoods-NY/ZillowNeighborhoods-NY.shx'
+shp = '../../data/new_york_geo_data/ZillowNeighborhoods-NY.shp'
+dbf = '../../data/new_york_geo_data/ZillowNeighborhoods-NY.dbf'
+shx = '../../data/new_york_geo_data/ZillowNeighborhoods-NY.shx'
+
 NEIGHBOURHOOD = "neighbourhood"
 LATITUDE = 'latitude'
 LONGITUDE = 'longitude'
