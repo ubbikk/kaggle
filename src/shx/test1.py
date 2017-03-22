@@ -205,6 +205,8 @@ shx = '../../data/new_york_geo_data/ZillowNeighborhoods-NY.shx'
 NEIGHBOURHOOD = "neighbourhood"
 LATITUDE = 'latitude'
 LONGITUDE = 'longitude'
+#100346
+
 
 
 def read_records():
@@ -220,9 +222,13 @@ def process_df(df):
         df[NEIGHBOURHOOD] = [[] for x in range(len(df))]
         for shapefile_record in fiona_collection:
             t=time()
-
             counter+=1
+
             shape = shapely.geometry.asShape( shapefile_record['geometry'] )
+            town = RECORDS[counter][2]
+            if town != 'New York':
+                continue
+
             def append_nei(s):
                 point = shapely.geometry.Point(s[LONGITUDE], s[LATITUDE])
                 if shape.contains(point):

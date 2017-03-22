@@ -30,6 +30,9 @@ def process_df(df):
             counter+=1
             print counter
             shape = shapely.geometry.asShape( shapefile_record['geometry'] )
+            town = RECORDS[counter][2]
+            if town != 'New York':
+                continue
             def append_nei(s):
                 point = shapely.geometry.Point(s[LONGITUDE], s[LATITUDE])
                 if shape.contains(point):
