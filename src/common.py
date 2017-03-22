@@ -65,12 +65,22 @@ def out(l, loss, l_1K, loss1K, num, t):
     if loss1K is not None:
         print 'loss1K {}'.format(loss1K)
         print 'avg_loss1K {}'.format(np.mean(l_1K))
+        print get_3s_confidence_for_mean(l_1K)
         print
 
     print 'loss {}'.format(loss)
     print 'avg_loss {}'.format(np.mean(l))
+    print get_3s_confidence_for_mean(l)
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
+
+def get_3s_confidence_for_mean(l):
+    std = np.std(l)/math.sqrt(len(l))
+    m = np.mean(l)
+    start = m -3*std
+    end = m+3*std
+
+    return '3s_confidence: [{}, {}]'.format(start, end)
 
 def write_results(l, fp):
     with open(fp, 'w+') as f:
