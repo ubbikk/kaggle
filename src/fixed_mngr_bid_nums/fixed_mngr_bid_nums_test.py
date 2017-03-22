@@ -140,29 +140,42 @@ def process_bid_categ_preprocessing(train_df, test_df):
     return process_with_lambda(train_df, test_df, col, TARGET, TARGET_VALUES, lamdba_f)
 
 
-def process_manager_num(train_df, test_df):
+def process_manager_num_fixed(train_df, test_df):
+    col = MANAGER_ID
     mngr_num_col = 'manager_num'
-    df = train_df.groupby(MANAGER_ID)[MANAGER_ID].count()
-    # df[df<=1]=-1
-    df = df.apply(float)
+
+    df = train_df.groupby(col)[col].count()
+    df = df.apply(lambda s: float(s)/len(train_df))
     df = df.to_frame(mngr_num_col)
-    train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
-    test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+    train_df = pd.merge(train_df, df, left_on=col, right_index=True)
+
+    merged_df = pd.concat([train_df, test_df])
+    df = merged_df.groupby(col)[col].count()
+    df = df.apply(lambda s: float(s)/len(merged_df))
+    df = df.to_frame(mngr_num_col)
+
+    test_df = pd.merge(test_df, df, left_on=col, right_index=True)
 
     return train_df, test_df, [mngr_num_col]
 
 
-def process_bid_num(train_df, test_df):
-    bid_num_col = 'bid_num'
-    df = train_df.groupby(BUILDING_ID)[BUILDING_ID].count()
-    # df[df<=1]=-1
-    df = df.apply(float)
-    df = df.to_frame(bid_num_col)
-    train_df = pd.merge(train_df, df, left_on=BUILDING_ID, right_index=True)
-    test_df = pd.merge(test_df, df, left_on=BUILDING_ID, right_index=True, how='left')
+def process_bid_num_fixed(train_df, test_df):
+    col = BUILDING_ID
+    mngr_num_col = 'bid_num'
 
-    return train_df, test_df, [bid_num_col]
+    df = train_df.groupby(col)[col].count()
+    df = df.apply(lambda s: float(s)/len(train_df))
+    df = df.to_frame(mngr_num_col)
+    train_df = pd.merge(train_df, df, left_on=col, right_index=True)
 
+    merged_df = pd.concat([train_df, test_df])
+    df = merged_df.groupby(col)[col].count()
+    df = df.apply(lambda s: float(s)/len(merged_df))
+    df = df.to_frame(mngr_num_col)
+
+    test_df = pd.merge(test_df, df, left_on=col, right_index=True)
+
+    return train_df, test_df, [mngr_num_col]
 
 
 
@@ -376,13 +389,13 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    train_df, test_df, new_cols = process_manager_num_fixed(train_df, test_df)
     features+=new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
+    train_df, test_df, new_cols = process_bid_num_fixed(train_df, test_df)
     features+=new_cols
 
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
@@ -447,4 +460,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(ii, 'importance.json')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'results_all1.json')
+do_test_with_xgboost_stats_per_tree(1000, 'fixed_bid_mngr_num.json')
