@@ -1,24 +1,14 @@
-import json
 import os
-import seaborn as sns
-import pandas as pd
 from collections import OrderedDict
 
+import numpy as np
+import pandas as pd
+import xgboost as xgb
 from hyperopt import STATUS_FAIL
 from hyperopt import STATUS_OK
 from hyperopt import Trials
 from hyperopt import hp, tpe, fmin
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
-import numpy as np
-import xgboost as xgb
 from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
-from v2w import avg_vector_df, load_model, avg_vector_df_and_pca
 
 TARGET = u'interest_level'
 MANAGER_ID = 'manager_id'
