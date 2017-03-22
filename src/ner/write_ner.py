@@ -206,8 +206,8 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
 from nltk.tag.stanford import StanfordNERTagger
 from nltk.tokenize import TweetTokenizer
 
-stanford_classifier = '/home/dpetrovskyi/stanford/stanford_nlp_libs/stanford-ner-2015-12-09/classifiers/english.all.3class.distsim.crf.ser.gz'
-stanford_ner_path = '/home/dpetrovskyi/stanford/stanford_nlp_libs/stanford-ner-2015-12-09/stanford-ner.jar'
+stanford_classifier = '/home/ubik/stanford/stanford-ner-2015-12-09/classifiers/english.all.3class.distsim.crf.ser.gz'
+stanford_ner_path = '/home/ubik/stanford/stanford-ner-2015-12-09/stanford-ner.jar'
 TAGGER = StanfordNERTagger(stanford_classifier, stanford_ner_path, encoding='utf-8')
 TOKENIZER=TweetTokenizer()
 DESCRIPTION= 'description'
@@ -261,7 +261,7 @@ def process_df(df):
     df['ner'] = df['descr_normalized'].apply(lambda s: perform_ner(s, counter))
 
 train_df, test_df = load_train(), load_test()
-train_df = train_df.head(10)
+# train_df = train_df.head(10)
 t=time()
 process_df(train_df)
 train_df.to_json('train_with_ner.json')
