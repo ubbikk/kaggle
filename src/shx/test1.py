@@ -219,7 +219,8 @@ def process_df(df):
         counter=-1
         df[NEIGHBOURHOOD] = [[] for x in range(len(df))]
         for shapefile_record in fiona_collection:
-            print counter
+            t=time()
+
             counter+=1
             shape = shapely.geometry.asShape( shapefile_record['geometry'] )
             def append_nei(s):
@@ -228,12 +229,13 @@ def process_df(df):
                     s[NEIGHBOURHOOD].append(RECORDS[counter])
 
             df.apply(append_nei, axis=1)
+            print '#{}, time {}'.format(counter, time()-t)
 
 
 def write_nei_data():
     train_df, test_df = load_train(), load_test()
-    train_df = train_df.head(100)
-    test_df = test_df.head(100)
+    # train_df = train_df.head(100)
+    # test_df = test_df.head(100)
     process_df(train_df)
     process_df(test_df)
     train_df.to_json('train.json')
