@@ -1,0 +1,209 @@
+{
+  "Staten Island": {
+    "Staten Island": [
+      "East Shore",
+      "Mid-Island",
+      "North Shore",
+      "South Shore"
+    ]
+  },
+  "Jersey City": {
+    "Jersey City": [
+      "Bergen - Lafayette",
+      "Greenville",
+      "Historic Downtown",
+      "McGinley Square",
+      "The Heights",
+      "The Waterfront",
+      "West Side"
+    ]
+  },
+  "Brooklyn": {
+    "Northwestern Brooklyn": [
+      "Brooklyn Heights",
+      "Brooklyn Navy Yard",
+      "Clinton Hill",
+      "DUMBO",
+      "Downtown Brooklyn",
+      "Fort Greene",
+      "Prospect Heights",
+      "Vinegar Hill"
+    ],
+    "Southeastern Brooklyn": [
+      "Bergen Beach",
+      "Flatlands",
+      "Floyd Bennett Airfield",
+      "Marine Park",
+      "Mill Basin"
+    ],
+    "Eastern Brooklyn": [
+      "Brownsville",
+      "Canarsie",
+      "Cypress Hills",
+      "East New York"
+    ],
+    "South Brooklyn": [
+      "Boerum Hill",
+      "Carroll Gardens",
+      "Cobble Hill",
+      "Gowanus",
+      "Greenwood Heights",
+      "Park Slope",
+      "Prospect Park",
+      "Red Hook",
+      "Sunset Park",
+      "Windsor Terrace"
+    ],
+    "Southwestern Brooklyn": [
+      "Bath Beach",
+      "Bay Ridge",
+      "Bensonhurst",
+      "Borough Park",
+      "Dyker Heights",
+      "Mapleton"
+    ],
+    "Northern Brooklyn": [
+      "Bedford-Stuyvesant",
+      "Bushwick",
+      "Greenpoint",
+      "Williamsburg"
+    ]
+  },
+  "Bronx": {
+    "East Bronx": [
+      "Allerton",
+      "Clason Point",
+      "Morris Park",
+      "Parkchester",
+      "Pelham Bay",
+      "Pelham Parkway",
+      "Throgs Neck",
+      "Unionport",
+      "Van Nest",
+      "Wakefield",
+      "Westchester Village",
+      "Williamsbridge",
+      "Woodlawn Heights"
+    ],
+    "West Bronx": [
+      "Bedford Park",
+      "Belmont",
+      "Bronx Park",
+      "Concourse",
+      "Concourse Village",
+      "East Tremont",
+      "Fordham Heights",
+      "Fordham Manor",
+      "Highbridge",
+      "Hunts Point",
+      "Kingsbridge",
+      "Longwood",
+      "Marble Hill",
+      "Morris Heights",
+      "Morrisania",
+      "Mott Haven",
+      "Mount Eden",
+      "Mount Hope",
+      "Norwood",
+      "Riverdale",
+      "University Heights",
+      "Van Cortlandt Park",
+      "West Farms"
+    ]
+  },
+  "Manhattan": {
+    "Midtown Manhattan": [
+      "Chelsea",
+      "Flatiron District",
+      "Garment District",
+      "Gramercy Park",
+      "Hell's Kitchen",
+      "Kips Bay",
+      "Koreatown",
+      "Midtown East",
+      "Murray Hill",
+      "NoMad",
+      "Stuyvesant Town - Peter Cooper Village",
+      "Theater District"
+    ],
+    "Other": [
+      "Randalls-Wards Island",
+      "Roosevelt Island"
+    ],
+    "Downtown Manhattan": [
+      "Battery Park City",
+      "Bowery",
+      "Chinatown",
+      "Civic Center",
+      "East Village",
+      "Financial District",
+      "Greenwich Village",
+      "Little Italy",
+      "Lower East Side",
+      "NoHo",
+      "NoLita",
+      "SoHo",
+      "Tribeca",
+      "Two Bridges",
+      "West Village"
+    ],
+    "Upper Manhattan": [
+      "Central Harlem",
+      "Central Park",
+      "East Harlem",
+      "Inwood",
+      "Upper East Side",
+      "Upper West Side",
+      "Washington Heights",
+      "West Harlem"
+    ]
+  },
+  "Queens": {
+    "Northwestern Queens": [
+      "Astoria",
+      "Corona",
+      "East Elmhurst",
+      "Elmhurst",
+      "Forest Hills",
+      "Glendale",
+      "Jackson Heights",
+      "Long Island City",
+      "Maspeth",
+      "Middle Village",
+      "Rego Park",
+      "Ridgewood",
+      "Sunnyside",
+      "Woodside"
+    ],
+    "Northeastern Queens": [
+      "Auburndale",
+      "Bayside",
+      "College Point",
+      "Flushing",
+      "Flushing Meadows-Corona Park",
+      "Fresh Meadows",
+      "Glen Oaks",
+      "Kew Gardens",
+      "Kew Gardens Hills",
+      "Whitestone"
+    ],
+    "Southeastern Queens": [
+      "Briarwood",
+      "Hollis",
+      "Holliswood",
+      "Jamaica",
+      "Jamaica Estates",
+      "Jamaica Hills",
+      "South Jamaica",
+      "St. Albans"
+    ],
+    "Southwestern Queens": [
+      "Forest Park",
+      "Howard Beach",
+      "Ozone Park",
+      "Richmond Hill",
+      "South Ozone Park",
+      "Woodhaven"
+    ]
+  }
+}
