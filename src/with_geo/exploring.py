@@ -42,7 +42,8 @@ CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
 CREATED_HOUR = 'created_hour'
 DAY_OF_WEEK = 'dayOfWeek'
-nei = 'neighbourhood'
+NEI = 'neighbourhood'
+BORO = 'boro'
 
 
 
@@ -58,8 +59,11 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-train_file = '../data/with_geo/train.json'
-test_file = '../data/with_geo/test.json'
+train_file = '../data/redhoop/train.json'
+test_file = '../data/redhoop/test.json'
+
+train_geo_file = '../data/redhoop/with_geo/train_geo.json'
+test_geo_file = '../data/redhoop/with_geo/test_geo.json'
 
 def out(l, loss, l_1K, loss1K, num, t):
     print '\n\n'
@@ -95,11 +99,17 @@ def split_df(df, c):
 
 
 def load_train():
-    return basic_preprocess(pd.read_json(train_file))
+    train = pd.read_json(train_file)
+    train_geo = pd.read_json(train_geo_file)
+    train[BORO], train[NEI]= train_geo[BORO] , train_geo[NEI]
+    return basic_preprocess(train)
 
 
 def load_test():
-    return basic_preprocess(pd.read_json(test_file))
+    test = pd.read_json(test_file)
+    test_geo = pd.read_json(test_geo_file)
+    test[BORO], test[NEI] = test_geo[BORO], test_geo[NEI]
+    return basic_preprocess(test)
 
 def process_outliers_lat_long(train_df, test_df):
     min_lat=40
