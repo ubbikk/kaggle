@@ -41,7 +41,6 @@ CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
 CREATED_HOUR = 'created_hour'
-UPPER_RATIO_IN_DESCRIPTION= 'upper_ratio'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -61,13 +60,6 @@ test_file = '../../data/redhoop/test.json'
 
 def process_listing_id(train_df, test_df):
     return train_df, test_df, [LISTING_ID]
-
-
-def process_add_upper_ratio_col(train_df, test_df):
-    for df in (train_df, test_df):
-        df[UPPER_RATIO_IN_DESCRIPTION] = df[DESCRIPTION].apply(upper_ratio)
-
-    return train_df, test_df, [UPPER_RATIO_IN_DESCRIPTION]
 
 
 
@@ -146,6 +138,21 @@ def process_bid_categ_preprocessing(train_df, test_df):
     f=0.156103119211
     lamdba_f = get_exp_lambda(k, f)
     return process_with_lambda(train_df, test_df, col, TARGET, TARGET_VALUES, lamdba_f)
+
+def process_manager_num_and_median(train_df, test_df):
+    mngr_num_col = 'manager_num'
+    mngr_nmean_col= 'manager_median'
+    df = train_df.groupby(MANAGER_ID).agg({MANAGER_ID:{'count':'count'}, PRICE:{'median':'median'}})
+    df.columns=[mngr_num_col, mngr_nmean_col]
+    # df[df<=1]=-1
+    df[mngr_num_col] = df[mngr_num_col].apply(float)
+    df[mngr_nmean_col] = df[mngr_nmean_col].apply(float)
+
+    # df = df.to_frame(mngr_num_col)
+    train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
+    test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+
+    return train_df, test_df, [mngr_num_col, mngr_nmean_col]
 
 
 def process_manager_num(train_df, test_df):
@@ -384,7 +391,7 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    train_df, test_df, new_cols = process_manager_num_and_median(train_df, test_df)
     features+=new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
@@ -394,9 +401,6 @@ def loss_with_per_tree_stats(df, new_cols):
     features+=new_cols
 
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
-    features+=new_cols
-
-    train_df, test_df, new_cols = process_add_upper_ratio_col(train_df, test_df)
     features+=new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
@@ -458,4 +462,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(ii, 'importance.json')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_upper_ratio.json')
+do_test_with_xgboost_stats_per_tree(1000, 'manager_num_and_median.json')

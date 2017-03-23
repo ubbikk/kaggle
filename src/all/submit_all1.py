@@ -41,7 +41,6 @@ CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
 CREATED_HOUR = 'created_hour'
-UPPER_RATIO_IN_DESCRIPTION= 'upper_ratio'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -61,13 +60,6 @@ test_file = '../../data/redhoop/test.json'
 
 def process_listing_id(train_df, test_df):
     return train_df, test_df, [LISTING_ID]
-
-
-def process_add_upper_ratio_col(train_df, test_df):
-    for df in (train_df, test_df):
-        df[UPPER_RATIO_IN_DESCRIPTION] = df[DESCRIPTION].apply(upper_ratio)
-
-    return train_df, test_df, [UPPER_RATIO_IN_DESCRIPTION]
 
 
 
@@ -300,22 +292,12 @@ def out(l, loss, l_1K, loss1K, num, t):
     if loss1K is not None:
         print 'loss1K {}'.format(loss1K)
         print 'avg_loss1K {}'.format(np.mean(l_1K))
-        print get_3s_confidence_for_mean(l_1K)
         print
 
     print 'loss {}'.format(loss)
     print 'avg_loss {}'.format(np.mean(l))
-    print get_3s_confidence_for_mean(l)
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
-
-def get_3s_confidence_for_mean(l):
-    std = np.std(l)/math.sqrt(len(l))
-    m = np.mean(l)
-    start = m -3*std
-    end = m+3*std
-
-    return '3s_confidence: [{}, {}]'.format(start, end)
 
 def write_results(l, fp):
     with open(fp, 'w+') as f:
@@ -396,9 +378,6 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_add_upper_ratio_col(train_df, test_df)
-    features+=new_cols
-
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -458,4 +437,48 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(ii, 'importance.json')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_upper_ratio.json')
+def perform():
+    np.random.seed(9999)
+
+    features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
+                'num_features', 'num_photos', 'word_num_in_descr',
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
+
+    train_df, test_df = load_train(), load_test()
+    np.random.shuffle(train_df.index.values)
+    train_df, new_cols = process_features(train_df)
+    test_df, new_cols = process_features(test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
+    features+=new_cols
+
+    train_target = train_df[TARGET].values
+
+    train_arr, test_arr = train_df[features].values, test_df[features].values
+
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
+    # estimator = RandomForestClassifier(n_estimators=1000)
+    estimator.fit(train_arr, train_target)
+
+    proba = estimator.predict_proba(test_arr)
+    classes = [x for x in estimator.classes_]
+    for cl in classes:
+        test_df[cl] = proba[:, classes.index(cl)]
+
+    res = test_df[['listing_id', 'high', 'medium', 'low']]
+    res.to_csv('results.csv', index=False)
+
+perform()

@@ -19,3 +19,6 @@
 19)addr_has_number
 20)dummies for bath?
 21)floorplans?
+22)upper in descr + 0.002!
+23)month\months free
+24)html tags in descr?
