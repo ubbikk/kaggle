@@ -41,6 +41,7 @@ CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
 CREATED_HOUR = 'created_hour'
+UPPER_RATIO_IN_DESCRIPTION= 'upper_ratio'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -60,6 +61,13 @@ test_file = '../../data/redhoop/test.json'
 
 def process_listing_id(train_df, test_df):
     return train_df, test_df, [LISTING_ID]
+
+
+def process_add_upper_ratio_col(train_df, test_df):
+    for df in (train_df, test_df):
+        df[UPPER_RATIO_IN_DESCRIPTION] = df[DESCRIPTION].apply(upper_ratio)
+
+    return train_df, test_df, [UPPER_RATIO_IN_DESCRIPTION]
 
 
 
@@ -388,6 +396,9 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
     features+=new_cols
 
+    train_df, test_df, new_cols = process_add_upper_ratio_col(train_df, test_df)
+    features+=new_cols
+
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -447,4 +458,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(ii, 'importance.json')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'results_all1.json')
+do_test_with_xgboost_stats_per_tree(1000, 'all_and_upper_ratio.json')
