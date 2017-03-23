@@ -370,7 +370,7 @@ def get_loss_at1K(estimator):
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
     features+=new_cols
 
     train_df, test_df = split_df(df, 0.7)
@@ -449,4 +449,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(ii, 'importance.json')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_upper_ratio.json')
+do_test_with_xgboost_stats_per_tree(1000, 'all_and_day_of_week.json')
