@@ -1,0 +1,26 @@
+
+
+
+
+
+
+ (u'queens village', 2),# 3rd Queens
+
+ (u'laurelton', 2),# 3rd Queens
+ (u'st. george', 2),
+ (u'neponsit', 1),
+ (u'rikers island', 1),
+ (u'navy yard', 1),
+ (u'fort wadsworth', 1),
+ (u'melrose', 1),
+ (u'heartland village', 1),
+ (u'springfield gardens', 1),
+ (u'tompkinsville', 1),
+ (u'bay terrace', 1),
+ (u'park hill', 1),
+ (u'country club', 1),
+ (u'old town', 1),
+ (u'stapleton', 1),
+ (u'blissville', 1),
+ (u'rockaway park', 1)]
+]

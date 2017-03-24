@@ -22,3 +22,4 @@
 22)upper in descr + 0.002!
 23)month\months free
 24)html tags in descr?
+25)bathrooms is zero feature low=0.977636, or isolate?

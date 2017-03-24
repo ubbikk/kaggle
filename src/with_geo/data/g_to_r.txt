@@ -1,26 +1,3 @@
-bedford stuyvesant == bedford-stuyvesant 480
-battery park == battery park city   352
-brighton beach ???? 64
-carnegie hill ???? 188
-columbus circle ???? 1267    ????
-crown heights ???? 364
-downtown ???? 157
-gramercy === gramercy park 2803
-hamilton heights ???? 543    ==== West Harlem, Upper Manhattan
-harlem ===> c\w\e harlem
-hunters point  ???? 457
-manhattanville ??? 213
-midtown ???? 1201 midtown manhetten????
-ocean hill ???? 59
-morningside heights ???? 112
-stuyvesant town === stuyvesant town - peter cooper village 187
-sutton place ???? 768 ===Midtown East
-tudor city 982 ????    ===Midtown East
-turtle bay ???? 1306   ====Midtown East
-
-
-
-
 [(u'gramercy', 2803, 'gramercy park'),
  (u'clinton', 2746, 'hell's kitchen'),
  (u'turtle bay', 1306, 'midtown east', 'sub'),
