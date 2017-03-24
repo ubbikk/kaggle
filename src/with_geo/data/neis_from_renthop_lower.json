@@ -1,14 +1,14 @@
 {
-  "Staten Island": {
-    "Staten Island": [
+  "staten island": {
+    "staten island": [
       "east shore",
       "mid-island",
       "north shore",
       "south shore"
     ]
   },
-  "Jersey City": {
-    "Jersey City": [
+  "jersey city": {
+    "jersey city": [
       "bergen - lafayette",
       "greenville",
       "historic downtown",
@@ -18,8 +18,8 @@
       "west side"
     ]
   },
-  "Brooklyn": {
-    "Northwestern Brooklyn": [
+  "brooklyn": {
+    "northwestern brooklyn": [
       "brooklyn heights",
       "brooklyn navy yard",
       "clinton hill",
@@ -29,20 +29,20 @@
       "prospect heights",
       "vinegar hill"
     ],
-    "Southeastern Brooklyn": [
+    "southeastern brooklyn": [
       "bergen beach",
       "flatlands",
       "floyd bennett airfield",
       "marine park",
       "mill basin"
     ],
-    "Eastern Brooklyn": [
+    "eastern brooklyn": [
       "brownsville",
       "canarsie",
       "cypress hills",
       "east new york"
     ],
-    "Central Brooklyn": [
+    "central brooklyn": [
       "crown heights",
       "east flatbush",
       "flatbush",
@@ -50,7 +50,7 @@
       "midwood",
       "ocean hill"
     ],
-    "South Brooklyn": [
+    "south brooklyn": [
       "boerum hill",
       "carroll gardens",
       "cobble hill",
@@ -62,7 +62,7 @@
       "sunset park",
       "windsor terrace"
     ],
-    "Southwestern Brooklyn": [
+    "southwestern brooklyn": [
       "bath beach",
       "bay ridge",
       "bensonhurst",
@@ -70,21 +70,21 @@
       "dyker heights",
       "mapleton"
     ],
-    "Southern Brooklyn": [
+    "southern brooklyn": [
       "brighton beach",
       "coney island",
       "gravesend",
       "sheepshead bay"
     ],
-    "Northern Brooklyn": [
+    "northern brooklyn": [
       "bedford-stuyvesant",
       "bushwick",
       "greenpoint",
       "williamsburg"
     ]
   },
-  "Bronx": {
-    "East Bronx": [
+  "bronx": {
+    "east bronx": [
       "allerton",
       "clason point",
       "morris park",
@@ -99,7 +99,7 @@
       "williamsbridge",
       "woodlawn heights"
     ],
-    "West Bronx": [
+    "west bronx": [
       "bedford park",
       "belmont",
       "bronx park",
@@ -125,8 +125,8 @@
       "west farms"
     ]
   },
-  "Manhattan": {
-    "Midtown Manhattan": [
+  "manhattan": {
+    "midtown manhattan": [
       "chelsea",
       "flatiron district",
       "garment district",
@@ -140,11 +140,11 @@
       "stuyvesant town - peter cooper village",
       "theater district"
     ],
-    "Other": [
+    "other": [
       "randalls-wards island",
       "roosevelt island"
     ],
-    "Downtown Manhattan": [
+    "downtown manhattan": [
       "battery park city",
       "bowery",
       "chinatown",
@@ -161,7 +161,7 @@
       "two bridges",
       "west village"
     ],
-    "Upper Manhattan": [
+    "upper manhattan": [
       "central harlem",
       "central park",
       "east harlem",
@@ -172,8 +172,8 @@
       "west harlem"
     ]
   },
-  "Queens": {
-    "Northwestern Queens": [
+  "queens": {
+    "northwestern queens": [
       "astoria",
       "corona",
       "east elmhurst",
@@ -189,7 +189,7 @@
       "sunnyside",
       "woodside"
     ],
-    "Northeastern Queens": [
+    "northeastern queens": [
       "auburndale",
       "bayside",
       "college point",
@@ -201,7 +201,7 @@
       "kew gardens hills",
       "whitestone"
     ],
-    "Southeastern Queens": [
+    "southeastern queens": [
       "briarwood",
       "hollis",
       "holliswood",
@@ -211,11 +211,11 @@
       "south jamaica",
       "st. albans"
     ],
-    "Rockaway Peninsula": [
+    "rockaway peninsula": [
       "far rockaway",
       "rockaway beach"
     ],
-    "Southwestern Queens": [
+    "southwestern queens": [
       "forest park",
       "howard beach",
       "ozone park",
