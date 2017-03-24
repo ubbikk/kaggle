@@ -161,39 +161,6 @@ test_geo_file = '../data/redhoop/with_geo/test_geo.json'
 # train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 # test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
 
-
-def out(l, loss, l_1K, loss1K, num, t):
-    print '\n\n'
-    print '#{}'.format(num)
-    if loss1K is not None:
-        print 'loss1K {}'.format(loss1K)
-        print 'avg_loss1K {}'.format(np.mean(l_1K))
-        print get_3s_confidence_for_mean(l_1K)
-        print
-
-    print 'loss {}'.format(loss)
-    print 'avg_loss {}'.format(np.mean(l))
-    print get_3s_confidence_for_mean(l)
-    print 'std {}'.format(np.std(l))
-    print 'time {}'.format(t)
-
-def get_3s_confidence_for_mean(l):
-    std = np.std(l)/math.sqrt(len(l))
-    m = np.mean(l)
-    start = m -3*std
-    end = m+3*std
-
-    return '3s_confidence: [{}, {}]'.format(start, end)
-
-def write_results(l, fp):
-    with open(fp, 'w+') as f:
-        json.dump(l, f)
-
-
-def split_df(df, c):
-    msk = np.random.rand(len(df)) < c
-    return df[msk], df[~msk]
-
 def load_df(file, geo_file):
     df = pd.read_json(file)
     geo = pd.read_json(geo_file)
@@ -211,24 +178,6 @@ def load_train():
 
 def load_test():
     return load_df(test_file, test_geo_file)
-
-def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
-
-    good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
-    good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
-
-    train_df = train_df[good_lat & good_long]
-
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
-    bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
-    test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
-
-    return train_df, test_df
 
 
 def basic_preprocess(df):
@@ -248,69 +197,6 @@ def basic_preprocess(df):
     return df
 
 
-def get_loss_at1K(estimator):
-    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    return results_on_test[1000]
-
-def loss_with_per_tree_stats(df):
-    features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
-                'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
-
-    train_df, test_df = split_df(df, 0.7)
-
-    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
-    del train_df[TARGET]
-    del test_df[TARGET]
-
-    train_df = train_df[features]
-    test_df = test_df[features]
-
-    train_arr, test_arr = train_df.values, test_df.values
-    print features
-
-    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
-    eval_set = [(train_arr, train_target), (test_arr, test_target)]
-    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
-
-    # plot feature importance
-    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
-    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
-    # sns.plt.show()
-
-
-    # print estimator.feature_importances_
-    proba = estimator.predict_proba(test_arr)
-
-    loss = log_loss(test_target, proba)
-    loss1K = get_loss_at1K(estimator)
-    return loss, loss1K, xgboost_per_tree_results(estimator)
-
-def xgboost_per_tree_results(estimator):
-    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
-    return {
-        'train':results_on_train,
-        'test':results_on_test
-    }
-
-def do_test_with_xgboost_stats_per_tree(num, fp):
-    l = []
-    results =[]
-    l_1K=[]
-    train_df = load_train()
-    for x in range(num):
-        t=time()
-        df=train_df.copy()
-
-        loss, loss1K, res = loss_with_per_tree_stats(df)
-        t=time()-t
-        l.append(loss)
-        l_1K.append(loss1K)
-        results.append(res)
-
-        out(l, loss, l_1K, loss1K, x, t)
-        write_results(results, fp)
 
 
 BED_NORMALIZED = 'bed_norm'
@@ -364,15 +250,16 @@ def process_nei123(train_df, test_df):
         df[new_col] = df[PRICE]-df['tmp']
         df[new_col] = df[new_col]/df['tmp']
         new_cols.append(new_col)
-
-    boros = set(df[NEI_3])
-    boros.remove(None)
-    df = pd.get_dummies(df, columns=[NEI_3])
-    dummies= get_dummy_cols(NEI_3, boros)
-    new_cols+=dummies
+    for col in [NEI_1, NEI_2, NEI_3]:
+        vals = set(df[col])
+        if None in vals:
+            vals.remove(None)
+        df = pd.get_dummies(df, columns=[col])
+        dummies= get_dummy_cols(col, vals)
+        new_cols+=dummies
 
     for d in [train_df, test_df]:
-        for col in new_cols+[NEI, NEI_1, NEI_2, NEI_3]:
+        for col in new_cols:
             d[col]=df.loc[d.index, col]
 
     return train_df, test_df, new_cols

@@ -140,7 +140,7 @@ def process_nei123(train_df, test_df):
     new_cols=[]
     for col in [NEI_1, NEI_2]:
         new_col = 'freq_of_{}'.format(col)
-        df[new_col] = df.groupby(col).transform('count')
+        df[new_col] = df.groupby(col)[PRICE].transform('count')
         df[new_col] = df[new_col]/sz
         new_cols.append(new_col)
 
@@ -148,22 +148,23 @@ def process_nei123(train_df, test_df):
     for col in [NEI_1, NEI_2, NEI_3]:
         for bed in beds_vals:
             new_col = 'freq_of_{}, with bed={}'.format(col, bed)
-            df[new_col] = df.groupby([col, BED_NORMALIZED]).transform('count')
+            df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
             df[new_col] = df[new_col]/sz
             new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
         new_col = 'median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([NEI_2, BEDROOMS])[PRICE].transform('median')
+        df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
         df[new_col] = df[PRICE]-df['tmp']
         df[new_col] = df[new_col]/df['tmp']
         new_cols.append(new_col)
-
-    boros = set(df[NEI_3])
-    boros.remove(None)
-    df = pd.get_dummies(df, columns=[NEI_3])
-    dummies= get_dummy_cols(NEI_3, boros)
-    new_cols+=dummies
+    for col in [NEI_1, NEI_2, NEI_3]:
+        vals = set(df[col])
+        if None in vals:
+            vals.remove(None)
+        df = pd.get_dummies(df, columns=[col])
+        dummies= get_dummy_cols(col, vals)
+        new_cols+=dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:

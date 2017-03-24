@@ -549,7 +549,8 @@ def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
 
-def loss_with_per_tree_stats(df, new_cols):
+def do_loss(df, new_cols):
+    df = df.head(100)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
@@ -574,10 +575,14 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
     features+=new_cols
+    for col in features:
+        for df in[train_df, test_df]:
+            df.loc[df[col].isnull(), col]=0
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
+
 
     train_df = train_df[features]
     test_df = test_df[features]
@@ -585,9 +590,8 @@ def loss_with_per_tree_stats(df, new_cols):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
-    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
-    eval_set = [(train_arr, train_target), (test_arr, test_target)]
-    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
+    estimator = RandomForestClassifier(n_estimators=1000)
+    estimator.fit(train_arr, train_target)
 
     # plot feature importance
     # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
@@ -599,21 +603,10 @@ def loss_with_per_tree_stats(df, new_cols):
     proba = estimator.predict_proba(test_arr)
 
     loss = log_loss(test_target, proba)
-    loss1K = get_loss_at1K(estimator)
-    return loss, loss1K, xgboost_per_tree_results(estimator), estimator.feature_importances_
+    return loss,  estimator.feature_importances_
 
-def xgboost_per_tree_results(estimator):
-    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
-    return {
-        'train':results_on_train,
-        'test':results_on_test
-    }
-
-def do_test_with_xgboost_stats_per_tree(num, fp):
+def do_test(num, fp):
     l = []
-    results =[]
-    l_1K=[]
     train_df = load_train()
     train_df, new_cols = process_features(train_df)
     ii=[]
@@ -621,17 +614,16 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         t=time()
         df=train_df.copy()
 
-        loss, loss1K, res , imp= loss_with_per_tree_stats(df, new_cols)
+        loss,  imp= do_loss(df, new_cols)
         ii.append(imp.tolist())
 
         t=time()-t
         l.append(loss)
-        l_1K.append(loss1K)
-        results.append(res)
+        print 'loss {}'.format(loss)
+        print 'time {}'.format(t)
 
-        out(l, loss, l_1K, loss1K, x, t)
-        write_results(results, fp)
+
         write_results(ii, fp+'_importance')
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'blja')
+do_test(1000, 'all_and_nei_medians_random_forest')

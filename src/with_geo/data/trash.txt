@@ -1,0 +1,121 @@
+upper east side                           7625
+upper west side                           4657
+hell's kitchen                            4013
+financial district                        3219
+midtown east                              3056
+gramercy park                             2803
+east village                              2755
+chelsea                                   1444
+flatiron district                         1251
+greenwich village                         1246
+midtown                                   1201
+west village                              1153
+east harlem                                982
+washington heights                         947
+west harlem                                868
+harlem                                     837
+murray hill                                679
+williamsburg                               636
+lower east side                            633
+tribeca                                    587
+astoria                                    557
+garment district                           484
+bedford-stuyvesant                         480
+long island city                           457
+little italy                               405
+bushwick                                   395
+soho                                       383
+crown heights                              364
+battery park city                          352
+park slope                                 307
+fort greene                                262
+inwood                                     234
+flatbush                                   232
+forest hills                               203
+stuyvesant town - peter cooper village     187
+brooklyn heights                           187
+clinton hill                               165
+downtown brooklyn                          157
+roosevelt island                           157
+rego park                                  142
+noho                                       141
+dumbo                                      139
+sunnyside                                  136
+bay ridge                                  131
+greenpoint                                 127
+kew gardens                                 91
+jackson heights                             81
+sunset park                                 80
+riverdale                                   79
+boerum hill                                 76
+gowanus                                     69
+chinatown                                   67
+ridgewood                                   66
+brighton beach                              64
+east flatbush                               61
+ocean hill                                  59
+carroll gardens                             58
+prospect heights                            56
+kensington                                  55
+elmhurst                                    54
+greenwood heights                           44
+cobble hill                                 44
+not_mapped_yet                              39
+kingsbridge                                 38
+windsor terrace                             38
+briarwood                                   32
+midwood                                     29
+bensonhurst                                 29
+williamsbridge                              28
+gravesend                                   27
+kew gardens hills                           26
+concourse                                   25
+fordham manor                               25
+corona                                      21
+woodhaven                                   21
+bedford park                                21
+flushing                                    20
+woodside                                    19
+sheepshead bay                              18
+university heights                          18
+central park                                18
+glendale                                    16
+east new york                               15
+dyker heights                               15
+jamaica                                     13
+far rockaway                                13
+highbridge                                  13
+norwood                                     12
+maspeth                                     10
+middle village                               9
+pelham bay                                   9
+morris park                                  9
+morris heights                               8
+bayside                                      8
+bath beach                                   8
+mott haven                                   7
+richmond hill                                7
+glen oaks                                    6
+borough park                                 6
+brownsville                                  6
+red hook                                     5
+flatlands                                    5
+east elmhurst                                5
+rockaway beach                               5
+canarsie                                     5
+mount hope                                   4
+coney island                                 4
+wakefield                                    4
+belmont                                      3
+ozone park                                   3
+whitestone                                   2
+marine park                                  2
+east tremont                                 2
+unionport                                    2
+parkchester                                  2
+marble hill                                  1
+jamaica estates                              1
+hunts point                                  1
+van cortlandt park                           1
+hollis                                       1
+south ozone park                             1
