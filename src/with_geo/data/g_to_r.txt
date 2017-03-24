@@ -1,0 +1,94 @@
+bedford stuyvesant == bedford-stuyvesant 480
+battery park == battery park city   352
+brighton beach ???? 64
+carnegie hill ???? 188
+columbus circle ???? 1267    ????
+crown heights ???? 364
+downtown ???? 157
+gramercy === gramercy park 2803
+hamilton heights ???? 543    ==== West Harlem, Upper Manhattan
+harlem ===> c\w\e harlem
+hunters point  ???? 457
+manhattanville ??? 213
+midtown ???? 1201 midtown manhetten????
+ocean hill ???? 59
+morningside heights ???? 112
+stuyvesant town === stuyvesant town - peter cooper village 187
+sutton place ???? 768 ===Midtown East
+tudor city 982 ????    ===Midtown East
+turtle bay ???? 1306   ====Midtown East
+
+
+
+
+[(u'gramercy', 2803, 'gramercy park'),
+ (u'clinton', 2746, 'hell's kitchen'),
+ (u'turtle bay', 1306, 'midtown east', 'sub'),
+ (u'columbus circle', 1267),
+ (u'midtown', 1201, ['theater district', 'midtown east', 'chelsea'], 'no'),
+ (u'tudor city', 982, 'midtown east', 'sub'),
+ (u'harlem', 837, ['central harlem', 'west harlem'], 'no'),
+ (u'sutton place', 768, 'midtown east', 'sub'),
+ (u'hamilton heights', 543, 'west harlem'),
+ (u'bedford stuyvesant', 480, 'bedford-stuyvesant'),
+ (u'hunters point', 457, 'long island city'),
+ (u'battery park', 352, 'battery park city'),
+ (u'manhattanville', 213, 'west harlem', 'sub'),
+ (u'carnegie hill', 188, 'upper east side', 'sub'),
+ (u'stuyvesant town', 187, 'stuyvesant town - peter cooper village', 'no'),
+ (u'flatbush', 181),
+ (u'downtown', 157),
+ (u'morningside heights', 112),
+ (u'brighton beach', 64),
+ (u'ocean hill', 59),
+ (u'kensington', 55),
+ (u'spuyten duyvil', 54),
+ (u'prospect lefferts gardens', 51),
+ (u'greenwood', 44),
+ (u'east flatbush', 42),
+ (u'fort hamilton', 35),
+ (u'gravesend', 27),
+ (u'fordham', 25),
+ (u'midwood', 22),
+ (u'wingate', 19),
+ (u'sheepshead bay', 15),
+ (u'forest hills gardens', 14),
+ (u'far rockaway', 13),
+ (u'high bridge', 13),
+ (u'columbia street waterfront district', 11),
+ (u'ocean parkway', 7),
+ (u'north riverdale', 7),
+ (u'astoria heights', 6),
+ (u'castle hill', 6),
+ (u'throggs neck', 5),
+ (u'rockaway beach', 5),
+ (u'coney island', 4),
+ (u'soundview', 4),
+ (u'tremont', 4),
+ (u'new utrecht', 3),
+ (u'homecrest', 3),
+ (u'fieldston', 3),
+ (u'port morris', 3),
+ (u'georgetown', 3),
+ (u'tottenville', 3),
+ (u'pomonok', 2),
+ (u'hillcrest', 2),
+ (u'laurelton', 2),
+ (u'oakland gardens', 2),
+ (u'queens village', 2),
+ (u'st. george', 2),
+ (u'neponsit', 1),
+ (u'tompkinsville', 1),
+ (u'rockaway park', 1),
+ (u'navy yard', 1),
+ (u'fort wadsworth', 1),
+ (u'melrose', 1),
+ (u'heartland village', 1),
+ (u'springfield gardens', 1),
+ (u'rikers island', 1),
+ (u'bay terrace', 1),
+ (u'park hill', 1),
+ (u'country club', 1),
+ (u'old town', 1),
+ (u'stapleton', 1),
+ (u'blissville', 1)]

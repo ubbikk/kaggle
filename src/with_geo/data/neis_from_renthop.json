@@ -67,6 +67,20 @@
       "Bushwick",
       "Greenpoint",
       "Williamsburg"
+    ],
+    "Central Brooklyn":[
+      "Crown Heights",
+      "East Flatbush",
+      "Flatbush",
+      "Kensington",
+      "Midwood",
+      "Ocean Hill"
+    ],
+    "Southern Brooklyn":[
+      "Brighton Beach",
+      "Coney Island",
+      "Gravesend",
+      "Sheepshead Bay"
     ]
   },
   "Bronx": {
@@ -204,6 +218,10 @@
       "Richmond Hill",
       "South Ozone Park",
       "Woodhaven"
+    ],
+    "Rockaway Peninsula":[
+      "Far Rockaway",
+      "Rockaway Beach"
     ]
   }
 }

@@ -42,6 +42,14 @@
       "cypress hills",
       "east new york"
     ],
+    "Central Brooklyn": [
+      "crown heights",
+      "east flatbush",
+      "flatbush",
+      "kensington",
+      "midwood",
+      "ocean hill"
+    ],
     "South Brooklyn": [
       "boerum hill",
       "carroll gardens",
@@ -61,6 +69,12 @@
       "borough park",
       "dyker heights",
       "mapleton"
+    ],
+    "Southern Brooklyn": [
+      "brighton beach",
+      "coney island",
+      "gravesend",
+      "sheepshead bay"
     ],
     "Northern Brooklyn": [
       "bedford-stuyvesant",
@@ -196,6 +210,10 @@
       "jamaica hills",
       "south jamaica",
       "st. albans"
+    ],
+    "Rockaway Peninsula": [
+      "far rockaway",
+      "rockaway beach"
     ],
     "Southwestern Queens": [
       "forest park",
