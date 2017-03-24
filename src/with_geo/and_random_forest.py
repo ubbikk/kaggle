@@ -550,7 +550,6 @@ def get_loss_at1K(estimator):
     return results_on_test[1000]
 
 def do_loss(df, new_cols):
-    df = df.head(100)
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
@@ -601,7 +600,6 @@ def do_loss(df, new_cols):
 
     # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
-
     loss = log_loss(test_target, proba)
     return loss,  estimator.feature_importances_
 
@@ -622,7 +620,7 @@ def do_test(num, fp):
         print 'loss {}'.format(loss)
         print 'time {}'.format(t)
 
-
+        write_results(l, fp)
         write_results(ii, fp+'_importance')
 
 
