@@ -90,7 +90,7 @@ def designate_single_observations(df1, df2, column):
 
 def process_mangr_etc_factorize(train_df, test_df):
     new_cols = ['building_id', 'display_address', 'manager_id', 'street_address']
-    for col in cols:
+    for col in new_cols:
         train_df, test_df = designate_single_observations(train_df, test_df, col)
         train_df, test_df = factorize(train_df, test_df, col)
 
