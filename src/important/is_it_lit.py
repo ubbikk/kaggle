@@ -1,5 +1,9 @@
+import json
+from time import time
+
 import numpy as np
 import pandas as pd
+from sklearn.metrics import log_loss
 from sklearn.preprocessing import MultiLabelBinarizer
 from itertools import product
 from sklearn.model_selection import StratifiedKFold
@@ -59,8 +63,11 @@ def hcc_encode(train_df, test_df, variable, target, prior_prob, k, f=1, g=1, r_k
     return
 
 # Load data
-X_train = pd.read_json("../input/train.json").sort_values(by="listing_id")
-X_test = pd.read_json("../input/test.json").sort_values(by="listing_id")
+# X_train = pd.read_json("../data/redhoop/train.json").sort_values(by="listing_id")
+# X_test = pd.read_json("../data/redhoop/test.json").sort_values(by="listing_id")
+
+X_train = pd.read_json("../../data/redhoop/train.json").sort_values(by="listing_id")
+X_test = pd.read_json("../../data/redhoop/test.json").sort_values(by="listing_id")
 
 # Make target integer, one hot encoded, calculate target priors
 X_train = X_train.replace({"interest_level": {"low": 0, "medium": 1, "high": 2}})
@@ -101,6 +108,10 @@ flt = lambda l: [i for i in l if i in mlb.classes_]     # filter out features no
 X_train = X_train.join(pd.DataFrame(data=mlb.transform(X_train["features"].apply(flt)), columns=columns, index=X_train.index))
 X_test = X_test.join(pd.DataFrame(data=mlb.transform(X_test["features"].apply(flt)), columns=columns, index=X_test.index))
 
+
+
+
+
 # Save
 """
 X_train = X_train.sort_index(axis=1).sort_values(by="listing_id")
@@ -111,3 +122,130 @@ X_train.drop([c for c in X_train.columns if c in columns_to_drop], axis=1).\
 X_test.drop([c for c in X_test.columns if c in columns_to_drop], axis=1).\
     to_csv("data/test_python.csv", index=False, encoding='utf-8')
 """
+import xgboost as xgb
+import math
+
+columns_to_drop = ["photos", "pred_0","pred_1", "pred_2", "description", "features", "created"]
+TARGET = u'interest_level'
+TARGET_VALUES = ['low', 'medium', 'high']
+MANAGER_ID = 'manager_id'
+BUILDING_ID = 'building_id'
+LATITUDE = 'latitude'
+LONGITUDE = 'longitude'
+PRICE = 'price'
+BATHROOMS = 'bathrooms'
+BEDROOMS = 'bedrooms'
+DESCRIPTION = 'description'
+DISPLAY_ADDRESS = 'display_address'
+STREET_ADDRESS = 'street_address'
+LISTING_ID = 'listing_id'
+PRICE_PER_BEDROOM = 'price_per_bedroom'
+F_COL=u'features'
+CREATED_MONTH = "created_month"
+CREATED_DAY = "created_day"
+CREATED_MINUTE='created_minute'
+CREATED_HOUR = 'created_hour'
+
+def out(l, loss, l_1K, loss1K, num, t):
+    print '\n\n'
+    print '#{}'.format(num)
+    if loss1K is not None:
+        print 'loss1K {}'.format(loss1K)
+        print 'avg_loss1K {}'.format(np.mean(l_1K))
+        print get_3s_confidence_for_mean(l_1K)
+        print
+
+    print 'loss {}'.format(loss)
+    print 'avg_loss {}'.format(np.mean(l))
+    print get_3s_confidence_for_mean(l)
+    print 'std {}'.format(np.std(l))
+    print 'time {}'.format(t)
+
+def get_3s_confidence_for_mean(l):
+    std = np.std(l)/math.sqrt(len(l))
+    m = np.mean(l)
+    start = m -3*std
+    end = m+3*std
+
+    return '3s_confidence: [{}, {}]'.format(start, end)
+
+def write_results(l, fp):
+    with open(fp, 'w+') as f:
+        json.dump(l, f)
+
+
+
+def split_df(df, c):
+    msk = np.random.rand(len(df)) < c
+    return df[msk], df[~msk]
+
+def get_loss_at1K(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    return results_on_test[1000]
+
+def loss_with_per_tree_stats(df):
+    train_df, test_df = split_df(df, 0.7)
+
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    del train_df[TARGET]
+    del test_df[TARGET]
+
+    features = train_df.columns.values
+
+    train_df = train_df[features]
+    test_df = test_df[features]
+
+    train_arr, test_arr = train_df.values, test_df.values
+    print features
+
+    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
+
+    # plot feature importance
+    # ffs= features[:len(features)-1]+['man_id_high', 'man_id_medium', 'man_id_low', 'manager_skill']
+    # sns.barplot(ffs, [x for x in estimator.feature_importances_])
+    # sns.plt.show()
+
+
+    # print estimator.feature_importances_
+    proba = estimator.predict_proba(test_arr)
+
+    loss = log_loss(test_target, proba)
+    loss1K = get_loss_at1K(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator), estimator.feature_importances_
+
+def xgboost_per_tree_results(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
+    return {
+        'train':results_on_train,
+        'test':results_on_test
+    }
+
+def do_test_with_xgboost_stats_per_tree(train_df, num, fp):
+    for col in columns_to_drop:
+        del train_df[col]
+    l = []
+    results =[]
+    l_1K=[]
+    ii=[]
+    for x in range(num):
+        t=time()
+        df=train_df.copy()
+
+        loss, loss1K, res , imp= loss_with_per_tree_stats(df)
+        ii.append(imp.tolist())
+
+        t=time()-t
+        l.append(loss)
+        l_1K.append(loss1K)
+        results.append(res)
+
+        out(l, loss, l_1K, loss1K, x, t)
+        write_results(results, fp)
+        write_results(ii, fp+'_importance.json')
+
+
+# do_test_with_xgboost_stats_per_tree(X_train, 1000, 'is_it_lit.json')
+
