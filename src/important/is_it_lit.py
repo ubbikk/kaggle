@@ -224,7 +224,7 @@ def xgboost_per_tree_results(estimator):
     }
 
 def do_test_with_xgboost_stats_per_tree(train_df, num, fp):
-    for col in columns_to_drop:
+    for col in columns_to_drop+[MANAGER_ID, BUILDING_ID, DISPLAY_ADDRESS, STREET_ADDRESS]:
         del train_df[col]
     l = []
     results =[]
@@ -247,5 +247,5 @@ def do_test_with_xgboost_stats_per_tree(train_df, num, fp):
         write_results(ii, fp+'_importance.json')
 
 
-# do_test_with_xgboost_stats_per_tree(X_train, 1000, 'is_it_lit.json')
+do_test_with_xgboost_stats_per_tree(X_train, 1000, 'is_it_lit_drop_mgr_bid_etc.json')
 
