@@ -3,10 +3,12 @@ from time import time
 
 import numpy as np
 import pandas as pd
+from pymongo import MongoClient
 from sklearn.metrics import log_loss
 from sklearn.preprocessing import MultiLabelBinarizer
 from itertools import product
 from sklearn.model_selection import StratifiedKFold
+import os
 
 
 #my
@@ -108,23 +110,39 @@ def designate_single_observations(df1, df2, column):
     return df1, df2
 
 
-def hcc_encode(train_df, test_df, variable, target, prior_prob, k, f=1, g=1, r_k=None, update_df=None):
+def hcc_encode(train_df, test_df, variable, target, prior_prob, k, f=1, g=1):
     """
     See "A Preprocessing Scheme for High-Cardinality Categorical Attributes in
     Classification and Prediction Problems" by Daniele Micci-Barreca
     """
     hcc_name = "_".join(["hcc", variable, target])
+    r_k = 0.01
+    skf = StratifiedKFold(5)
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        grouped = big.groupby(variable)[target].agg({"size": "size", "mean": "mean"})
+        grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
+        grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
+
+        # big = pd.merge(big, grouped[[hcc_name]], left_on=variable, right_index=True)
+        # big[hcc_name]= big[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(big))
+        if hcc_name in small.columns:
+            del small[hcc_name]
+        small = pd.merge(small, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
+        small.loc[small[hcc_name].isnull(), hcc_name] = prior_prob
+        small[hcc_name]= small[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(small))
+        train_df.loc[small.index, hcc_name] = small[hcc_name]
 
     grouped = train_df.groupby(variable)[target].agg({"size": "size", "mean": "mean"})
     grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
     grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
 
-    train_df = pd.merge(train_df, grouped[[hcc_name]], left_on=variable, right_index=True)
-    train_df[hcc_name]= train_df[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(train_df))
+    # big = pd.merge(big, grouped[[hcc_name]], left_on=variable, right_index=True)
+    # big[hcc_name]= big[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(big))
 
     test_df = pd.merge(test_df, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
     test_df.loc[test_df[hcc_name].isnull(), hcc_name] = prior_prob
-    # test_df[hcc_name]= test_df[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(test_df))
 
     return train_df, test_df
 
@@ -161,7 +179,7 @@ def do_is_it_lit(X_train, X_test):
     # High-Cardinality Categorical encoding
     attributes = product(("building_id", "manager_id"), zip(("pred_1", "pred_2"), (prior_1, prior_2)))
     for variable, (target, prior) in attributes:
-        X_train, X_test= hcc_encode(X_train, X_test, variable, target, prior, k=5, r_k=0.01)
+        X_train, X_test= hcc_encode(X_train, X_test, variable, target, prior, k=5)
         # for train, test in skf.split(np.zeros(len(X_train)), X_train['interest_level']):
         #     hcc_encode(X_train.iloc[train], X_train.iloc[test], variable, target, prior, k=5, r_k=0.01, update_df=X_train)
 
@@ -247,9 +265,19 @@ def get_3s_confidence_for_mean(l):
 
     return '3s_confidence: [{}, {}]'.format(start, end)
 
-def write_results(l, fp):
+def write_results(l, name, ii, fldr=None):
+    client = MongoClient('10.20.0.144', 27017)
+    db = client.renthop_results
+    collection = db[name]
+    losses = l[len(l)-1]
+    importance = ii[len(ii)-1]
+    collection.insert_one({'results':losses, 'importance':importance})
+    fp = name+'.json' if fldr is None else os.path.join(name+'.json')
+    ii_fp = name+'_importance.json' if fldr is None else os.path.join(name+'_importance.json')
     with open(fp, 'w+') as f:
         json.dump(l, f)
+    with open(ii_fp, 'w+') as f:
+        json.dump(ii, f)
 
 
 
@@ -306,7 +334,7 @@ def xgboost_per_tree_results(estimator):
         'test':results_on_test
     }
 
-def do_test_with_xgboost_stats_per_tree(num, fp):
+def do_test_with_xgboost_stats_per_tree(num, name):
 
     l = []
     results =[]
@@ -327,9 +355,8 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         results.append(res)
 
         out(l, loss, l_1K, loss1K, x, t)
-        write_results(results, fp)
-        write_results(ii, fp+'_importance.json')
+        write_results(results, name, ii)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'is_it_lit_drop_mgr_bid_etc.json')
+do_test_with_xgboost_stats_per_tree(1000, 'is_it_lit')
 
