@@ -19,6 +19,7 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import boxcox
 from scipy.spatial import KDTree
 import math
+from pymongo import MongoClient
 
 
 
@@ -59,18 +60,23 @@ train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
 
 
+
+#========================================================
+#LISTING_ID
+
 def process_listing_id(train_df, test_df):
     return train_df, test_df, [LISTING_ID]
 
 
+#========================================================
 
 
 
 
 
 
-
-
+#========================================================
+#MNGR CATEG
 
 def cols(col, target_col, target_vals):
     return ['{}_coverted_exp_for_{}={}'.format(col, target_col, v) for v in target_vals]
@@ -132,6 +138,12 @@ def process_mngr_categ_preprocessing(train_df, test_df):
     lamdba_f = get_exp_lambda(k, f)
     return process_with_lambda(train_df, test_df, col, TARGET, TARGET_VALUES, lamdba_f)
 
+#========================================================
+
+
+#========================================================
+#BID_CATEG
+
 
 def process_bid_categ_preprocessing(train_df, test_df):
     col = BUILDING_ID
@@ -139,6 +151,11 @@ def process_bid_categ_preprocessing(train_df, test_df):
     f=0.156103119211
     lamdba_f = get_exp_lambda(k, f)
     return process_with_lambda(train_df, test_df, col, TARGET, TARGET_VALUES, lamdba_f)
+
+#========================================================
+
+#========================================================
+#MANAGER NUM
 
 
 def process_manager_num(train_df, test_df):
@@ -151,6 +168,13 @@ def process_manager_num(train_df, test_df):
     test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
 
     return train_df, test_df, [mngr_num_col]
+
+#========================================================
+
+
+
+#========================================================
+#BID NUM
 
 
 def process_bid_num(train_df, test_df):
@@ -165,11 +189,12 @@ def process_bid_num(train_df, test_df):
     return train_df, test_df, [bid_num_col]
 
 
+#========================================================
 
 
 
-
-
+#========================================================
+#TOP 50 GROUPED FEATURES
 
 COL = 'normalized_features'
 
@@ -273,18 +298,12 @@ def process_features(df):
     return df, new_cols
 
 
+#========================================================
 
 
 
-
-
-
-
-
-
-
-
-
+#========================================================
+#WRITTING RESULTS
 
 
 def out(l, loss, l_1K, loss1K, num, t):
@@ -310,11 +329,26 @@ def get_3s_confidence_for_mean(l):
 
     return '3s_confidence: [{}, {}]'.format(start, end)
 
-def write_results(l, fp):
+def write_results(l, name, ii, fldr=None):
+    client = MongoClient('10.20.0.144', 27017)
+    db = client.renthop_results
+    collection = db[name]
+    losses = l[len(l)-1]
+    importance = ii[len(ii)-1]
+    collection.insert_one({'results':losses, 'importance':importance})
+    fp = name+'.json' if fldr is None else os.path.join(name+'.json')
+    ii_fp = name+'_importance.json' if fldr is None else os.path.join(name+'_importance.json')
     with open(fp, 'w+') as f:
         json.dump(l, f)
+    with open(ii_fp, 'w+') as f:
+        json.dump(ii, f)
+
+#========================================================
 
 
+
+#========================================================
+#VALIDATION
 def split_df(df, c):
     msk = np.random.rand(len(df)) < c
     return df[msk], df[~msk]
@@ -370,7 +404,7 @@ def get_loss_at1K(estimator):
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
     features+=new_cols
 
     train_df, test_df = split_df(df, 0.7)
@@ -445,8 +479,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         results.append(res)
 
         out(l, loss, l_1K, loss1K, x, t)
-        write_results(results, fp)
-        write_results(ii, fp+'_importance.json')
+        write_results(results, fp, ii)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all1.json')
+do_test_with_xgboost_stats_per_tree(1000, 'all1')
