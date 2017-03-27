@@ -17,6 +17,27 @@ def cols(col, target_col, target_vals):
     return ['{}_coverted_exp_for_{}={}'.format(col, target_col, v) for v in target_vals]
 
 
+def process_with_lambda_binary(train_df, test_df, col, target_col, target_val, lambda_f):
+    df = train_df[[col, target_col]]
+    new_col = 'hcc_{}_{}'.format(col, target_val)
+    df['target'] = train_df[target_col].apply(lambda s: 1 if s == target_val else 0)
+    prior= df['target'].mean()
+    agg = OrderedDict([
+        ('sz','size'), ('posterior', 'mean')
+    ])
+    df = df.groupby(col)['target'].agg(agg)
+    df.columns=['sz', 'posterior']
+    df['lambda'] = df['sz'].apply(lambda_f)
+    df[new_col] = df['lambda']*df['posterior'] + (1-df['lambda'])*prior
+
+    train_df = pd.merge(train_df, df, left_on=col, right_index=True)
+    test_df = pd.merge(test_df, df, how='left', left_on=col, right_index=True)
+
+    test_df.loc[test_df[new_col].isnull(), new_col] = prior
+
+    return train_df, test_df, [new_col]
+
+
 def process_with_lambda(train_df, test_df, col, target_col, target_vals, lambda_f):
     temp_target = '{}_'.format(target_col)
     train_df[temp_target]= train_df[target_col]
