@@ -103,7 +103,7 @@ def do_test(runs):
     space = {
         'k': hp.qnormal('k', 10, 7, 1),
         'f': hp.loguniform('f', log(0.1), log(5)),
-        'n': hp.choice([2,3,4,5,6,7,10])
+        'n': hp.choice('n', [2,3,4,5,6,7,10])
     }
     trials = MongoTrials('mongo://10.20.0.144:27017/mngr_id_hcc_08_08/jobs', exp_key='exp1')
 
