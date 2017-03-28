@@ -170,7 +170,7 @@ def with_lambda_loss(df, k, f, n):
 
     train_arr, test_arr = train_df.values, test_df.values
 
-    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss', subsample=0.8, colsample_bytree=0.8)
     # estimator = RandomForestClassifier(n_estimators=1000)
     estimator.fit(train_arr, train_target)
 

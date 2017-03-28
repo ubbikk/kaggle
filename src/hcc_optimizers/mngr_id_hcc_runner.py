@@ -12,7 +12,7 @@ from scipy.stats import boxcox
 
 import mngr_id_categorical_optimizer
 
-from hcc_optimizers import mngr_id_hcc_optimizer
+import mngr_id_hcc_optimizer
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
