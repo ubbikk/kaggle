@@ -10,7 +10,7 @@ from matplotlib import pyplot
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
+from sklearn.model_selection import StratifiedKFold
 import numpy as np
 import xgboost as xgb
 from sklearn.metrics import log_loss
@@ -81,31 +81,37 @@ def process_listing_id(train_df, test_df):
 #========================================================
 #MNGR CATEG
 
-def cols(col, target_col, target_vals):
-    return ['{}_coverted_exp_for_{}={}'.format(col, target_col, v) for v in target_vals]
+def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k = 0.01, folds=5):
+    """
+    See "A Preprocessing Scheme for High-Cardinality Categorical Attributes in
+    Classification and Prediction Problems" by Daniele Micci-Barreca
+    """
+    prior_prob = train_df[binary_target].mean()
+    hcc_name = "_".join(["hcc", variable, binary_target])
 
-def dummy_col(col_name, val):
-    return '{}_{}'.format(col_name, val)
+    skf = StratifiedKFold(folds)
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        grouped = big.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
+        grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
+        grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
 
-def process_with_lambda_binary(train_df, test_df, col, target_col, target_val, lambda_f):
-    df = train_df[[col, target_col]]
-    new_col = 'hcc_{}_{}'.format(col, target_val)
-    df['target'] = train_df[target_col].apply(lambda s: 1 if s == target_val else 0)
-    prior= df['target'].mean()
-    agg = OrderedDict([
-        ('sz','size'), ('posterior', 'mean')
-    ])
-    df = df.groupby(col)['target'].agg(agg)
-    df.columns=['sz', 'posterior']
-    df['lambda'] = df['sz'].apply(lambda_f)
-    df[new_col] = df['lambda']*df['posterior'] + (1-df['lambda'])*prior
+        if hcc_name in small.columns:
+            del small[hcc_name]
+        small = pd.merge(small, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
+        small.loc[small[hcc_name].isnull(), hcc_name] = prior_prob
+        small[hcc_name]= small[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(small))
+        train_df.loc[small.index, hcc_name] = small[hcc_name]
 
-    train_df = pd.merge(train_df, df, left_on=col, right_index=True)
-    test_df = pd.merge(test_df, df, how='left', left_on=col, right_index=True)
+    grouped = train_df.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
+    grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
+    grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
 
-    test_df.loc[test_df[new_col].isnull(), new_col] = prior
+    test_df = pd.merge(test_df, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
+    test_df.loc[test_df[hcc_name].isnull(), hcc_name] = prior_prob
 
-    return train_df, test_df, [new_col]
+    return train_df, test_df, hcc_name
 
 
 def get_exp_lambda(k,f):
@@ -116,13 +122,14 @@ def get_exp_lambda(k,f):
 
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
-    k=5
-    f=1
-    lamdba_f = get_exp_lambda(k, f)
     new_cols=[]
-    for val in ['high', 'medium']:
-        train_df, test_df, columns = process_with_lambda_binary(train_df, test_df, col, TARGET, val, lamdba_f)
-        new_cols+=columns
+    for df in [train_df, test_df]:
+        df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
+        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
+    for binary_col in ['target_high', 'target_medium']:
+        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
+        new_cols.append(new_col)
+
     return train_df, test_df, new_cols
 
 #========================================================
@@ -141,14 +148,15 @@ def designate_single_observations(train_df, test_df, col):
     return train_df, test_df, new_col
 
 def process_bid_categ_preprocessing(train_df, test_df):
-    train_df, test_df, replacement_col = designate_single_observations(train_df, test_df, BUILDING_ID)
-    k=5
-    f=1
-    lamdba_f = get_exp_lambda(k, f)
+    col = BUILDING_ID
     new_cols=[]
-    for val in ['high', 'medium']:
-        train_df, test_df, columns = process_with_lambda_binary(train_df, test_df, replacement_col, TARGET, val, lamdba_f)
-        new_cols+=columns
+    for df in [train_df, test_df]:
+        df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
+        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
+    for binary_col in ['target_high', 'target_medium']:
+        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
+        new_cols.append(new_col)
+
     return train_df, test_df, new_cols
 
 #========================================================
@@ -404,24 +412,24 @@ def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
-    # features+=new_cols
+    features+=new_cols
 
     train_df, test_df = split_df(df, 0.7)
 
-    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    # features+=new_cols
-    #
-    # train_df, test_df, new_cols = process_manager_num(train_df, test_df)
-    # features+=new_cols
+    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    features+=new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
     features+=new_cols
 
-    # train_df, test_df, new_cols = process_bid_num(train_df, test_df)
-    # features+=new_cols
+    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
+    features+=new_cols
 
-    # train_df, test_df, new_cols = process_listing_id(train_df, test_df)
-    # features+=new_cols
+    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
+    features+=new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -433,7 +441,7 @@ def loss_with_per_tree_stats(df, new_cols):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
-    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=1100, objective='mlogloss')
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 

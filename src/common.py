@@ -157,7 +157,7 @@ def loss_with_per_tree_stats(df):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
-    estimator = xgb.XGBClassifier(n_estimators=1500, objective='mlogloss')
+    estimator = xgb.XGBClassifier(n_estimators=1100, objective='mlogloss')
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
