@@ -12,6 +12,8 @@ from scipy.stats import boxcox
 
 import mngr_id_categorical_optimizer
 
+from hcc_optimizers import mngr_id_hcc_optimizer
+
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
@@ -96,16 +98,16 @@ def get_the_best_loss(trials):
         return None
 
 
-def do_test(runs, flder):
+def do_test(runs):
     df = load_train()
     space = {
-        'k': hp.qnormal('k', 25, 10, 1),
-        'f': hp.loguniform('f', log(0.1), log(5))
+        'k': hp.qnormal('k', 10, 7, 1),
+        'f': hp.loguniform('f', log(0.1), log(5)),
+        'n': hp.choice([2,3,4,5,6,7,10])
     }
-    trials = MongoTrials('mongo://10.20.0.144:27017/redhop_mngr_id_exp_family/jobs', exp_key='exp1')
+    trials = MongoTrials('mongo://10.20.0.144:27017/mngr_id_hcc_08_08/jobs', exp_key='exp1')
 
-    log_file = os.path.join(flder, 'log.txt')
-    objective = partial(mngr_id_categorical_optimizer.loss_for_batch, df=df, runs=runs, flder=flder, log_file=log_file)
+    objective = partial(mngr_id_hcc_optimizer.loss_for_batch, df=df, runs=runs)
     best = fmin(objective, space=space, algo=tpe.suggest, trials=trials,
                 max_evals=10000)
 
@@ -114,4 +116,4 @@ def do_test(runs, flder):
     print 'best={}'.format(get_the_best_loss(trials))
 
 
-do_test(25, sys.argv[1])
+do_test(25)
