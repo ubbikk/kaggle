@@ -10,7 +10,7 @@ from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
 from scipy.stats import boxcox
 
-import mngr_id_categorical_optimizer
+
 
 import mngr_id_hcc_optimizer
 
