@@ -482,4 +482,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         write_results(results, fp, ii)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all1')
+do_test_with_xgboost_stats_per_tree(1000, '')

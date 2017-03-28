@@ -160,6 +160,7 @@ def with_lambda_loss(df, k, f, n):
 
     train_df, test_df, new_columns = process_mngr_categ_preprocessing(train_df, test_df, k, f, n)
     features+=new_columns
+    print features
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -198,6 +199,7 @@ def loss_for_batch(s, df, runs):
     f = s['f']
     k = s['k']
     n=int(s['n'])
+    print k, f, n
     if k <= 1 or f <= 0.1:
         return {'loss': 1000, 'status': STATUS_FAIL}
 
