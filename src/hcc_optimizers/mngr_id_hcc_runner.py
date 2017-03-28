@@ -28,6 +28,12 @@ DISPLAY_ADDRESS = 'display_address'
 STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
+F_COL=u'features'
+CREATED_MONTH = "created_month"
+CREATED_DAY = "created_day"
+CREATED_MINUTE='created_minute'
+CREATED_HOUR = 'created_hour'
+DAY_OF_WEEK = 'dayOfWeek'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -80,9 +86,12 @@ def basic_preprocess(df):
     df['num_photos'] = df['photos'].apply(len)
     df['word_num_in_descr'] = df['description'].apply(lambda x: len(x.split(' ')))
     df["created"] = pd.to_datetime(df["created"])
-    df["created_year"] = df["created"].dt.year
-    df["created_month"] = df["created"].dt.month
-    df["created_day"] = df["created"].dt.day
+    # df["created_year"] = df["created"].dt.year
+    df[CREATED_MONTH] = df["created"].dt.month
+    df[CREATED_DAY] = df["created"].dt.day
+    df[CREATED_HOUR] = df["created"].dt.hour
+    df[CREATED_MINUTE] = df["created"].dt.minute
+    df[DAY_OF_WEEK] = df['created'].dt.dayofweek
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
 
