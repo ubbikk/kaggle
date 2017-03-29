@@ -206,7 +206,7 @@ def loss_for_batch(s, df, runs):
     k = s['k']
     n=int(s['n'])
     print k, f, n
-    if k <= 1 or f <= 0.1:
+    if k <= 1 or f <= 0.1 or n<=1:
         return {'loss': 1000, 'status': STATUS_FAIL}
 
     # print 'Running for k={}, f={}'.format(k,f)
