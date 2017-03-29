@@ -4,6 +4,9 @@ apt-get -y install make
 apt-get -y install g++
 apt-get -y install python-dev
 apt-get -y install python-tk
+apt-get -y install unzip
+apt-get -y install htop
+apt-get -y install nmap
 
 wget https://bootstrap.pypa.io/get-pip.py
 python get-pip.py

@@ -12,6 +12,14 @@ sudo bash install_environment.sh
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/train.json data/redhoop/
 scp dpetrovskyi@10.20.0.144:/home/dpetrovskyi/PycharmProjects/kaggle/data/redhoop/test.json data/redhoop/
 
+or
+
+wget https://www.dropbox.com/s/fs4wlw2k9xmbkvw/test.json.zip
+wget https://www.dropbox.com/s/z7ybcosh4ohbh27/train.json.zip
+
+unzip train.json.zip -d data/redhoop/
+unzip test.json.zip -d data/redhoop/
+
 
 
 

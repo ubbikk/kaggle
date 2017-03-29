@@ -40,3 +40,14 @@ def explore_importance(name, features, N):
     ys=[x[1] for x in res]
     sns.barplot(xs, ys)
     sns.plt.show()
+
+
+def explore_res_name(name):
+    res = load_results_1K(name)
+    return [
+        ('avg_loss', np.mean(res)),
+        ('max', np.max(res)),
+        ('min', np.min(res)),
+        ('std', np.std(res)),
+        ('len', len(res))
+    ]
