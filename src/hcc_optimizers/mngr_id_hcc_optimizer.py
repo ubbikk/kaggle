@@ -49,6 +49,9 @@ def split_df(df, c):
     msk = np.random.rand(len(df)) < c
     return df[msk], df[~msk]
 
+def shuffle_df(df):
+    return df.iloc[np.random.permutation(len(df))]
+
 #========================================================
 #MANAGER NUM
 
@@ -148,7 +151,7 @@ def with_lambda_loss(df, k, f, n):
 
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE]
+                "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -156,10 +159,13 @@ def with_lambda_loss(df, k, f, n):
     col = MANAGER_ID
 
     train_df, test_df, new_columns = process_manager_num(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_columns
 
     train_df, test_df, new_columns = process_mngr_categ_preprocessing(train_df, test_df, k, f, n)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_columns
+
     print features
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values

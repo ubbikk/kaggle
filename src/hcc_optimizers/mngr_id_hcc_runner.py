@@ -5,6 +5,7 @@ from math import log
 
 import numpy as np
 import pandas as pd
+from hyperopt import Trials
 from hyperopt import hp, fmin
 from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials

@@ -1,0 +1,54 @@
+elevator             in(elevator)
+hardwood floors      in(hardwood)
+cats allowed         in(cats)
+dogs allowed         in(dogs)
+doorman               in(doorman, concierge)
+dishwasher            in(dishwasher)
+laundry in building   in(laundry)
+no fee / reduced fee(600) ???               in(fee)   no fee, no broker fee, no realtor fee
+fitness center        in(fitness)
+ pre-war               in(pre-war, prewar)
+ roof deck           in(roof)  many synonims roof-deck roofdeck roof/deck
+ outdoor space\common outdoor space\private outdoor space +
+     outdoor areas\building-common-outdoor-space\outdoor entertainment space\private-outdoor-space\publicoutdoor
+
+ dining room      in(dining)
+
+ high speed internet     in(internet)
+
+ balcony        in(balcony)
+
+ swimming pool    in(pool or swimming) vs pool(300)
+
+ new construction in(new construction)
+
+ terrace   in(terrace)
+
+ exclusive   ==== !!!
+ loft        in(loft)
+
+ garden/patio    in(garden)
+
+ wheelchair access   in(wheelchair)
+
+ fireplace   in(fireplace)
+
+ simplex  in(simplex)
+
+ lowrise in(lowrise, low-rise
+ garage  in(garage
+ reduced fee   in(reduced fee
+ furnished   ===furnished
+ multi-level   in (multi-level, multi level
+ high ceilings in (high ceilings, high-ceilings, high ceiling)
+ parking space  in (parking
+
+ live in super in(live in super, live-in superintendent, live-in super, on-site super, on site super, super on-site, onsite super, on-sites super
+ maybe super + one from list [live, site]
+
+ renovated
+ green building in(green building)
+ storage in(storage
+ washer in unit   in(washer
+ drier in unit   in(washer  --- duplicate DO NOT ADD
+ stainless steel appliances   in(stainless
