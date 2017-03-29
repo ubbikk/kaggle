@@ -6,6 +6,7 @@ import seaborn as sns
 import pandas as pd
 from collections import OrderedDict
 
+import sys
 from matplotlib import pyplot
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
@@ -336,8 +337,8 @@ def get_3s_confidence_for_mean(l):
 
     return '3s_confidence: [{}, {}]'.format(start, end)
 
-def write_results(l, name, ii, fldr=None):
-    client = MongoClient('10.20.0.144', 27017)
+def write_results(l, ii,name,mongo_host, fldr=None):#results, ii, fp, mongo_host
+    client = MongoClient(mongo_host, 27017)
     db = client.renthop_results
     collection = db[name]
     losses = l[len(l)-1]
@@ -466,7 +467,7 @@ def xgboost_per_tree_results(estimator):
         'test':results_on_test
     }
 
-def do_test_with_xgboost_stats_per_tree(num, fp):
+def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     l = []
     results =[]
     l_1K=[]
@@ -486,7 +487,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp):
         results.append(res)
 
         out(l, loss, l_1K, loss1K, x, t)
-        write_results(results, fp, ii)
+        write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_fixed_hcc')
+do_test_with_xgboost_stats_per_tree(1000, 'all_and_fixed_hcc', sys.argv[1])
