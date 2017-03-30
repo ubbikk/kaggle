@@ -30,7 +30,7 @@ mkdir trash
 sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr/bin/
 sudo ln -s /home/dpetrovskyi/kg/kaggle/src/mngr_id_categorical_optimizer.py /usr/local/bin/
 
-hyperopt-mongo-worker --mongo=10.20.0.144:27017/mngr_id_hcc_08_08 --poll-interval=0.1
+hyperopt-mongo-worker --mongo=35.187.46.132:27017/expiriment_name --poll-interval=0.1 --workdir=
 
 
 home(new tab)
