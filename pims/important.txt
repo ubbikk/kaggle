@@ -1,0 +1,9 @@
+1)archive with pims
+2)install virtual box  5.0.2
+3)install vagrant 1.8.1
+4)PAC manager
+5)ssh
+    key in pims/.vagrant/machines/vbox/virtualbox/private_key
+    user vagrant
+    host 192.168.33.10
+6)./pims-mvn.sh && ./pims-build.sh -t local && ./pims-run.sh -t local
