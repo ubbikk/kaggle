@@ -664,9 +664,9 @@ def get_loss(df, mngr_f, mngr_k, mngr_n, bid_f, bid_k, bid_n):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_nei123(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_nei123(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
