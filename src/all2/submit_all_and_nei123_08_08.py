@@ -598,7 +598,7 @@ def get_loss_at1K(estimator):
     return results_on_test[1000]
 
 def submit_all_and_nei123_08_08():
-    seed = 7777
+    seed = 1001
     np.random.seed(seed)
     train_df, test_df = load_train(), load_test()
     train_df, new_cols0 = process_features(train_df)
@@ -664,7 +664,7 @@ def submit_all_and_nei123_08_08():
         test_df[cl] = proba[:, classes.index(cl)]
 
     res = test_df[['listing_id', 'high', 'medium', 'low']]
-    res.to_csv('results7777.csv', index=False)
+    res.to_csv('results1001_cp.csv', index=False)
 
 
 submit_all_and_nei123_08_08()

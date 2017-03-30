@@ -111,13 +111,17 @@ def get_the_best_loss(trials):
 def do_test(runs):
     df = load_train()
     space = {
-        'k': hp.qnormal('k', 10, 7, 1),
-        'f': hp.loguniform('f', log(0.1), log(5)),
-        'n': hp.choice('n', [2,3,4,5,6,7,10])
+        'mngr_k': hp.qnormal('mngr_k', 15, 11, 1),
+        'mngr_f': hp.loguniform('mngr_f', log(0.1), log(5)),
+        'mngr_n': hp.choice('mngr_n', [2,3,4,5,6,7,10]),
+
+        'bid_k': hp.qnormal('bid_k', 15, 11, 1),
+        'bid_f': hp.loguniform('bid_f', log(0.1), log(5)),
+        'bid_n': hp.choice('bid_n', [2,3,4,5,6,7,10])
     }
     trials = MongoTrials('mongo://10.20.0.144:27017/mngr_id_hcc_08_08/jobs', exp_key='exp1')
 
-    objective = partial(mngr_id_hcc_optimizer.loss_for_batch, df=df, runs=runs)
+    objective = partial(.loss_for_batch, df=df, runs=runs)
     best = fmin(objective, space=space, algo=tpe.suggest, trials=trials,
                 max_evals=10000)
 

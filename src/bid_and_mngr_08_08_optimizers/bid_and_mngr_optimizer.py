@@ -340,10 +340,16 @@ def process_nei123(train_df, test_df):
 
 #========================================================
 
+#VALIDATION
+def split_df(df, c):
+    msk = np.random.rand(len(df)) < c
+    return df[msk], df[~msk]
+
+def shuffle_df(df):
+    return df.iloc[np.random.permutation(len(df))]
 
 
-
-def with_lambda_loss(df, k, f, n):
+def get_loss(df, k, f, n):
     import json
     import os
     from collections import OrderedDict
@@ -432,7 +438,7 @@ def loss_for_batch(s, df, runs):
     # print 'Running for k={}, f={}'.format(k,f)
     l = []
     for x in range(runs):
-        loss = with_lambda_loss(df.copy(), k, f, n)
+        loss = get_loss(df.copy(), k, f, n)
         print loss
         l.append(loss)
 
