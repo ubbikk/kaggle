@@ -82,7 +82,7 @@ def explore_importance(name, features, N):
 
 def explore_res_name(name):
     res = load_results_1K(name)
-    s = std(res)
+    s = std(res)/math.sqrt(len(res))
     m = mean(res)
     return [
         ('avg_loss  ', m),
