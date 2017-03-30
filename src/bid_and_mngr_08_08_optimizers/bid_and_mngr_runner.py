@@ -296,11 +296,11 @@ def do_test(runs):
 
     df = load_train()
     space = {
-        'mngr_k': hp.qnormal('mngr_k', 15, 11, 1),
+        'mngr_k': hp.quniform('mngr_k', 3, 50, 1),
         'mngr_f': hp.loguniform('mngr_f', log(0.1), log(5)),
         'mngr_n': hp.choice('mngr_n', [2,3,4,5,6,7,10]),
 
-        'bid_k': hp.qnormal('bid_k', 15, 11, 1),
+        'bid_k': hp.quniform('bid_k', 3, 50, 1),
         'bid_f': hp.loguniform('bid_f', log(0.1), log(5)),
         'bid_n': hp.choice('bid_n', [2,3,4,5,6,7,10])
     }
