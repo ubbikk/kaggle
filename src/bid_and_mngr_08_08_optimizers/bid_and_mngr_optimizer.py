@@ -1,28 +1,23 @@
 import json
 import os
+from collections import OrderedDict
+from math import log
 from time import time
 
-import seaborn as sns
-import pandas as pd
-from collections import OrderedDict
-
-import sys
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold
 import numpy as np
+import pandas as pd
 import xgboost as xgb
-from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
+from hyperopt import STATUS_FAIL
+from hyperopt import STATUS_OK
+from hyperopt import Trials
+from hyperopt import hp, fmin
+from hyperopt import tpe
+from hyperopt.mongoexp import MongoTrials
 from scipy.stats import boxcox
-from scipy.spatial import KDTree
+from sklearn.metrics import log_loss
+from functools import partial
+from sklearn.model_selection import StratifiedKFold
 import math
-from pymongo import MongoClient
-
-
 
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
@@ -49,20 +44,6 @@ FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
             u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
             u'price', u'street_address']
-
-sns.set(color_codes=True)
-sns.set(style="whitegrid", color_codes=True)
-
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
-pd.set_option('display.max_rows', 5000)
-
-train_file = '../../data/redhoop/train.json'
-test_file = '../../data/redhoop/test.json'
-
-# train_file = '../data/redhoop/train.json'
-# test_file = '../data/redhoop/test.json'
-
 
 
 #========================================================
@@ -124,7 +105,7 @@ def get_exp_lambda(k,f):
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols=[]
-    for df in [train_df]:
+    for df in [train_df, test_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
@@ -151,7 +132,7 @@ def designate_single_observations(train_df, test_df, col):
 def process_bid_categ_preprocessing(train_df, test_df):
     col = BUILDING_ID
     new_cols=[]
-    for df in [train_df]:
+    for df in [train_df, test_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
@@ -198,140 +179,6 @@ def process_bid_num(train_df, test_df):
 
 
 #========================================================
-
-
-
-#========================================================
-#TOP 50 GROUPED FEATURES
-
-COL = 'normalized_features'
-
-
-def normalize_df(df):
-    df[COL] = df[F_COL].apply(lambda l: [x.lower() for x in l])
-
-
-def lambda_in(in_arr):
-    def is_in(l):
-        for f in l:
-            for t in in_arr:
-                if t in f:
-                    return 1
-
-        return 0
-
-    return is_in
-
-
-def lambda_equal(val):
-    def is_equal(l):
-        for f in l:
-            if f.strip() == val:
-                return 1
-
-        return 0
-
-    return is_equal
-
-
-def lambda_two_arr(arr1, arr2):
-    def is_in(l):
-        for f in l:
-            for x in arr1:
-                for y in arr2:
-                    if x in f and y in f:
-                        return 1
-        return 0
-
-    return is_in
-
-
-GROUPING_MAP=OrderedDict(
-    [('elevator', {'vals': ['elevator'], 'type': 'in'}),
-     ('hardwood floors', {'vals': ['hardwood'], 'type': 'in'}),
-     ('cats allowed', {'vals': ['cats'], 'type': 'in'}),
-     ('dogs allowed', {'vals': ['dogs'], 'type': 'in'}),
-     ('doorman', {'vals': ['doorman', 'concierge'], 'type': 'in'}),
-     ('dishwasher', {'vals': ['dishwasher'], 'type': 'in'}),
-     ('laundry in building', {'vals': ['laundry'], 'type': 'in'}),
-     ('no fee', {'vals': ['no fee', 'no broker fee', 'no realtor fee'], 'type': 'in'}),
-     ('reduced fee', {'vals': ['reduced fee', 'reduced-fee', 'reducedfee'], 'type': 'in'}),
-     ('fitness center', {'vals': ['fitness'], 'type': 'in'}),
-     ('pre-war', {'vals': ['pre-war', 'prewar'], 'type': 'in'}),
-     ('roof deck', {'vals': ['roof'], 'type': 'in'}),
-     ('outdoor space',{'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment'], 'type': 'in'}),
-     ('common outdoor space',{'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor'], 'type': 'in'}),
-     ('private outdoor space', {'vals': ['private outdoor', 'private-outdoor', 'privateoutdoor'], 'type': 'in'}),
-     ('dining room', {'vals': ['dining'], 'type': 'in'}),
-     ('high speed internet', {'vals': ['internet'], 'type': 'in'}),
-     ('balcony', {'vals': ['balcony'], 'type': 'in'}),
-     ('swimming pool', {'vals': ['swimming', 'pool'], 'type': 'in'}),
-     ('new construction', {'vals': ['new construction'], 'type': 'in'}),
-     ('terrace', {'vals': ['terrace'], 'type': 'in'}),
-     ('exclusive', {'vals': ['exclusive'], 'type': 'equal'}),
-     ('loft', {'vals': ['loft'], 'type': 'in'}),
-     ('garden/patio', {'vals': ['garden'], 'type': 'in'}),
-     ('wheelchair access', {'vals': ['wheelchair'], 'type': 'in'}),
-     ('fireplace', {'vals': ['fireplace'], 'type': 'in'}),
-     ('simplex', {'vals': ['simplex'], 'type': 'in'}),
-     ('lowrise', {'vals': ['lowrise', 'low-rise'], 'type': 'in'}),
-     ('garage', {'vals': ['garage'], 'type': 'in'}),
-     ('furnished', {'vals': ['furnished'], 'type': 'equal'}),
-     ('multi-level', {'vals': ['multi-level', 'multi level', 'multilevel'], 'type': 'in'}),
-     ('high ceilings', {'vals': ['high ceilings', 'highceilings', 'high-ceilings'], 'type': 'in'}),
-     ('parking space', {'vals': ['parking'], 'type': 'in'}),
-     ('live in super', {'vals': ['super'], 'vals2': ['live', 'site'], 'type': 'two'}),
-     ('renovated', {'vals': ['renovated'], 'type': 'in'}),
-     ('green building', {'vals': ['green building'], 'type': 'in'}),
-     ('storage', {'vals': ['storage'], 'type': 'in'}),
-     ('washer', {'vals': ['washer'], 'type': 'in'}),
-     ('stainless steel appliances', {'vals': ['stainless'], 'type': 'in'})])
-
-
-def process_features(df):
-    normalize_df(df)
-    new_cols=[]
-    for col, m in GROUPING_MAP.iteritems():
-        new_cols.append(col)
-        tp = m['type']
-        if tp == 'in':
-            df[col] = df[COL].apply(lambda_in(m['vals']))
-        elif tp=='equal':
-            df[col] = df[COL].apply(lambda_equal(m['vals'][0]))
-        elif tp=='two':
-            df[col] = df[COL].apply(lambda_two_arr(m['vals'], m['vals2']))
-        else:
-            raise Exception()
-
-    return df, new_cols
-
-
-#========================================================
-
-
-#========================================================
-
-train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
-test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
-
-
-def load_df(file, geo_file):
-    df = pd.read_json(file)
-    geo = pd.read_json(geo_file)
-    df[NEI]= geo[NEI]
-    df['tmp']=df[NEI].apply(transform_geo_to_rent)
-    df[NEI_1]=df['tmp'].apply(lambda s:None if s is None else s[0])
-    df[NEI_2]=df['tmp'].apply(lambda s:None if s is None else s[1])
-    df[NEI_3]=df['tmp'].apply(lambda s:None if s is None else s[2])
-    return basic_preprocess(df)
-
-
-def load_train():
-    return load_df(train_file, train_geo_file)
-
-
-def load_test():
-    return load_df(test_file, test_geo_file)
 
 BED_NORMALIZED = 'bed_norm'
 BATH_NORMALIZED = 'bath_norm'
@@ -495,160 +342,63 @@ def process_nei123(train_df, test_df):
 
 
 
-#========================================================
-#WRITTING RESULTS
 
+def with_lambda_loss(df, k, f, n):
+    import json
+    import os
+    from collections import OrderedDict
+    from math import log
+    from time import time
 
-def out(l, loss, l_1K, loss1K, num, t):
-    print '\n\n'
-    print '#{}'.format(num)
-    if loss1K is not None:
-        print 'loss1K {}'.format(loss1K)
-        print 'avg_loss1K {}'.format(np.mean(l_1K))
-        print get_3s_confidence_for_mean(l_1K)
-        print
+    import numpy as np
+    import pandas as pd
+    import xgboost as xgb
+    from hyperopt import STATUS_FAIL
+    from hyperopt import STATUS_OK
+    from hyperopt import Trials
+    from hyperopt import hp, fmin
+    from hyperopt import tpe
+    from hyperopt.mongoexp import MongoTrials
+    from scipy.stats import boxcox
+    from sklearn.metrics import log_loss
+    from functools import partial
+    import math
 
-    print 'loss {}'.format(loss)
-    print 'avg_loss {}'.format(np.mean(l))
-    print get_3s_confidence_for_mean(l)
-    print 'std {}'.format(np.std(l))
-    print 'time {}'.format(t)
-
-def get_3s_confidence_for_mean(l):
-    std = np.std(l)/math.sqrt(len(l))
-    m = np.mean(l)
-    start = m -3*std
-    end = m+3*std
-
-    return '3s_confidence: [{}, {}]'.format(start, end)
-
-def write_results(l, ii,name,mongo_host, fldr=None):#results, ii, fp, mongo_host
-    client = MongoClient(mongo_host, 27017)
-    db = client.renthop_results
-    collection = db[name]
-    losses = l[len(l)-1]
-    importance = ii[len(ii)-1]
-    collection.insert_one({'results':losses, 'importance':importance})
-    fp = name+'.json' if fldr is None else os.path.join(name+'.json')
-    ii_fp = name+'_importance.json' if fldr is None else os.path.join(name+'_importance.json')
-    with open(fp, 'w+') as f:
-        json.dump(l, f)
-    with open(ii_fp, 'w+') as f:
-        json.dump(ii, f)
-
-#========================================================
-
-
-
-#========================================================
-#VALIDATION
-def split_df(df, c):
-    msk = np.random.rand(len(df)) < c
-    return df[msk], df[~msk]
-
-def shuffle_df(df):
-    return df.iloc[np.random.permutation(len(df))]
-
-
-# def load_train():
-#     return basic_preprocess(pd.read_json(train_file))
-#
-#
-# def load_test():
-#     return basic_preprocess(pd.read_json(test_file))
-
-def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
-
-    good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
-    good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
-
-    train_df = train_df[good_lat & good_long]
-
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
-    bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
-    test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
-
-    return train_df, test_df
-
-
-def basic_preprocess(df):
-    df['num_features'] = df[u'features'].apply(len)
-    df['num_photos'] = df['photos'].apply(len)
-    df['word_num_in_descr'] = df['description'].apply(lambda x: len(x.split(' ')))
-    df["created"] = pd.to_datetime(df["created"])
-    # df["created_year"] = df["created"].dt.year
-    df[CREATED_MONTH] = df["created"].dt.month
-    df[CREATED_DAY] = df["created"].dt.day
-    df[CREATED_HOUR] = df["created"].dt.hour
-    df[CREATED_MINUTE] = df["created"].dt.minute
-    df[DAY_OF_WEEK] = df['created'].dt.dayofweek
-    bc_price, tmp = boxcox(df['price'])
-    df['bc_price'] = bc_price
-
-    return df
-
-
-def get_loss_at1K(estimator):
-    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    return results_on_test[1000]
-
-def submit_all_and_nei123_08_08():
-    seed = 7777
-    np.random.seed(seed)
-    train_df, test_df = load_train(), load_test()
-    train_df, new_cols0 = process_features(train_df)
-    test_df, new_cols = process_features(test_df)
-    # print new_cols0
-    # print new_cols
-    # print new_cols0==new_cols
-    # raise
+    try:
+        import dill as pickle
+    except ImportError:
+        import pickle
 
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
-    features+=new_cols
 
-    # train_df, test_df = split_df(df, 0.7)
+    train_df, test_df = split_df(df, 0.7)
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+
+    col = MANAGER_ID
+
+    train_df, test_df, new_columns = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features+=new_columns
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    train_df, test_df, new_columns = process_mngr_categ_preprocessing(train_df, test_df, k, f, n)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features+=new_columns
 
-    train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    print features
 
-    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
-
-    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
-
-    train_df, test_df, new_cols = process_nei123(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
-
-    train_target = train_df[TARGET].values
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
+    del test_df[TARGET]
 
     train_df = train_df[features]
     test_df = test_df[features]
 
     train_arr, test_arr = train_df.values, test_df.values
-    print features
 
     estimator = xgb.XGBClassifier(n_estimators=1000, objective='mlogloss', subsample=0.8, colsample_bytree=0.8)
+    # estimator = RandomForestClassifier(n_estimators=1000)
     estimator.fit(train_arr, train_target)
 
     # plot feature importance
@@ -659,16 +409,53 @@ def submit_all_and_nei123_08_08():
 
     # print estimator.feature_importances_
     proba = estimator.predict_proba(test_arr)
-    classes = [x for x in estimator.classes_]
-    for cl in classes:
-        test_df[cl] = proba[:, classes.index(cl)]
-
-    res = test_df[['listing_id', 'high', 'medium', 'low']]
-    res.to_csv('results7777.csv', index=False)
-
-
-submit_all_and_nei123_08_08()
+    loss = log_loss(test_target, proba)
+    return loss
 
 
 
 
+def loss_for_batch(s, df, runs):
+    def log(ss):
+        print ss
+
+
+    t = time()
+
+    f = s['f']
+    k = s['k']
+    n=int(s['n'])
+    print k, f, n
+    if k <= 1 or f <= 0.1 or n<=1:
+        return {'loss': 1000, 'status': STATUS_FAIL}
+
+    # print 'Running for k={}, f={}'.format(k,f)
+    l = []
+    for x in range(runs):
+        loss = with_lambda_loss(df.copy(), k, f, n)
+        print loss
+        l.append(loss)
+
+    t = time() - t
+
+
+    avg_loss = np.mean(l)
+    var = np.var(l)
+
+    log([
+        '\n\n',
+        'summary for k={}, f={}, n={}'.format(k, f, n),
+        'current_loss={}, best={}'.format(avg_loss, '?'),
+        'time: {}'.format(t),
+        'std={}'.format(np.std(l)),
+        '\n\n'
+    ])
+
+    return {
+        'loss': avg_loss,
+        'loss_variance': var,
+        'status': STATUS_OK,
+        'losses_m': json.dumps(l),
+        'params_m':json.dumps({'k': k, 'f': f, 'n':n}),
+        'std_m':str(np.std(l))
+    }
