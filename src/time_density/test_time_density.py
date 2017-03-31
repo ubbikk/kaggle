@@ -597,7 +597,7 @@ def process_time_density_df(df, ns_vals, periods):
         col_name = 'num_in_period_{}'.format(p)
         new_cols.append(col_name)
         s= pd.Series({indexes[j]: vals[j] for j in range(sz)})
-        s=s/norm
+        # s=s/norm
         s=s.to_frame(col_name)
         df = pd.merge(df, s, left_index=True, right_index=True)
 
@@ -606,7 +606,7 @@ def process_time_density_df(df, ns_vals, periods):
         col_name = 'secs_until_{}'.format(n)
         new_cols.append(col_name)
         s= pd.Series({indexes[j]: vals[j] for j in range(sz)})
-        s=s/norm
+        # s=s/norm
         s=s.to_frame(col_name)
         df = pd.merge(df, s, left_index=True, right_index=True)
 
