@@ -91,7 +91,8 @@ def explore_res_name(name):
         ('2s        ', '[{}, {}]'.format(m-2*s, m+2*s)),
         ('3s        ', '[{}, {}]'.format(m-3*s, m+3*s)),
         ('norm      ', normaltest(res).pvalue),
-        ('std       ', s),
+        ('std       ', np.std(res)),
+        ('mean_std  ', s),
         ('len       ', len(res))
     ]
 

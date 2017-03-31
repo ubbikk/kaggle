@@ -7,3 +7,22 @@
     user vagrant
     host 192.168.33.10
 6)./pims-mvn.sh && ./pims-build.sh -t local && ./pims-run.sh -t local
+
+7)jetbrains plugin for chrome (js debugging)
+
+
+8)в /etc/hosts
+192.168.33.10   mongodb openldap elasticsearch rabbitmq configserver
+
+
+9)настройка дебага для ремоут дебага Томката:
+Remote:
+    192.168.33.10:53751 (Run => Edit configurations => Remote)
+10)настройка дебага для js
+    Javascript Debug
+    Remote URL=http://192.168.33.10/?debug
+    pims/fronend-angular-angularjs/app/index.html = http://192.168.33.10/?debug
+11)настройка дебага для локал storm
+    Application
+    Main class = com.dbicapital.pims.storm.TopologyRunner
+    Use classpath of module = pims-processing-engine
