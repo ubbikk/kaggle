@@ -557,7 +557,11 @@ def process_time_density_df(df, ns_vals, periods):
     new_cols = []
 
     periods_data=[]
+    count=0
     for j in range(sz):
+        count+=1
+        if count%1000==0:
+            print count
         ppd = {x:np.nan for x in periods}
         periods_data.append(ppd)
         for i in range(j+1, sz):
@@ -613,14 +617,18 @@ def process_time_density(train_df, test_df):
     m=60.0
     h= 60*m
     d = 24*h
-    periods=[m, 5*m, 10*m, 30*m, h, 3*h, 6*h, 12*h, d, 3*d, 7*d, 30*d]
+    periods=[m, 5*m, 10*m, 30*m, h, 3*h, 6*h, 12*h]#, d, 3*d, 7*d, 30*d
     nums=[1, 2, 3, 5, 10, 50, 100, 300, 1000]
 
     train_df, new_cols = process_time_density_df(train_df, nums, periods)
     train_df['label']='train'
     test_df['label'] = 'test'
 
-    df = pd.concat([train_df.copy(), test_df])
+    train_df_copy = train_df.copy()
+    for col in new_cols:
+        del train_df_copy[col]
+
+    df = pd.concat([train_df_copy, test_df])
     df, new_cols = process_time_density_df(df, nums, periods)
     test_df=df[df['label']=='test']
 
@@ -691,7 +699,7 @@ def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
-    # features+=new_cols
+    features+=new_cols
 
     train_df, test_df = split_df(df, 0.7)
 
@@ -715,13 +723,16 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_time_density(train_df, test_df)
+
+    train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
 
-    # train_df, test_df, new_cols = process_nei123(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features+=new_cols
+
+    train_df, test_df, new_cols = process_time_density(train_df, test_df)
+    print new_cols
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -763,8 +774,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     results =[]
     l_1K=[]
     train_df = load_train()
-    # train_df, new_cols = process_features(train_df)
-    new_cols=[]
+    train_df, new_cols = process_features(train_df)
     ii=[]
     for x in range(num):
         t=time()

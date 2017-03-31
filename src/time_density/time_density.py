@@ -86,7 +86,11 @@ def process_time_density(train_df, test_df):
     train_df['label']='train'
     test_df['label'] = 'test'
 
-    df = pd.concat([train_df.copy(), test_df])
+    train_df_copy = train_df.copy()
+    for col in new_cols:
+        del train_df_copy[col]
+
+    df = pd.concat([train_df_copy, test_df])
     df, new_cols = process_time_density_df(df, nums, periods)
     test_df=df[df['label']=='test']
 
