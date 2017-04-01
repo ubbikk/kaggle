@@ -28,4 +28,6 @@
 28)manager counts on nei!!!!!!
 29)sort bid on streats?
 30)1_month_free WHY??
-31)neis length!!!
+31)neis length!!! - already done - nei_freq
+32)mngr_frequency in this nei123
+33)avg bid score, avg mngr_score

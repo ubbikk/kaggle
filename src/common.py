@@ -37,6 +37,7 @@ STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
 F_COL=u'features'
+CREATED = "created"
 CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
