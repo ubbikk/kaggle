@@ -507,91 +507,73 @@ def process_nei123(train_df, test_df):
 ####Recent Mngr Activity=============================================================================
 
 def process_recent_mngr_activity_df(df, periods):
-    bl = df.groupby(MANAGER_ID).groups
-    prev_cols = {p: 'mngr_activity_prev_num_in_{}_secs'.format(p) for p in periods}
-    next_cols = {p: 'mngr_activity_next_num_in_{}_secs'.format(p) for p in periods}
-    count = 0
+    bl=df.groupby(MANAGER_ID).groups
+    prev_cols = {p:'mngr_activity_prev_num_in_{}_secs'.format(p) for p in periods}
+    next_cols = {p:'mngr_activity_next_num_in_{}_secs'.format(p) for p in periods}
+    count=0
     mngrs_num = len(bl)
-    prev_all = []
-    next_all = []
-    index_all = []
+    prev_all=[]
+    next_all=[]
+    index_all=[]
     for m, ii in bl.iteritems():
         s = df.loc[ii][CREATED].sort_values()
         sz = len(s)
         ind = list(s.index.values)
-        index_all += ind
+        index_all+=ind
         vals = s.values
         start = vals[0]
         max_period = max(periods)
-        vals = [(x - start) / np.timedelta64(1, 's') for x in vals]
-        prev = {p: [0 for x in range(sz)] for p in periods}
+        vals = [(x-start)/np.timedelta64(1, 's') for x in vals]
+        prev = {p:[0 for x in range(sz)] for p in periods}
         prev_all.append(prev)
-        nnext = {p: [0 for x in range(sz)] for p in periods}
+        nnext = {p:[0 for x in range(sz)] for p in periods}
         next_all.append(nnext)
 
         for j in range(sz):
-            for i in range(j + 1, sz):
+            for i in range(j+1, sz):
                 delta = vals[i] - vals[j]
                 if delta > max_period:
                     break
                 for p in periods:
-                    if delta <= p:
-                        v = nnext[p][j]
-                        if v == 0:
-                            nnext[p][j] = 1
-                        else:
-                            nnext[p][j] += 1
-                    else:
-                        break
+                    if delta<=p:
+                        nnext[p][j]=1
 
-            for i in range(j - 1, -1, -1):
+            for i in range(j-1, -1, -1):
                 delta = vals[j] - vals[i]
                 if delta > max_period:
                     break
                 for p in periods:
-                    if delta <= p:
-                        v = prev[p][j]
-                        if v == 0:
-                            prev[p][j] = 1
-                        else:
-                            prev[p][j] += 1
-                    else:
-                        break
+                    if delta<=p:
+                        prev[p][j]=1
 
-                        # for p in periods:
-                        #     prev_col = prev_cols[p]
-                        #     df.loc[ind, prev_col] = prev[p]
-                        #
-                        #     next_col = next_cols[p]
-                        #     df.loc[ind, next_col] = nnext[p]
     for p in periods:
         prev_col = prev_cols[p]
         bl = [x[p] for x in prev_all]
-        vals = []
+        vals =[]
         for x in bl:
-            vals += x
+            vals+=x
         df.loc[index_all, prev_col] = vals
 
         next_col = next_cols[p]
         bl = [x[p] for x in next_all]
-        vals = []
+        vals =[]
         for x in bl:
-            vals += x
+            vals+=x
         df.loc[index_all, next_col] = vals
 
-    new_cols = prev_cols.values() + next_cols.values()
+    new_cols = prev_cols.values()+next_cols.values()
 
     return df, new_cols
 
 
 def process_recent_mngr_activity(train_df, test_df):
-    m = 60.0
-    h = 60 * m
-    d = 24 * h
-    periods = [d + m, h, 30 * m]
+    m=60.0
+    h= 60*m
+    d = 24*h
+    periods=[d+m, h, 30*m]
 
     train_df, new_cols = process_recent_mngr_activity_df(train_df, periods)
-    train_df['label'] = 'train'
+    train_df['label']='train'
     test_df['label'] = 'test'
 
     train_df_copy = train_df.copy()
@@ -600,7 +582,7 @@ def process_recent_mngr_activity(train_df, test_df):
 
     df = pd.concat([train_df_copy, test_df])
     df, new_cols = process_recent_mngr_activity_df(df, periods)
-    test_df = df[df['label'] == 'test']
+    test_df=df[df['label']=='test']
 
     return train_df, test_df, new_cols
 
@@ -812,7 +794,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_resent_mngr_activity', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'all_and_resent_mngr_activity_0_1', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos',

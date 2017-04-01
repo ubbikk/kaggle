@@ -14,15 +14,15 @@ sns.set(style="whitegrid", color_codes=True)
 gc_host='35.187.46.132'
 local_host = '10.20.0.144'
 
-host = local_host
+host = gc_host
 
-client = MongoClient(gc_host, 27017)
+client = MongoClient(host, 27017)
 db = client.renthop_results
 
 
 
 
-def get_trials(key, host=gc_host):
+def get_trials(key):
     return MongoTrials('mongo://{}:27017/{}/jobs'.format(host, key), exp_key='exp1')
 
 def get_best_loss(trials):

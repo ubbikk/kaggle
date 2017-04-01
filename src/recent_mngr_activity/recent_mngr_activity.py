@@ -53,13 +53,7 @@ def process_recent_mngr_activity_df(df, periods):
                     break
                 for p in periods:
                     if delta<=p:
-                        v = nnext[p][j]
-                        if v==0:
-                            nnext[p][j]=1
-                        else:
-                            nnext[p][j]+=1
-                    else:
-                        break
+                        nnext[p][j]=1
 
             for i in range(j-1, -1, -1):
                 delta = vals[j] - vals[i]
@@ -67,20 +61,8 @@ def process_recent_mngr_activity_df(df, periods):
                     break
                 for p in periods:
                     if delta<=p:
-                        v = prev[p][j]
-                        if v==0:
-                            prev[p][j]=1
-                        else:
-                            prev[p][j]+=1
-                    else:
-                        break
+                        prev[p][j]=1
 
-        # for p in periods:
-        #     prev_col = prev_cols[p]
-        #     df.loc[ind, prev_col] = prev[p]
-        #
-        #     next_col = next_cols[p]
-        #     df.loc[ind, next_col] = nnext[p]
     for p in periods:
         prev_col = prev_cols[p]
         bl = [x[p] for x in prev_all]

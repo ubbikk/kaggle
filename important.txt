@@ -6,16 +6,16 @@
 6_Exclamation marks in description
 7)description: move-in? train\road
 8)mng num\avg price
-9) manager activity <24hour
+9) manager activity <24hour  DONE
 10)neighborhood map - strict label
 11)neighbourhoods median
 12) entity in description
 13)description freaquent tokens 'amazing, gorgeous'
 14)some NLP adj/adv/verb etc ???, sentiment, w2v clustering
-15)dayOfWeek
+15)dayOfWeek  DONE
 16)managers activity normalized\beans
 17)number of listings in that hour\min etc
-18)medians in exact neibourhood
+18)medians in exact neibourhood DONE
 19)addr_has_number
 20)dummies for bath?
 21)floorplans?
@@ -28,6 +28,8 @@
 28)manager counts on nei!!!!!!
 29)sort bid on streats?
 30)1_month_free WHY??
-31)neis length!!! - already done - nei_freq
+31)neis length!!! - DONE
 32)mngr_frequency in this nei123
 33)avg bid score, avg mngr_score
+34)special feature for the biggest MANAGER ?
+35)drop nei dummies
