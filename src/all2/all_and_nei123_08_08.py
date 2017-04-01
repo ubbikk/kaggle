@@ -22,8 +22,6 @@ from scipy.spatial import KDTree
 import math
 from pymongo import MongoClient
 
-
-
 TARGET = u'interest_level'
 TARGET_VALUES = ['low', 'medium', 'high']
 MANAGER_ID = 'manager_id'
@@ -38,10 +36,10 @@ DISPLAY_ADDRESS = 'display_address'
 STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
-F_COL=u'features'
+F_COL = u'features'
 CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
-CREATED_MINUTE='created_minute'
+CREATED_MINUTE = 'created_minute'
 CREATED_HOUR = 'created_hour'
 DAY_OF_WEEK = 'dayOfWeek'
 
@@ -60,29 +58,30 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
 
+
 # train_file = '../data/redhoop/train.json'
 # test_file = '../data/redhoop/test.json'
 
 
 
-#========================================================
-#LISTING_ID
+# ========================================================
+# LISTING_ID
 
 def process_listing_id(train_df, test_df):
     return train_df, test_df, [LISTING_ID]
 
 
-#========================================================
+# ========================================================
 
 
 
 
 
 
-#========================================================
-#MNGR CATEG
+# ========================================================
+# MNGR CATEG
 
-def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k = 0.01, folds=5):
+def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.01, folds=5):
     """
     See "A Preprocessing Scheme for High-Cardinality Categorical Attributes in
     Classification and Prediction Problems" by Daniele Micci-Barreca
@@ -102,7 +101,7 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k = 
             del small[hcc_name]
         small = pd.merge(small, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
         small.loc[small[hcc_name].isnull(), hcc_name] = prior_prob
-        small[hcc_name]= small[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(small))
+        small[hcc_name] = small[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(small))
         train_df.loc[small.index, hcc_name] = small[hcc_name]
 
     grouped = train_df.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
@@ -115,55 +114,59 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k = 
     return train_df, test_df, hcc_name
 
 
-def get_exp_lambda(k,f):
+def get_exp_lambda(k, f):
     def res(n):
-        return 1/(1+math.exp(float(k-n)/f))
+        return 1 / (1 + math.exp(float(k - n) / f))
+
     return res
 
 
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
-    new_cols=[]
+    new_cols = []
     for df in [train_df, test_df]:
-        df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
-        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
+        df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
+        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
     return train_df, test_df, new_cols
 
-#========================================================
+
+# ========================================================
 
 
-#========================================================
-#BID_CATEG
+# ========================================================
+# BID_CATEG
 
 def designate_single_observations(train_df, test_df, col):
     new_col = '{}_grouped_single_obs'.format(col)
-    bl=pd.concat([train_df, test_df]).groupby(col)[col].count()
-    bl= bl[bl==1]
+    bl = pd.concat([train_df, test_df]).groupby(col)[col].count()
+    bl = bl[bl == 1]
     bl = set(bl.index.values)
     train_df[new_col] = train_df[col].apply(lambda s: s if s not in bl else 'single_obs')
     test_df[new_col] = test_df[col].apply(lambda s: s if s not in bl else 'single_obs')
     return train_df, test_df, new_col
 
+
 def process_bid_categ_preprocessing(train_df, test_df):
     col = BUILDING_ID
-    new_cols=[]
+    new_cols = []
     for df in [train_df, test_df]:
-        df['target_high'] = df[TARGET].apply(lambda s: 1 if s=='high' else 0)
-        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s=='medium' else 0)
+        df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
+        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
     return train_df, test_df, new_cols
 
-#========================================================
 
-#========================================================
-#MANAGER NUM
+# ========================================================
+
+# ========================================================
+# MANAGER NUM
 
 
 def process_manager_num(train_df, test_df):
@@ -177,12 +180,13 @@ def process_manager_num(train_df, test_df):
 
     return train_df, test_df, [mngr_num_col]
 
-#========================================================
+
+# ========================================================
 
 
 
-#========================================================
-#BID NUM
+# ========================================================
+# BID NUM
 
 
 def process_bid_num(train_df, test_df):
@@ -197,12 +201,12 @@ def process_bid_num(train_df, test_df):
     return train_df, test_df, [bid_num_col]
 
 
-#========================================================
+# ========================================================
 
 
 
-#========================================================
-#TOP 50 GROUPED FEATURES
+# ========================================================
+# TOP 50 GROUPED FEATURES
 
 COL = 'normalized_features'
 
@@ -246,7 +250,7 @@ def lambda_two_arr(arr1, arr2):
     return is_in
 
 
-GROUPING_MAP=OrderedDict(
+GROUPING_MAP = OrderedDict(
     [('elevator', {'vals': ['elevator'], 'type': 'in'}),
      ('hardwood floors', {'vals': ['hardwood'], 'type': 'in'}),
      ('cats allowed', {'vals': ['cats'], 'type': 'in'}),
@@ -259,8 +263,10 @@ GROUPING_MAP=OrderedDict(
      ('fitness center', {'vals': ['fitness'], 'type': 'in'}),
      ('pre-war', {'vals': ['pre-war', 'prewar'], 'type': 'in'}),
      ('roof deck', {'vals': ['roof'], 'type': 'in'}),
-     ('outdoor space',{'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment'], 'type': 'in'}),
-     ('common outdoor space',{'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor'], 'type': 'in'}),
+     ('outdoor space',
+      {'vals': ['outdoor space', 'outdoor-space', 'outdoor areas', 'outdoor entertainment'], 'type': 'in'}),
+     ('common outdoor space',
+      {'vals': ['common outdoor', 'publicoutdoor', 'public-outdoor', 'common-outdoor'], 'type': 'in'}),
      ('private outdoor space', {'vals': ['private outdoor', 'private-outdoor', 'privateoutdoor'], 'type': 'in'}),
      ('dining room', {'vals': ['dining'], 'type': 'in'}),
      ('high speed internet', {'vals': ['internet'], 'type': 'in'}),
@@ -290,15 +296,15 @@ GROUPING_MAP=OrderedDict(
 
 def process_features(df):
     normalize_df(df)
-    new_cols=[]
+    new_cols = []
     for col, m in GROUPING_MAP.iteritems():
         new_cols.append(col)
         tp = m['type']
         if tp == 'in':
             df[col] = df[COL].apply(lambda_in(m['vals']))
-        elif tp=='equal':
+        elif tp == 'equal':
             df[col] = df[COL].apply(lambda_equal(m['vals'][0]))
-        elif tp=='two':
+        elif tp == 'two':
             df[col] = df[COL].apply(lambda_two_arr(m['vals'], m['vals2']))
         else:
             raise Exception()
@@ -306,10 +312,10 @@ def process_features(df):
     return df, new_cols
 
 
-#========================================================
+# ========================================================
 
 
-#========================================================
+# ========================================================
 
 train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
@@ -318,11 +324,11 @@ test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
 def load_df(file, geo_file):
     df = pd.read_json(file)
     geo = pd.read_json(geo_file)
-    df[NEI]= geo[NEI]
-    df['tmp']=df[NEI].apply(transform_geo_to_rent)
-    df[NEI_1]=df['tmp'].apply(lambda s:None if s is None else s[0])
-    df[NEI_2]=df['tmp'].apply(lambda s:None if s is None else s[1])
-    df[NEI_3]=df['tmp'].apply(lambda s:None if s is None else s[2])
+    df[NEI] = geo[NEI]
+    df['tmp'] = df[NEI].apply(transform_geo_to_rent)
+    df[NEI_1] = df['tmp'].apply(lambda s: None if s is None else s[0])
+    df[NEI_2] = df['tmp'].apply(lambda s: None if s is None else s[1])
+    df[NEI_3] = df['tmp'].apply(lambda s: None if s is None else s[2])
     return basic_preprocess(df)
 
 
@@ -332,6 +338,7 @@ def load_train():
 
 def load_test():
     return load_df(test_file, test_geo_file)
+
 
 BED_NORMALIZED = 'bed_norm'
 BATH_NORMALIZED = 'bath_norm'
@@ -415,7 +422,7 @@ def load_rent():
 def transform_geo_to_rent(s):
     if s is None:
         return s
-    s=s.lower()
+    s = s.lower()
     rent = load_rent()
     if s in rent:
         return rent[s]
@@ -428,75 +435,78 @@ def transform_geo_to_rent(s):
 
     return ('not_mapped_yet', 'not_mapped_yet', 'not_mapped_yet')
 
+
 def dummy_col(col_name, val):
     return '{}_{}'.format(col_name, val)
+
 
 def get_dummy_cols(col_name, col_values):
     return ['{}_{}'.format(col_name, val) for val in col_values]
 
 
 def normalize_bed_bath(df):
-    df[BED_NORMALIZED] = df[BEDROOMS].apply(lambda s: s if s<=3 else 3)
+    df[BED_NORMALIZED] = df[BEDROOMS].apply(lambda s: s if s <= 3 else 3)
+
     def norm_bath(s):
-        s=round(s)
-        if s==0:
+        s = round(s)
+        if s == 0:
             return 1
-        if s>=2:
+        if s >= 2:
             return 2
         return s
 
-    df[BATH_NORMALIZED]=df[BATHROOMS].apply(norm_bath)
+    df[BATH_NORMALIZED] = df[BATHROOMS].apply(norm_bath)
 
 
-#NEI123
+# NEI123
 def process_nei123(train_df, test_df):
     df = pd.concat([train_df, test_df])
     normalize_bed_bath(df)
-    sz= float(len(df))
+    sz = float(len(df))
     # neis_cols = [NEI_1, NEI_2, NEI_3]
-    new_cols=[]
+    new_cols = []
     for col in [NEI_1, NEI_2]:
         new_col = 'freq_of_{}'.format(col)
         df[new_col] = df.groupby(col)[PRICE].transform('count')
-        df[new_col] = df[new_col]/sz
+        df[new_col] = df[new_col] / sz
         new_cols.append(new_col)
 
-    beds_vals =[0,1,2,3]
+    beds_vals = [0, 1, 2, 3]
     for col in [NEI_1, NEI_2, NEI_3]:
         for bed in beds_vals:
             new_col = 'freq_of_{}, with bed={}'.format(col, bed)
             df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
-            df[new_col] = df[new_col]/sz
+            df[new_col] = df[new_col] / sz
             new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
         new_col = 'median_ratio_of_{}'.format(col)
         df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
-        df[new_col] = df[PRICE]-df['tmp']
-        df[new_col] = df[new_col]/df['tmp']
+        df[new_col] = df[PRICE] - df['tmp']
+        df[new_col] = df[new_col] / df['tmp']
         new_cols.append(new_col)
-
 
     for col in [NEI_1, NEI_2, NEI_3]:
         vals = set(df[col])
         if None in vals:
             vals.remove(None)
         df = pd.get_dummies(df, columns=[col])
-        dummies= get_dummy_cols(col, vals)
-        new_cols+=dummies
+        dummies = get_dummy_cols(col, vals)
+        new_cols += dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:
-            d[col]=df.loc[d.index, col]
+            d[col] = df.loc[d.index, col]
 
     return train_df, test_df, new_cols
 
-#========================================================
+
+# ========================================================
 
 
 
-#========================================================
-#WRITTING RESULTS
+# ========================================================
+# WRITTING RESULTS
 
 
 def out(l, loss, l_1K, loss1K, num, t):
@@ -514,37 +524,41 @@ def out(l, loss, l_1K, loss1K, num, t):
     print 'std {}'.format(np.std(l))
     print 'time {}'.format(t)
 
+
 def get_3s_confidence_for_mean(l):
-    std = np.std(l)/math.sqrt(len(l))
+    std = np.std(l) / math.sqrt(len(l))
     m = np.mean(l)
-    start = m -3*std
-    end = m+3*std
+    start = m - 3 * std
+    end = m + 3 * std
 
     return '3s_confidence: [{}, {}]'.format(start, end)
 
-def write_results(l, ii,name,mongo_host, fldr=None):#results, ii, fp, mongo_host
+
+def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo_host
     client = MongoClient(mongo_host, 27017)
     db = client.renthop_results
     collection = db[name]
-    losses = l[len(l)-1]
-    importance = ii[len(ii)-1]
-    collection.insert_one({'results':losses, 'importance':importance})
-    fp = name+'.json' if fldr is None else os.path.join(name+'.json')
-    ii_fp = name+'_importance.json' if fldr is None else os.path.join(name+'_importance.json')
+    losses = l[len(l) - 1]
+    importance = ii[len(ii) - 1]
+    collection.insert_one({'results': losses, 'importance': importance})
+    fp = name + '.json' if fldr is None else os.path.join(name + '.json')
+    ii_fp = name + '_importance.json' if fldr is None else os.path.join(name + '_importance.json')
     with open(fp, 'w+') as f:
         json.dump(l, f)
     with open(ii_fp, 'w+') as f:
         json.dump(ii, f)
 
-#========================================================
+
+# ========================================================
 
 
 
-#========================================================
-#VALIDATION
+# ========================================================
+# VALIDATION
 def split_df(df, c):
     msk = np.random.rand(len(df)) < c
     return df[msk], df[~msk]
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -558,20 +572,20 @@ def shuffle_df(df):
 #     return basic_preprocess(pd.read_json(test_file))
 
 def process_outliers_lat_long(train_df, test_df):
-    min_lat=40
-    max_lat=41
-    min_long=-74.1
-    max_long=-73
+    min_lat = 40
+    max_lat = 41
+    min_long = -74.1
+    max_long = -73
 
     good_lat = (train_df[LATITUDE] < max_lat) & (train_df[LATITUDE] > min_lat)
     good_long = (train_df[LONGITUDE] < max_long) & (train_df[LONGITUDE] > min_long)
 
     train_df = train_df[good_lat & good_long]
 
-    bed_lat = (test_df[LATITUDE] >=max_lat) | (test_df[LATITUDE] <=min_lat)
+    bed_lat = (test_df[LATITUDE] >= max_lat) | (test_df[LATITUDE] <= min_lat)
     bed_long = (test_df[LONGITUDE] >= max_long) | (test_df[LONGITUDE] <= min_long)
     test_df[LATITUDE][bed_lat] = train_df[LATITUDE].mean()
-    test_df[LONGITUDE][bed_long]=train_df[LONGITUDE].mean()
+    test_df[LONGITUDE][bed_long] = train_df[LONGITUDE].mean()
 
     return train_df, test_df
 
@@ -597,37 +611,38 @@ def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     return results_on_test[1000]
 
+
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
                 "created_month", "created_day", CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df = split_df(df, 0.7)
 
     train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df, new_cols = process_bid_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
+    features += new_cols
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -656,29 +671,31 @@ def loss_with_per_tree_stats(df, new_cols):
     loss1K = get_loss_at1K(estimator)
     return loss, loss1K, xgboost_per_tree_results(estimator), estimator.feature_importances_
 
+
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     results_on_train = estimator.evals_result()['validation_0']['mlogloss']
     return {
-        'train':results_on_train,
-        'test':results_on_test
+        'train': results_on_train,
+        'test': results_on_test
     }
+
 
 def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     l = []
-    results =[]
-    l_1K=[]
+    results = []
+    l_1K = []
     train_df = load_train()
     train_df, new_cols = process_features(train_df)
-    ii=[]
+    ii = []
     for x in range(num):
-        t=time()
-        df=train_df.copy()
+        t = time()
+        df = train_df.copy()
 
-        loss, loss1K, res , imp= loss_with_per_tree_stats(df, new_cols)
+        loss, loss1K, res, imp = loss_with_per_tree_stats(df, new_cols)
         ii.append(imp.tolist())
 
-        t=time()-t
+        t = time() - t
         l.append(loss)
         l_1K.append(loss1K)
         results.append(res)
@@ -688,3 +705,43 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
 
 
 do_test_with_xgboost_stats_per_tree(1000, 'all_and_nei123_08_08', sys.argv[1])
+
+"""
+features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',
+'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'elevator', 'hardwood floors', 'cats allowed', 'dogs allowed',
+'doorman', 'dishwasher', 'laundry in building', 'no fee', 'reduced fee', 'fitness center', 'pre-war', 'roof deck', 'outdoor space',
+'common outdoor space', 'private outdoor space', 'dining room', 'high speed internet', 'balcony', 'swimming pool', 'new construction',
+ 'terrace', 'exclusive', 'loft', 'garden/patio', 'wheelchair access', 'fireplace', 'simplex', 'lowrise', 'garage', 'furnished',
+  'multi-level', 'high ceilings', 'parking space', 'live in super', 'renovated', 'green building', 'storage', 'washer',
+  'stainless steel appliances', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num',
+  'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'freq_of_nei1',
+   'freq_of_nei2', 'freq_of_nei1, with bed=0', 'freq_of_nei1, with bed=1', 'freq_of_nei1, with bed=2',
+    'freq_of_nei1, with bed=3', 'freq_of_nei2, with bed=0', 'freq_of_nei2, with bed=1', 'freq_of_nei2, with bed=2',
+    'freq_of_nei2, with bed=3', 'freq_of_nei3, with bed=0', 'freq_of_nei3, with bed=1', 'freq_of_nei3, with bed=2',
+    'freq_of_nei3, with bed=3', 'median_ratio_of_nei1', 'median_ratio_of_nei2', 'nei1_central park', 'nei1_downtown brooklyn',
+     'nei1_dyker heights', 'nei1_little italy', 'nei1_long island city', 'nei1_murray hill', 'nei1_rockaway beach', 'nei1_concourse',
+     'nei1_richmond hill', 'nei1_bedford-stuyvesant', 'nei1_midtown east', 'nei1_university heights', 'nei1_woodside', 'nei1_coney island',
+      'nei1_kew gardens hills', 'nei1_gravesend', 'nei1_red hook', 'nei1_forest hills', 'nei1_marble hill', 'nei1_wakefield', 'nei1_williamsbridge',
+       'nei1_hollis', 'nei1_east village', 'nei1_glendale', 'nei1_morris heights', 'nei1_glen oaks', 'nei1_bensonhurst', 'nei1_bushwick', 'nei1_jamaica',
+       'nei1_financial district', 'nei1_flatiron district', 'nei1_middle village', 'nei1_prospect heights', 'nei1_greenpoint', 'nei1_brighton beach',
+        'nei1_jackson heights', 'nei1_kensington', 'nei1_flushing', 'nei1_inwood', 'nei1_noho', 'nei1_jamaica estates', 'nei1_kingsbridge', 'nei1_boerum hill',
+        'nei1_greenwood heights', 'nei1_canarsie', 'nei1_upper east side', 'nei1_flatlands', 'nei1_whitestone', 'nei1_brooklyn heights',
+        'nei1_stuyvesant town - peter cooper village', 'nei1_borough park', 'nei1_sheepshead bay', 'nei1_west harlem', 'nei1_south ozone park',
+         'nei1_hunts point', 'nei1_brownsville', 'nei1_park slope', 'nei1_highbridge', 'nei1_windsor terrace', 'nei1_roosevelt island',
+          'nei1_east harlem', 'nei1_rego park', 'nei1_bedford park', 'nei1_ridgewood', 'nei1_east tremont', 'nei1_cobble hill',
+           'nei1_unionport', 'nei1_far rockaway', 'nei1_ozone park', 'nei1_belmont', 'nei1_astoria', 'nei1_fordham manor',
+           'nei1_briarwood', 'nei1_gowanus', 'nei1_parkchester', 'nei1_lower east side', 'nei1_mott haven', 'nei1_norwood',
+           'nei1_tribeca', 'nei1_chinatown', 'nei1_midtown', 'nei1_clinton hill', 'nei1_chelsea', 'nei1_marine park',
+           'nei1_morris park', 'nei1_van cortlandt park', 'nei1_sunset park', 'nei1_garment district', 'nei1_not_mapped_yet',
+           'nei1_midwood', 'nei1_bath beach', 'nei1_maspeth', 'nei1_bay ridge', 'nei1_bayside', 'nei1_gramercy park',
+           'nei1_sunnyside', 'nei1_carroll gardens', 'nei1_williamsburg', 'nei1_mount hope', 'nei1_pelham bay',
+           'nei1_battery park city', 'nei1_west village', 'nei1_flatbush', 'nei1_ocean hill', 'nei1_upper west side',
+           "nei1_hell's kitchen", 'nei1_dumbo', 'nei1_east flatbush', 'nei1_washington heights', 'nei1_east elmhurst',
+           'nei1_harlem', 'nei1_greenwich village', 'nei1_crown heights', 'nei1_fort greene', 'nei1_corona',
+           'nei1_east new york', 'nei1_soho', 'nei1_elmhurst', 'nei1_riverdale', 'nei1_woodhaven', 'nei1_kew gardens',
+            'nei2_west bronx', 'nei2_northeastern queens', 'nei2_northwestern brooklyn', 'nei2_southeastern brooklyn',
+            'nei2_northwestern queens', 'nei2_eastern brooklyn', 'nei2_central brooklyn', 'nei2_not_mapped_yet',
+             'nei2_south brooklyn', 'nei2_upper manhattan', 'nei2_east bronx', 'nei2_other', 'nei2_midtown manhattan',
+             'nei2_southeastern queens', 'nei2_southwestern brooklyn', 'nei2_southwestern queens', 'nei2_rockaway peninsula', 'nei2_northern brooklyn',
+             'nei2_downtown manhattan', 'nei2_southern brooklyn', 'nei3_not_mapped_yet', 'nei3_manhattan', 'nei3_brooklyn', 'nei3_bronx', 'nei3_queens']
+"""

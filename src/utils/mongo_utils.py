@@ -1,18 +1,21 @@
-from pymongo import MongoClient
+import math
+
+import matplotlib.pyplot as plt
 import numpy as np
-from numpy import mean, std
-from scipy.stats import ttest_ind, normaltest
-import pandas as pd
 import seaborn as sns
 from hyperopt.mongoexp import MongoTrials
-import math
-import matplotlib.pyplot as plt
+from numpy import mean, std
+from pymongo import MongoClient
+from scipy.stats import normaltest
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
 
 gc_host='35.187.46.132'
 local_host = '10.20.0.144'
+
+host = local_host
+
 client = MongoClient(gc_host, 27017)
 db = client.renthop_results
 
