@@ -217,8 +217,8 @@ def normalize_bed_bath(df):
         s=round(s)
         if s==0:
             return 1
-        if s>=2.5:
-            return 3
+        if s>=2:
+            return 2
         return s
 
     df[BATH_NORMALIZED]=df[BATHROOMS].apply(norm_bath)
@@ -252,14 +252,6 @@ def process_nei123(train_df, test_df):
         df[new_col] = df[PRICE]-df['tmp']
         df[new_col] = df[new_col]/df['tmp']
         new_cols.append(new_col)
-
-    for col in [NEI_1, NEI_2]:
-        new_col = 'with_bath_median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([col, BEDROOMS, BATH_NORMALIZED])[PRICE].transform('median')
-        df[new_col] = df[PRICE]-df['tmp']
-        df[new_col] = df[new_col]/df['tmp']
-        new_cols.append(new_col)
-
     for col in [NEI_1, NEI_2, NEI_3]:
         vals = set(df[col])
         if None in vals:

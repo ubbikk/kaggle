@@ -1,55 +1,21 @@
-import json
-import os
-from time import time
-
-import seaborn as sns
 import pandas as pd
-from collections import OrderedDict
 
-from matplotlib import pyplot
-from scipy.sparse import coo_matrix
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.cross_validation import cross_val_score, KFold
-import numpy as np
-import xgboost as xgb
-from sklearn.metrics import log_loss
-from xgboost import plot_importance
-from sklearn.model_selection import train_test_split
-from scipy.stats import boxcox
-from scipy.spatial import KDTree
-import math
-
-
-
-TARGET = u'interest_level'
-TARGET_VALUES = ['low', 'medium', 'high']
-MANAGER_ID = 'manager_id'
-BUILDING_ID = 'building_id'
-LATITUDE = 'latitude'
-LONGITUDE = 'longitude'
-PRICE = 'price'
-BATHROOMS = 'bathrooms'
-BEDROOMS = 'bedrooms'
-DESCRIPTION = 'description'
-DISPLAY_ADDRESS = 'display_address'
-STREET_ADDRESS = 'street_address'
-LISTING_ID = 'listing_id'
-PRICE_PER_BEDROOM = 'price_per_bedroom'
-F_COL=u'features'
-CREATED = "created"
-CREATED_MONTH = "created_month"
-CREATED_DAY = "created_day"
-CREATED_MINUTE='created_minute'
-CREATED_HOUR = 'created_hour'
-DAY_OF_WEEK = 'dayOfWeek'
 NEI = 'neighbourhood'
 BORO = 'boro'
 NEI_1 = 'nei1'
 NEI_2 = 'nei2'
 NEI_3 = 'nei3'
+BATHROOMS = 'bathrooms'
+BEDROOMS = 'bedrooms'
+BED_NORMALIZED = 'bed_norm'
+BATH_NORMALIZED = 'bath_norm'
+PRICE = 'price'
 
-rent_file = 'with_geo/data/neis_from_renthop_lower.json'
+import json
+import pandas as pd
+
+rent_file = 'src/with_geo/data/neis_from_renthop_lower.json'
+TARGET = 'interest_level'
 
 EXACT_MAP = {
     'gramercy': 'gramercy park',
@@ -118,6 +84,9 @@ def load_rent():
 
     return res
 
+def explore_target_on_val(df, col, val):
+    return pd.get_dummies(df[[TARGET, col]][df[col] == val], columns=[TARGET]).mean()
+
 
 def transform_geo_to_rent(s):
     if s is None:
@@ -136,74 +105,6 @@ def transform_geo_to_rent(s):
     return ('not_mapped_yet', 'not_mapped_yet', 'not_mapped_yet')
 
 
-
-FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
-            u'description', u'display_address', u'features',
-            u'latitude', u'listing_id', u'longitude', MANAGER_ID, u'photos',
-            u'price', u'street_address']
-
-sns.set(color_codes=True)
-sns.set(style="whitegrid", color_codes=True)
-
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
-pd.set_option('display.max_rows', 5000)
-
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
-
-train_geo_file = '../data/redhoop/with_geo/train_geo.json'
-test_geo_file = '../data/redhoop/with_geo/test_geo.json'
-
-
-# train_file = '../../data/redhoop/train.json'
-# test_file = '../../data/redhoop/test.json'
-#
-# train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
-# test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
-
-def load_df(file, geo_file):
-    df = pd.read_json(file)
-    geo = pd.read_json(geo_file)
-    df[NEI]= geo[NEI]
-    df['tmp']=df[NEI].apply(transform_geo_to_rent)
-    df[NEI_1]=df['tmp'].apply(lambda s:None if s is None else s[0])
-    df[NEI_2]=df['tmp'].apply(lambda s:None if s is None else s[1])
-    df[NEI_3]=df['tmp'].apply(lambda s:None if s is None else s[2])
-    return basic_preprocess(df)
-
-
-def load_train():
-    return load_df(train_file, train_geo_file)
-
-
-def load_test():
-    return load_df(test_file, test_geo_file)
-
-
-def basic_preprocess(df):
-    df['num_features'] = df[u'features'].apply(len)
-    df['num_photos'] = df['photos'].apply(len)
-    df['word_num_in_descr'] = df['description'].apply(lambda x: len(x.split(' ')))
-    df['created_raw'] = df[CREATED]
-    df["created"] = pd.to_datetime(df["created"])
-    # df["created_year"] = df["created"].dt.year
-    df[CREATED_MONTH] = df["created"].dt.month
-    df[CREATED_DAY] = df["created"].dt.day
-    df[CREATED_HOUR] = df["created"].dt.hour
-    df[CREATED_MINUTE] = df["created"].dt.minute
-    df[DAY_OF_WEEK] = df['created'].dt.dayofweek
-    bc_price, tmp = boxcox(df['price'])
-    df['bc_price'] = bc_price
-
-    return df
-
-
-
-
-BED_NORMALIZED = 'bed_norm'
-BATH_NORMALIZED = 'bath_norm'
-
 def dummy_col(col_name, val):
     return '{}_{}'.format(col_name, val)
 
@@ -217,12 +118,11 @@ def normalize_bed_bath(df):
         s=round(s)
         if s==0:
             return 1
-        if s>=2.5:
-            return 3
+        if s>=2:
+            return 2
         return s
 
     df[BATH_NORMALIZED]=df[BATHROOMS].apply(norm_bath)
-
 
 
 
@@ -276,6 +176,6 @@ def process_nei123(train_df, test_df):
 
 
 
-train_df, test_df = load_train(), load_test()
-train_df, test_df, new_cols = process_nei123(train_df, test_df)
+
+
 
