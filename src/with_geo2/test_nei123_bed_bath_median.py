@@ -481,15 +481,8 @@ def process_nei123(train_df, test_df):
             new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
-        new_col = 'median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
-        df[new_col] = df[PRICE]-df['tmp']
-        df[new_col] = df[new_col]/df['tmp']
-        new_cols.append(new_col)
-
-    for col in [NEI_1, NEI_2]:
         new_col = 'with_bath_median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([col, BEDROOMS, BATH_NORMALIZED])[PRICE].transform('median')
+        df['tmp'] = df.groupby([col, BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
         df[new_col] = df[PRICE]-df['tmp']
         df[new_col] = df[new_col]/df['tmp']
         new_cols.append(new_col)
@@ -712,7 +705,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_nei123_08_08', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_nei123_bed_bath_median', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',

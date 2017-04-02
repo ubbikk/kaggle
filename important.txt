@@ -35,3 +35,4 @@
 35)drop nei dummies
 36)hour_num   ????
 37)Normalize small Neis?
+38)plug into an ansemble descriptions NN or Word2Vec
