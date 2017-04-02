@@ -15,12 +15,16 @@ BORO = 'boro'
 
 def process_time_density_neis_df(df, ns_vals, periods):
     new_cols=[]
-    for nei_col in [NEI_1, NEI_2]:
+    for nei_col in [NEI_1, NEI_2, NEI_3]:
         tmp=None
         nei_vals = set(df[nei_col])
+        nei_vals.remove(None)
         for nei in nei_vals:
             bl=df[df[nei_col]==nei]
             bl, tmp=process_time_density_df(bl, ns_vals, periods, nei_col)
+            for c in tmp:
+                df[c]=np.nan
+
             df.loc[bl.index] = bl
         new_cols+=tmp
 
@@ -92,23 +96,20 @@ def process_time_density_df(df, ns_vals, periods, suffix):
     return df, new_cols
 
 
-def process_time_density(train_df, test_df):
+def process_time_density_and_nei(train_df, test_df):
     m=60.0
     h= 60*m
     d = 24*h
-    periods=[m, 5*m, 10*m, 30*m, h, 3*h, 6*h, 12*h, d, 3*d, 7*d, 30*d]
-    nums=[1, 2, 3, 5, 10, 50, 100, 300, 1000]
+    periods=[m, 5*m, 10*m, 30*m, h, 3*h, 6*h, 12*h, d, 3*d]
+    nums=[1, 2, 3, 5, 10, 50]
 
-    train_df, new_cols = process_time_density_df(train_df, nums, periods)
-    train_df['label']='train'
+    train_df['label'] = 'train'
     test_df['label'] = 'test'
+    df = pd.concat([train_df, test_df])
 
-    train_df_copy = train_df.copy()
-    for col in new_cols:
-        del train_df_copy[col]
+    df, new_cols = process_time_density_neis_df(df, nums, periods)
 
-    df = pd.concat([train_df_copy, test_df])
-    df, new_cols = process_time_density_df(df, nums, periods)
+    train_df=df[df['label']=='train']
     test_df=df[df['label']=='test']
 
     return train_df, test_df, new_cols

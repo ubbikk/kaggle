@@ -125,12 +125,6 @@ def normalize_bed_bath(df):
     df[BATH_NORMALIZED]=df[BATHROOMS].apply(norm_bath)
 
 
-# def add_nei_cols(df):
-#     df['tmp'] = df[NEI].apply(transform_geo_to_rent)
-#     df[NEI_1] = df['tmp'].apply(lambda s: None if s is None else s[0])
-#     df[NEI_2] = df['tmp'].apply(lambda s: None if s is None else s[1])
-#     df[NEI_3] = df['tmp'].apply(lambda s: None if s is None else s[2])
-
 
 def process_nei123(train_df, test_df):
     df = pd.concat([train_df, test_df])

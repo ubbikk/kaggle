@@ -33,3 +33,4 @@
 33)avg bid score, avg mngr_score
 34)special feature for the biggest MANAGER ?
 35)drop nei dummies
+36)hour_num   ????

@@ -37,6 +37,7 @@ STREET_ADDRESS = 'street_address'
 LISTING_ID = 'listing_id'
 PRICE_PER_BEDROOM = 'price_per_bedroom'
 F_COL=u'features'
+CREATED = "created"
 CREATED_MONTH = "created_month"
 CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
@@ -184,6 +185,7 @@ def basic_preprocess(df):
     df['num_features'] = df[u'features'].apply(len)
     df['num_photos'] = df['photos'].apply(len)
     df['word_num_in_descr'] = df['description'].apply(lambda x: len(x.split(' ')))
+    df['created_raw'] = df[CREATED]
     df["created"] = pd.to_datetime(df["created"])
     # df["created_year"] = df["created"].dt.year
     df[CREATED_MONTH] = df["created"].dt.month
