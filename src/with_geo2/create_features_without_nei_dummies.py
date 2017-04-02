@@ -14,7 +14,7 @@ PRICE = 'price'
 import json
 import pandas as pd
 
-rent_file = 'src/with_geo/data/neis_from_renthop_lower.json'
+rent_file = '/home/dpetrovskyi/PycharmProjects/kaggle/src/with_geo/data/neis_from_renthop_lower.json'
 TARGET = 'interest_level'
 
 EXACT_MAP = {
@@ -153,20 +153,14 @@ def process_nei123(train_df, test_df):
         df[new_col] = df[new_col]/df['tmp']
         new_cols.append(new_col)
 
-    for col in [NEI_1, NEI_2]:
-        new_col = 'with_bath_median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([col, BEDROOMS, BATH_NORMALIZED])[PRICE].transform('median')
-        df[new_col] = df[PRICE]-df['tmp']
-        df[new_col] = df[new_col]/df['tmp']
-        new_cols.append(new_col)
 
-    for col in [NEI_1, NEI_2, NEI_3]:
-        vals = set(df[col])
-        if None in vals:
-            vals.remove(None)
-        df = pd.get_dummies(df, columns=[col])
-        dummies= get_dummy_cols(col, vals)
-        new_cols+=dummies
+    # for col in [NEI_1, NEI_2, NEI_3]:
+    #     vals = set(df[col])
+    #     if None in vals:
+    #         vals.remove(None)
+    #     df = pd.get_dummies(df, columns=[col])
+    #     dummies= get_dummy_cols(col, vals)
+    #     new_cols+=dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:
