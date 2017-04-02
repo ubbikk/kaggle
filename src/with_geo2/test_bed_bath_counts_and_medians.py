@@ -714,7 +714,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_nei123_08_08', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_bed_bath_counts_and_medians', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',
