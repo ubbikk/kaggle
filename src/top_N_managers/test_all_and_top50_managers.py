@@ -43,6 +43,7 @@ CREATED_MINUTE = 'created_minute'
 CREATED_HOUR = 'created_hour'
 DAY_OF_WEEK = 'dayOfWeek'
 CREATED='created'
+LABEL='lbl'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -334,11 +335,15 @@ def load_df(file, geo_file):
 
 
 def load_train():
-    return load_df(train_file, train_geo_file)
+    df = load_df(train_file, train_geo_file)
+    df[LABEL] = 'train'
+    return df
 
 
 def load_test():
-    return load_df(test_file, test_geo_file)
+    df = load_df(test_file, test_geo_file)
+    df[LABEL] = 'test'
+    return df
 
 
 BED_NORMALIZED = 'bed_norm'
@@ -463,46 +468,65 @@ def normalize_bed_bath(df):
 def process_nei123(train_df, test_df):
     df = pd.concat([train_df, test_df])
     normalize_bed_bath(df)
-    sz= float(len(df))
+    sz = float(len(df))
     # neis_cols = [NEI_1, NEI_2, NEI_3]
-    new_cols=[]
+    new_cols = []
     for col in [NEI_1, NEI_2]:
         new_col = 'freq_of_{}'.format(col)
         df[new_col] = df.groupby(col)[PRICE].transform('count')
-        df[new_col] = df[new_col]
+        df[new_col] = df[new_col] / sz
         new_cols.append(new_col)
 
-    beds_vals =[0,1,2,3]
+    beds_vals = [0, 1, 2, 3]
     for col in [NEI_1, NEI_2, NEI_3]:
         for bed in beds_vals:
             new_col = 'freq_of_{}, with bed={}'.format(col, bed)
             df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
-            df[new_col] = df[new_col]/sz
+            df[new_col] = df[new_col] / sz
             new_cols.append(new_col)
 
-    # for col in [NEI_1, NEI_2]:
-    #     new_col = 'with_bath_median_ratio_of_{}'.format(col)
-    #     df['tmp'] = df.groupby([col, BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
-    #     df[new_col] = df[PRICE]-df['tmp']
-    #     df[new_col] = df[new_col]/df['tmp']
-    #     new_cols.append(new_col)
+    for col in [NEI_1, NEI_2]:
+        new_col = 'median_ratio_of_{}'.format(col)
+        df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
+        df[new_col] = df[PRICE] - df['tmp']
+        df[new_col] = df[new_col] / df['tmp']
+        new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2, NEI_3]:
         vals = set(df[col])
         if None in vals:
             vals.remove(None)
         df = pd.get_dummies(df, columns=[col])
-        dummies= get_dummy_cols(col, vals)
-        new_cols+=dummies
+        dummies = get_dummy_cols(col, vals)
+        new_cols += dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:
-            d[col]=df.loc[d.index, col]
+            d[col] = df.loc[d.index, col]
 
     return train_df, test_df, new_cols
 
 
 # ========================================================
+
+
+
+#Top N managers
+
+def process_topN_managers(train_df, test_df):
+    N=50
+    new_cols=[]
+    df = pd.concat([train_df, test_df])
+    top_mngrs=df.groupby(MANAGER_ID)[MANAGER_ID].count().sort_values(ascending=False).index.values[:N]
+    for m in top_mngrs:
+        new_col = 'mngr_{}'.format(m)
+        new_cols.append(new_col)
+        for df in [train_df, test_df]:
+            df[new_col] = df[MANAGER_ID].apply(lambda s: 1 if s==m else 0)
+
+    return train_df, test_df, new_cols
+#Top N managers
+
 
 
 
@@ -645,6 +669,11 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+
+    train_df, test_df, new_cols = process_topN_managers(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -655,7 +684,7 @@ def loss_with_per_tree_stats(df, new_cols):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
-    estimator = xgb.XGBClassifier(n_estimators=1100, objective='mlogloss', subsample=0.8, colsample_bytree=0.8)
+    estimator = xgb.XGBClassifier(n_estimators=1100, objective='multi:softprob', subsample=0.8, colsample_bytree=0.8)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
@@ -705,7 +734,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_nei123_bed_bath_median1', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_top_50_mngrs', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',
