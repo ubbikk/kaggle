@@ -43,6 +43,7 @@ CREATED_DAY = "created_day"
 CREATED_MINUTE='created_minute'
 CREATED_HOUR = 'created_hour'
 DAY_OF_WEEK = 'dayOfWeek'
+LABEL = 'label'
 
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
@@ -133,6 +134,7 @@ def basic_preprocess(df):
     df[DAY_OF_WEEK] = df['created'].dt.dayofweek
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
+
 
     return df
 

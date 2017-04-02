@@ -511,6 +511,25 @@ def process_nei123(train_df, test_df):
 
 
 
+#Top N managers
+
+def process_topN_managers(train_df, test_df):
+    N=10
+    new_cols=[]
+    df = pd.concat([train_df, test_df])
+    top_mngrs=df.groupby(MANAGER_ID)[MANAGER_ID].count().sort_values(ascending=False).index.values[:N]
+    for m in top_mngrs:
+        new_col = 'mngr_{}'.format(m)
+        new_cols.append(new_col)
+        for df in [train_df, test_df]:
+            df[new_col] = df[MANAGER_ID].apply(lambda s: 1 if s==m else 0)
+
+    return train_df, test_df, new_cols
+#Top N managers
+
+
+
+
 # ========================================================
 # WRITTING RESULTS
 
@@ -650,6 +669,11 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+
+    train_df, test_df, new_cols = process_topN_managers(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
     del test_df[TARGET]
@@ -660,7 +684,7 @@ def loss_with_per_tree_stats(df, new_cols):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
-    estimator = xgb.XGBClassifier(n_estimators=1100, objective='mlogloss', subsample=0.8, colsample_bytree=0.8)
+    estimator = xgb.XGBClassifier(n_estimators=1100, objective='multi:softprob', subsample=0.8, colsample_bytree=0.8)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
@@ -710,7 +734,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'all_and_nei123_08_08', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_top_10_mngrs', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',
