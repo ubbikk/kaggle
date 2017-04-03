@@ -713,3 +713,9 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
 
 
 do_test_with_xgboost_stats_per_tree(1000, 'month_free_quick', sys.argv[1])
+
+"""
+features=['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr',
+ 'created_month', 'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num',
+'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'month_free']
+"""

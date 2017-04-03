@@ -468,45 +468,43 @@ def normalize_bed_bath(df):
 def process_nei123(train_df, test_df):
     df = pd.concat([train_df, test_df])
     normalize_bed_bath(df)
-    sz= float(len(df))
+    sz = float(len(df))
     # neis_cols = [NEI_1, NEI_2, NEI_3]
-    new_cols=[]
-    for col in [NEI_1, NEI_2]:
-        new_col = 'freq_of_{}'.format(col)
-        df[new_col] = df.groupby(col)[PRICE].transform('count')
-        df[new_col] = df[new_col]/sz
-        new_cols.append(new_col)
-
-    beds_vals =[0,1,2,3]
-    for col in [NEI_1, NEI_2, NEI_3]:
-        for bed in beds_vals:
-            new_col = 'freq_of_{}, with bed={}'.format(col, bed)
-            df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
-            df[new_col] = df[new_col]/sz
-            new_cols.append(new_col)
+    new_cols = []
+    # for col in [NEI_1, NEI_2]:
+    #     new_col = 'freq_of_{}'.format(col)
+    #     df[new_col] = df.groupby(col)[PRICE].transform('count')
+    #     df[new_col] = df[new_col] / sz
+    #     new_cols.append(new_col)
+    #
+    # beds_vals = [0, 1, 2, 3]
+    # for col in [NEI_1, NEI_2, NEI_3]:
+    #     for bed in beds_vals:
+    #         new_col = 'freq_of_{}, with bed={}'.format(col, bed)
+    #         df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
+    #         df[new_col] = df[new_col] / sz
+    #         new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
         new_col = 'median_ratio_of_{}'.format(col)
         df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
-        df[new_col] = df[PRICE]-df['tmp']
-        df[new_col] = df[new_col]/df['tmp']
+        df[new_col] = df[PRICE] - df['tmp']
+        df[new_col] = df[new_col] / df['tmp']
         new_cols.append(new_col)
 
-
-    # for col in [NEI_1, NEI_2, NEI_3]:
-    #     vals = set(df[col])
-    #     if None in vals:
-    #         vals.remove(None)
-    #     df = pd.get_dummies(df, columns=[col])
-    #     dummies= get_dummy_cols(col, vals)
-    #     new_cols+=dummies
+    for col in [NEI_1, NEI_2, NEI_3]:
+        vals = set(df[col])
+        if None in vals:
+            vals.remove(None)
+        df = pd.get_dummies(df, columns=[col])
+        dummies = get_dummy_cols(col, vals)
+        new_cols += dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:
-            d[col]=df.loc[d.index, col]
+            d[col] = df.loc[d.index, col]
 
     return train_df, test_df, new_cols
-
 
 
 # ========================================================
@@ -712,7 +710,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'nei_without_dummy', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'all_and_nei123_08_08', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',
