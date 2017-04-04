@@ -564,7 +564,7 @@ def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo
 def process_mngr_group_col_hcc(train_df, test_df, col):
     col_to_group = 'mngr_id_group_{}'.format(col)
     for df in (train_df, test_df):
-        df[col_to_group] = df[MANAGER_ID] + '_' + df[col]
+        df[col_to_group] = df[MANAGER_ID] + '_' + df[col].apply(str)
 
     new_cols = []
     for df in [train_df, test_df]:
