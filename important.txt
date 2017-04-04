@@ -36,3 +36,14 @@
 36)hour_num   ????
 37)Normalize small Neis?
 38)plug into an ansemble descriptions NN or Word2Vec
+
+
+
+39)mngr+created hour hcc
+40)
+Without stacking, I get 0.521. When I using different statistics for bedroom, price,
+ bathrooms and so on group by manager_id, it also gets 0.521 without improvement.
+  Finally I combine them without any model, and it gets 0.51711.
+
+41) 2+ hcc on ManagerId ?
+42)Mndr_id+Nei2 group hcc

@@ -509,36 +509,6 @@ def process_nei123(train_df, test_df):
 
 # ========================================================
 
-def process_m(train_df, test_df):
-    col = 'm'
-    num_col = 'min_num'
-    for df in (train_df, test_df):
-        df[col]=df[CREATED_MINUTE]+60*df[CREATED_HOUR]
-        df[num_col] = df.groupby(col)[col].transform('count')
-
-    new_cols = [col, num_col]
-    for df in [train_df, test_df]:
-        df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
-        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
-    for binary_col in ['target_high', 'target_medium']:
-        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
-        new_cols.append(new_col)
-
-
-
-    return train_df, test_df, new_cols
-
-#and m
-# def process_m(train_df, test_df):
-#     col = 'min'
-#     num_col = 'min_num'
-#     for df in (train_df, test_df):
-#         df[col]=df[CREATED_MINUTE]+60*df[CREATED_HOUR]
-#         df[num_col] = df.groupby(col)[col].transform('count')
-#     return train_df, test_df, [col, num_col]
-
-#and m
-
 
 
 # ========================================================
@@ -587,7 +557,20 @@ def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo
 
 # ========================================================
 
+def process_mngr_and_nei2(train_df, test_df):
+    col = 'mngr_nei2'
+    for df in (train_df, test_df):
+        df[col] = df[MANAGER_ID] + '_' + df[NEI_2]
 
+    new_cols = []
+    for df in [train_df, test_df]:
+        df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
+        df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
+    for binary_col in ['target_high', 'target_medium']:
+        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
+        new_cols.append(new_col)
+
+    return train_df, test_df, new_cols
 
 # ========================================================
 # VALIDATION
@@ -680,7 +663,8 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_m(train_df, test_df)
+
+    train_df, test_df, new_cols = process_mngr_and_nei2(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -744,7 +728,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'and_m_new', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'mngr_id_nei_2_hcc_test', sys.argv[1])
 
 """
 features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month',

@@ -14,7 +14,7 @@ sns.set(style="whitegrid", color_codes=True)
 gc_host='35.187.46.132'
 local_host = '10.20.0.144'
 
-host = local_host
+host = gc_host
 
 client = MongoClient(host, 27017)
 db = client.renthop_results
