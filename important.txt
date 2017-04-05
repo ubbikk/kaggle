@@ -39,7 +39,7 @@
 
 
 
-39)mngr+created hour hcc
+39)mngr+created hour hcc !Failed!
 40)
 Without stacking, I get 0.521. When I using different statistics for bedroom, price,
  bathrooms and so on group by manager_id, it also gets 0.521 without improvement.
@@ -48,3 +48,4 @@ Without stacking, I get 0.521. When I using different statistics for bedroom, pr
 41) 2+ hcc on ManagerId ?
 42)Mndr_id+Nei2 group hcc
 43)mngr group price\price-median beans
+44)streat\blvd\avenue
