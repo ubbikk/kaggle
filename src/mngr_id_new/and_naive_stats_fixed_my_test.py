@@ -654,9 +654,9 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df = split_df(df, 0.7)
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -671,6 +671,10 @@ def loss_with_per_tree_stats(df, new_cols):
     features += new_cols
 
     train_df, test_df, new_cols = process_listing_id(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
