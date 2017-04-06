@@ -181,6 +181,21 @@ def loss_with_per_tree_stats(df):
     loss1K = get_loss_at1K(estimator)
     return loss, loss1K, xgboost_per_tree_results(estimator)
 
+def get_group_by_mngr_target_dummies(df):
+    df = pd.get_dummies(df, columns=[TARGET])
+    target_vals = ['high', 'medium', 'low']
+    dummies = ['interest_level_{}'.format(k) for k in target_vals]
+    return df.groupby(MANAGER_ID)[dummies].sum()
+
+def get_target_means_by_mngr(df):
+    df = pd.get_dummies(df, columns=[TARGET])
+    target_vals = ['high', 'medium', 'low']
+    dummies = ['interest_level_{}'.format(k) for k in target_vals]
+    means= df.groupby(MANAGER_ID)[dummies].mean()
+    means['count'] = df.groupby(MANAGER_ID)[MANAGER_ID].count()
+    return means.sort_values(by=['count'], ascending=False)
+
+
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
     results_on_train = estimator.evals_result()['validation_0']['mlogloss']

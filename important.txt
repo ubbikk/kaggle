@@ -50,3 +50,6 @@ Without stacking, I get 0.521. When I using different statistics for bedroom, pr
 43)mngr group price\price-median beans
 44)streat\blvd\avenue
 45)tfidf = CountVectorizer(stop_words='english', max_features=200)
+46)manager profiles
+47)** in descr
+48)Street address starts not from digit
