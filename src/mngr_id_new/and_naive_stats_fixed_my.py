@@ -71,12 +71,14 @@ def process_target_ratios_my(test_df, train_df, col):
     train_df['sum_bl'] -= 1
     for t in target_vals:
         train_df['{}_ratio_of_{}'.format(col, t)] = train_df['{}_ratio_of_{}'.format(col, t)] / train_df['sum_bl']
+        train_df['{}_ratio_of_{}'.format(col, t)] = train_df['{}_ratio_of_{}'.format(col, t)].apply(lambda s: s*(1+0.01*np.random.random()))
     for t in target_vals:
         bl['{}_ratio_of_{}'.format(col, t)] = bl['{}_ratio_of_{}'.format(col, t)] / bl['sum']
     bl = bl[new_cols]
     test_df = pd.merge(test_df, bl, left_on=col, right_index=True)
 
     return train_df, test_df, new_cols
+
 
 
 
