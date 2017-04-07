@@ -73,10 +73,10 @@ def add_log_reg_cols_big_small(big, small, prior, update_df, variable):
     cols = ['man_id_count', 'man_id_high', 'man_id_medium', 'man_id_low']
     df.columns = cols
     big = pd.merge(big, df, left_on=variable, right_index=True)
-    small = pd.merge(small, left_on=variable, right_index=True, how='left')
+    small = pd.merge(small, df,left_on=variable, right_index=True, how='left')
     small.loc[small['man_id_count'].isnull(), cols] = [0] + [x for x in prior]
     big_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
-    small_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
+    small_arr = small[['man_id_high', 'man_id_medium', 'man_id_low']]
     target_vals = ['high', 'medium', 'low']
     for t in target_vals:
         big_target = big[TARGET].apply(lambda s: 1 if s == t else 0)
