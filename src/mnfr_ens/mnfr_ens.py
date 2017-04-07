@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.cross_validation import cross_val_score, KFold
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import roc_auc_score
 import numpy as np
 import xgboost as xgb
 from sklearn.metrics import log_loss
@@ -47,28 +48,17 @@ NEI_1 = 'nei1'
 NEI_2 = 'nei2'
 NEI_3 = 'nei3'
 
-def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.01, folds=5):
-    """
-    See "A Preprocessing Scheme for High-Cardinality Categorical Attributes in
-    Classification and Prediction Problems" by Daniele Micci-Barreca
-    """
-    prior_prob = train_df[binary_target].mean()
-    hcc_name = "_".join(["hcc", variable, binary_target])
-
+def hcc_encode(train_df, test_df, variable, folds):
     skf = StratifiedKFold(folds)
-    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df[TARGET]):
+        prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
         big = train_df.iloc[big_ind]
         small = train_df.iloc[small_ind]
-        grouped = big.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
-        grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
-        grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
+        add_log_reg_cols(big, small, prior, train_df)
 
-        if hcc_name in small.columns:
-            del small[hcc_name]
-        small = pd.merge(small, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
-        small.loc[small[hcc_name].isnull(), hcc_name] = prior_prob
-        small[hcc_name] = small[hcc_name] * np.random.uniform(1 - r_k, 1 + r_k, len(small))
-        train_df.loc[small.index, hcc_name] = small[hcc_name]
+
+
+
 
     grouped = train_df.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
     grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
@@ -78,6 +68,35 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
     test_df.loc[test_df[hcc_name].isnull(), hcc_name] = prior_prob
 
     return train_df, test_df, hcc_name
+
+
+def add_log_reg_cols(big, small, prior, update_df):
+    big['t'] = big[TARGET]
+    big = pd.get_dummies(big, columns=['t'])
+    agg = OrderedDict([
+        (MANAGER_ID, {'count': 'count'}),
+        ('t_high', {'high': 'mean'}),
+        ('t_medium', {'medium': 'mean'}),
+        ('t_low', {'low': 'mean'})
+    ])
+    df = big.groupby(MANAGER_ID).agg(agg)
+    cols = ['man_id_count', 'man_id_high', 'man_id_medium', 'man_id_low']
+    df.columns = cols
+    big = pd.merge(big, df, left_on=MANAGER_ID, right_index=True)
+    small = pd.merge(small, left_on=MANAGER_ID, right_index=True, how='left')
+    small.loc[small['man_id_count'].isnull(), cols] = [0] + [x for x in prior]
+    big_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
+    small_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
+    target_vals = ['high', 'medium', 'low']
+    for t in target_vals:
+        big_target = big[TARGET].apply(lambda s: 1 if s == t else 0)
+        small_target = small[TARGET].apply(lambda s: 1 if s == t else 0)
+        model = LogisticRegression()
+        model.fit(big_arr, big_target)
+        proba = model.predict_proba(small_arr)[:, 1]
+        auc = roc_auc_score(small_target, proba)
+        print 'auc={}'.format(auc)
+        update_df.loc[small.index, 'log_reg_{}'.format(t)] = proba
 
 
 def process_mngr_ens(train_df, test_df, target_val):

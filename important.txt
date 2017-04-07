@@ -54,3 +54,12 @@ Without stacking, I get 0.521. When I using different statistics for bedroom, pr
 47)** in descr
 48)Street address starts not from digit
 49)NEI median ratios ===> nei\bed\bath ratios!!!!!
+50)very_high_price feature :
+high         0.00917431192661
+medium       0.0
+low          0.990825688073
+51)Price ends 999
+
+52)Load medians from Renthop by ListingId
+53) Load this data 1BR / 1BA apartments in Kips Bay with Doorman, Elevator from Renthop
+
