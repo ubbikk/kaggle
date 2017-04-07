@@ -48,42 +48,32 @@ NEI_1 = 'nei1'
 NEI_2 = 'nei2'
 NEI_3 = 'nei3'
 
-def hcc_encode(train_df, test_df, variable, folds):
+def add_log_reg_cols(train_df, test_df, variable, folds):
     skf = StratifiedKFold(folds)
+    prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
     for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df[TARGET]):
-        prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
         big = train_df.iloc[big_ind]
         small = train_df.iloc[small_ind]
-        add_log_reg_cols(big, small, prior, train_df)
+        add_log_reg_cols_big_small(big, small, prior, train_df, variable)
+
+    add_log_reg_cols_big_small(train_df, test_df, prior, test_df, variable)
 
 
 
-
-
-    grouped = train_df.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
-    grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
-    grouped[hcc_name] = grouped["lambda"] * grouped["mean"] + (1 - grouped["lambda"]) * prior_prob
-
-    test_df = pd.merge(test_df, grouped[[hcc_name]], left_on=variable, right_index=True, how='left')
-    test_df.loc[test_df[hcc_name].isnull(), hcc_name] = prior_prob
-
-    return train_df, test_df, hcc_name
-
-
-def add_log_reg_cols(big, small, prior, update_df):
+def add_log_reg_cols_big_small(big, small, prior, update_df, variable):
     big['t'] = big[TARGET]
     big = pd.get_dummies(big, columns=['t'])
     agg = OrderedDict([
-        (MANAGER_ID, {'count': 'count'}),
+        (variable, {'count': 'count'}),
         ('t_high', {'high': 'mean'}),
         ('t_medium', {'medium': 'mean'}),
         ('t_low', {'low': 'mean'})
     ])
-    df = big.groupby(MANAGER_ID).agg(agg)
+    df = big.groupby(variable).agg(agg)
     cols = ['man_id_count', 'man_id_high', 'man_id_medium', 'man_id_low']
     df.columns = cols
-    big = pd.merge(big, df, left_on=MANAGER_ID, right_index=True)
-    small = pd.merge(small, left_on=MANAGER_ID, right_index=True, how='left')
+    big = pd.merge(big, df, left_on=variable, right_index=True)
+    small = pd.merge(small, left_on=variable, right_index=True, how='left')
     small.loc[small['man_id_count'].isnull(), cols] = [0] + [x for x in prior]
     big_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
     small_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
@@ -99,7 +89,8 @@ def add_log_reg_cols(big, small, prior, update_df):
         update_df.loc[small.index, 'log_reg_{}'.format(t)] = proba
 
 
-def process_mngr_ens(train_df, test_df, target_val):
-    model = LogisticRegression()
-    train_df['t'] = train_df[TARGET].apply(lambda s: 1 if s==target_val else 0)
-    df = pd.get_dummies(train_df, columns=[TARGET])
+def process_mngr_ens(train_df, test_df):
+    col = MANAGER_ID
+    folds = 5
+    add_log_reg_cols(train_df, test_df, col, folds)
+    return train_df, test_df, ['log_reg_{}'.format(t) for t in ['high', 'medium', 'low']]
