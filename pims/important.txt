@@ -6,6 +6,7 @@
     key in pims/.vagrant/machines/vbox/virtualbox/private_key
     user vagrant
     host 192.168.33.10
+5.1)vagrant up vbox
 6)./pims-mvn.sh && ./pims-build.sh -t local && ./pims-run.sh -t local
 
 7)jetbrains plugin for chrome (js debugging)
@@ -31,3 +32,5 @@ Remote:
 12)help4dev
 13)help4dev/USEME
 14)help4dev/pims.html
+15)to get inside docker container :
+    docker exec -i -t 5a67d3946332 /bin/bash

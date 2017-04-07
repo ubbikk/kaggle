@@ -53,3 +53,4 @@ Without stacking, I get 0.521. When I using different statistics for bedroom, pr
 46)manager profiles
 47)** in descr
 48)Street address starts not from digit
+49)NEI median ratios ===> nei\bed\bath ratios!!!!!

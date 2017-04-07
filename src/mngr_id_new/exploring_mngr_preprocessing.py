@@ -235,7 +235,7 @@ def process_nei123(train_df, test_df):
     for col in [NEI_1, NEI_2]:
         new_col = 'freq_of_{}'.format(col)
         df[new_col] = df.groupby(col)[PRICE].transform('count')
-        df[new_col] = df[new_col]/sz
+        # df[new_col] = df[new_col]/sz
         new_cols.append(new_col)
 
     beds_vals =[0,1,2,3]
@@ -243,7 +243,7 @@ def process_nei123(train_df, test_df):
         for bed in beds_vals:
             new_col = 'freq_of_{}, with bed={}'.format(col, bed)
             df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
-            df[new_col] = df[new_col]/sz
+            # df[new_col] = df[new_col]/sz
             new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
@@ -312,6 +312,13 @@ def get_target_means_by_mngr(df):
     means['count'] = df.groupby(MANAGER_ID)[MANAGER_ID].count()
     return means.sort_values(by=['count'], ascending=False)
 
+def explore_bad_good_mngrs(df_to_explore):
+    df = get_target_means_by_mngr(df_to_explore)
+    df = df[df['count']>=50]
+    return df
+
+
+
 def explore_target(df):
     print 'high         {}'.format(len(df[df[TARGET]=='high'])/(1.0*len(df)))
     print 'medium       {}'.format(len(df[df[TARGET]=='medium'])/(1.0*len(df)))
@@ -326,6 +333,19 @@ train_df, test_df = load_train(), load_test()
 train_df, test_df, new_cols = process_nei123(train_df, test_df)
 train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
 
+COLS_TO_SHOW_1=[ NEI_1, NEI_2,TARGET,PRICE, BEDROOMS, BATHROOMS,
+                CREATED_HOUR, 'created',
+                'median_ratio_of_nei1', 'median_ratio_of_nei2',
+                'freq_of_nei2', 'freq_of_nei1',
+                'num_features','num_photos','word_num_in_descr'
+                ]
+
+def show_mngr(mngr_id):
+    return train_df[train_df[MANAGER_ID]==mngr_id][COLS_TO_SHOW_1]
+
+df = explore_bad_good_mngrs(train_df)
+high = df.sort_values(by='interest_level_high')
+low = df.sort_values(by='interest_level_low')
 #interesting_mngr_h='35f11f952ba96803a9d9e23e83e7f972'
 #interesting_mngr_l='d1762ef0af965cfb5946ba0e209cc1c5'
 
