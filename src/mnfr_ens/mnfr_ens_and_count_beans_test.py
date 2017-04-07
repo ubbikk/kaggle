@@ -580,7 +580,6 @@ def add_log_reg_cols_big_small(big, small, prior, update_df, variable, beans):
     big['t'] = big[TARGET]
     big = pd.get_dummies(big, columns=['t'])
     agg = OrderedDict([
-        (variable, {'count': 'count'}),
         ('t_high', {'high': 'mean'}),
         ('t_medium', {'medium': 'mean'}),
         ('t_low', {'low': 'mean'})
@@ -590,7 +589,7 @@ def add_log_reg_cols_big_small(big, small, prior, update_df, variable, beans):
     df.columns = cols
     big = pd.merge(big, df, left_on=variable, right_index=True)
     small = pd.merge(small, df,left_on=variable, right_index=True, how='left')
-    small.loc[small['man_id_count'].isnull(), cols] = [0] + [x for x in prior]
+    small.loc[small['man_id_high'].isnull(), cols] = [x for x in prior]
     big_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']+beans_cols]
     small_arr = small[['man_id_high', 'man_id_medium', 'man_id_low']+beans_cols]
     target_vals = ['high', 'medium', 'low']
