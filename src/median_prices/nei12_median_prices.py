@@ -104,10 +104,10 @@ def process_nei12_median(train_df, test_df):
 
     train_df[diff_col]=df.loc[train_df.index, 'median_by_nei2_nei1']
     train_df[diff_col]=(train_df[PRICE]-train_df[diff_col])
-    train_df[ratio_col]=train_df[diff_col]/train_df[PRICE]
+    train_df[ratio_col]=train_df[diff_col]/train_df['median_by_nei2_nei1']
 
     test_df[diff_col]=df.loc[test_df.index, 'median_by_nei2_nei1']
     test_df[diff_col]=(test_df[PRICE]-test_df[diff_col])
-    test_df[ratio_col]=test_df[diff_col]/test_df[PRICE]
+    test_df[ratio_col]=test_df[diff_col]/test_df['median_by_nei2_nei1']
 
     return train_df, test_df, [diff_col, ratio_col]

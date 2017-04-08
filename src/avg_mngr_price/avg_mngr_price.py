@@ -73,9 +73,27 @@ def normalize_bed_bath(df):
 
 def process_mngr_avg_median_price(train_df, test_df):
     df = pd.concat([train_df, test_df])
-    col = 'bed_bath_median'
-    df[col] = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
-    train_df[col]=df.loc[train_df.index, col]
-    test_df[col]=df.loc[test_df.index, col]
+    bed_bath_median = 'bed_bath_median'
+    df[bed_bath_median] = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
 
-    return train_df, test_df
+    bed_bath_diff = 'bed_bath_diff'
+    df[bed_bath_diff]=df[PRICE]-df[bed_bath_median]
+
+    bed_bath_raio = 'bed_bath_ratio'
+    df[bed_bath_raio]=df[bed_bath_diff]/df['bed_bath_median']
+
+    df['gr_by_mngr_bed_bath_diff_median']=df.groupby(MANAGER_ID)[bed_bath_diff].transform('median')
+    df['gr_by_mngr_bed_bath_diff_mean']=df.groupby(MANAGER_ID)[bed_bath_diff].transform('mean')
+
+    df['gr_by_mngr_bed_bath_ratio_median']=df.groupby(MANAGER_ID)[bed_bath_raio].transform('median')
+    df['gr_by_mngr_bed_bath_ratio_mean']=df.groupby(MANAGER_ID)[bed_bath_raio].transform('mean')
+
+    new_cols= ['bed_bath_diff','bed_bath_ratio',
+               'gr_by_mngr_bed_bath_diff_median','gr_by_mngr_bed_bath_diff_mean',
+               'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean' ]
+
+    for col in new_cols:
+        train_df[col]=df.loc[train_df.index, col]
+        test_df[col]=df.loc[test_df.index, col]
+
+    return train_df, test_df, new_cols

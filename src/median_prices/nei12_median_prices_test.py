@@ -571,20 +571,20 @@ def process_median_price(train_df, test_df):
 
 
 def process_nei12_median(train_df, test_df):
-    min_num = 20
+    min_num=20
     df = pd.concat([train_df, test_df])
 
     groupby = df.groupby([BED_NORMALIZED, BATH_NORMALIZED, NEI_2, NEI_1])
-    df['count_by_nei2_nei1'] = groupby[PRICE].transform('count')
-    df['median_by_nei2_nei1'] = groupby[PRICE].transform('median')
+    df['count_by_nei2_nei1']= groupby[PRICE].transform('count')
+    df['median_by_nei2_nei1']= groupby[PRICE].transform('median')
 
     groupby = df.groupby([BED_NORMALIZED, BATH_NORMALIZED, NEI_2])
-    df['count_by_nei2'] = groupby[PRICE].transform('count')
-    df['median_by_nei2'] = groupby[PRICE].transform('median')
+    df['count_by_nei2']= groupby[PRICE].transform('count')
+    df['median_by_nei2']= groupby[PRICE].transform('median')
 
     groupby = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])
-    df['count_by_bed_bath'] = groupby[PRICE].transform('count')
-    df['median_by_bed_bath'] = groupby[PRICE].transform('median')
+    df['count_by_bed_bath']= groupby[PRICE].transform('count')
+    df['median_by_bed_bath']= groupby[PRICE].transform('median')
 
     small = df['count_by_nei2'] < min_num
     df.loc[small, 'median_by_nei2'] = df.loc[small, 'median_by_bed_bath']
@@ -592,16 +592,16 @@ def process_nei12_median(train_df, test_df):
     small = df['count_by_nei2_nei1'] < min_num
     df.loc[small, 'median_by_nei2_nei1'] = df.loc[small, 'median_by_nei2']
 
-    diff_col = 'median_diff_by_nei2_nei1'
-    ratio_col = 'median_ratio_by_nei2_nei1'
+    diff_col='median_diff_by_nei2_nei1'
+    ratio_col='median_ratio_by_nei2_nei1'
 
-    train_df[diff_col] = df.loc[train_df.index, 'median_by_nei2_nei1']
-    train_df[diff_col] = (train_df[PRICE] - train_df[diff_col])
-    train_df[ratio_col] = train_df[diff_col] / train_df[PRICE]
+    train_df[diff_col]=df.loc[train_df.index, 'median_by_nei2_nei1']
+    train_df[diff_col]=(train_df[PRICE]-train_df[diff_col])
+    train_df[ratio_col]=train_df[diff_col]/train_df['median_by_nei2_nei1']
 
-    test_df[diff_col] = df.loc[test_df.index, 'median_by_nei2_nei1']
-    test_df[diff_col] = (test_df[PRICE] - test_df[diff_col])
-    test_df[ratio_col] = test_df[diff_col] / test_df[PRICE]
+    test_df[diff_col]=df.loc[test_df.index, 'median_by_nei2_nei1']
+    test_df[diff_col]=(test_df[PRICE]-test_df[diff_col])
+    test_df[ratio_col]=test_df[diff_col]/test_df['median_by_nei2_nei1']
 
     return train_df, test_df, [diff_col, ratio_col]
 
@@ -813,7 +813,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'nei12_median_prices_test', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'nei12_median_prices_test_corr', sys.argv[1])
 
 """
 """
