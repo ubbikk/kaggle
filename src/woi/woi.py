@@ -50,12 +50,18 @@ NEI_3 = 'nei3'
 
 def woi(good, bed, prior):
     if bed==0:
-        return 2*math.log(good/prior)
+        return 2*math.log(good/(1*prior))
+    if good==0:
+        return 2*math.log(1/(bed*prior))
     return math.log(good/(bed*prior))
 
 def process_woi(train_df, test_df, variable, folds):
     skf = StratifiedKFold(folds)
     prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
+    prior['high']=prior['interest_level_high']
+    prior['medium']=prior['interest_level_medium']
+    prior['low']=prior['interest_level_low']
+
     for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df[TARGET]):
         big = train_df.iloc[big_ind]
         small = train_df.iloc[small_ind]
@@ -77,33 +83,33 @@ def process_woi_cols_big_small(big, small, prior, update_df, variable):
     df = big.groupby(variable).agg(agg)
     cols = ['high', 'medium', 'low']
     df.columns = cols
-    priot_high = prior['high'] / (prior['low'] + prior['medium'])
-    priot_medium = prior['medium'] / (prior['low'] + prior['high'])
-    priot_low = prior['low'] / (prior['high'] + prior['medium'])
+
+    prior_high = prior['high'] / (prior['low'] + prior['medium'])
+    prior_medium = prior['medium'] / (prior['low'] + prior['high'])
+    prior_low = prior['low'] / (prior['high'] + prior['medium'])
 
 
-    df['woi_high']= df.apply(lambda s: woi(s['high'], s['low'] + s['small'], priot_high))
-    big = pd.merge(big, df, left_on=variable, right_index=True)
+    df['woi_high']= df.apply(lambda s: woi(s['high'],       s['low'] + s['medium'], prior_high), axis=1)
+    df['woi_medium']= df.apply(lambda s: woi(s['medium'],   s['low'] + s['high'],  prior_medium), axis=1)
+    df['woi_low']= df.apply(lambda s: woi(s['low'],       s['high'] + s['medium'],  prior_low), axis=1)
+
+    # big = pd.merge(big, df, left_on=variable, right_index=True)
+    for t in ['high', 'medium', 'low']:
+        col = 'woi_{}'.format(t)
+        if col in small:
+            del small[col]
+
     small = pd.merge(small, df,left_on=variable, right_index=True, how='left')
     small.loc[small['high'].isnull(), cols] = 0
 
 
-    big_arr = big[['man_id_high', 'man_id_medium', 'man_id_low']]
-    small_arr = small[['man_id_high', 'man_id_medium', 'man_id_low']]
     target_vals = ['high', 'medium', 'low']
     for t in target_vals:
-        big_target = big[TARGET].apply(lambda s: 1 if s == t else 0)
-        small_target = small[TARGET].apply(lambda s: 1 if s == t else 0)
-        model = LogisticRegression()
-        model.fit(big_arr, big_target)
-        proba = model.predict_proba(small_arr)[:, 1]
-        auc = roc_auc_score(small_target, proba)
-        print 'auc={}'.format(auc)
-        update_df.loc[small.index, 'log_reg_{}'.format(t)] = proba
+        update_df.loc[small.index, 'woi_{}'.format(t)] = small['woi_{}'.format(t)]
 
 
-def process_mngr_ens(train_df, test_df):
+def process_mngr_woi(train_df, test_df):
     col = MANAGER_ID
     folds = 5
     process_woi(train_df, test_df, col, folds)
-    return train_df, test_df, ['log_reg_{}'.format(t) for t in ['high', 'medium', 'low']]
+    return train_df, test_df, ['woi_{}'.format(t) for t in ['high', 'medium', 'low']]
