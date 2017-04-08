@@ -759,12 +759,13 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     results = []
     l_1K = []
     train_df = load_train()
+    test_df =load_test()
     features=[]
 
     train_df, new_cols = process_features(train_df)
     features+=new_cols
 
-    train_df, new_cols = process_mngr_avg_median_price(train_df)
+    train_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     features+=new_cols
 
     ii = []
