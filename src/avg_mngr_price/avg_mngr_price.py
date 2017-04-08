@@ -32,7 +32,7 @@ BED_NORMALIZED = 'bed_norm'
 BATH_NORMALIZED = 'bath_norm'
 
 
-def normalize_bed_bath(df):
+def normalize_bed_bath_good(df):
     df['bed_bath']=df[[BEDROOMS, BATHROOMS]].apply(lambda s: (s[BEDROOMS], s[BATHROOMS]), axis=1)
     def norm(s):
         bed=s[0]
