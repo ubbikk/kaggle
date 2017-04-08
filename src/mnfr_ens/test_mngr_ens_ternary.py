@@ -593,11 +593,15 @@ def add_log_reg_cols_big_small(big, small, prior, update_df, variable):
     small_target = small[TARGET]
     model = LogisticRegression()
     model.fit(big_arr, big_target)
-    proba = model.predict_proba(small_arr)[:, 1]
-    auc = roc_auc_score(small_target, proba)
-    print 'auc={}'.format(auc)
-    new_cols = ['log_reg_{}'.format(t) for t in model.classes_]
-    update_df.loc[small.index, new_cols] = proba
+    proba = model.predict_proba(small_arr)
+
+    loss = log_loss(small_target, proba)
+    print 'log_loss={}'.format(loss)
+
+    classes = [x for x in model.classes_]
+    new_cols = ['log_reg_{}'.format(t) for t in classes]
+    for t in classes:
+        update_df.loc[small.index, 'log_reg_{}'.format(t)] = proba[:, classes.index(t)]
 
 
 def process_mngr_ens(train_df, test_df):
