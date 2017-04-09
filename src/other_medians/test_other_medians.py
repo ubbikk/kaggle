@@ -692,7 +692,7 @@ def process_other_mngr_medians(train_df, test_df):
     df = pd.concat([train_df, test_df])
     new_cols = []
     for f in features:
-        col = 'get_by_mngr_{}_mean'
+        col = 'get_by_mngr_{}_mean'.format(f)
         df[col] = df.groupby(MANAGER_ID)[f].transform('mean')
         new_cols.append(col)
 
