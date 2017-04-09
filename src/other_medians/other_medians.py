@@ -33,13 +33,15 @@ BATH_NORMALIZED = 'bath_norm'
 
 
 def process_other_mngr_medians(train_df, test_df):
-    features = ['num_features', 'num_photos', 'word_num_in_descr']
+    features = ['num_features', 'num_photos', 'word_num_in_descr', BED_NORMALIZED, BATH_NORMALIZED]
     df = pd.concat([train_df, test_df])
     new_cols = []
     for f in features:
         col = 'get_by_mngr_{}_mean'.format(f)
         df[col] = df.groupby(MANAGER_ID)[f].transform('mean')
         new_cols.append(col)
+        if f in [BATH_NORMALIZED, BED_NORMALIZED]:
+            continue
 
         col = 'get_by_mngr_{}_median'
         new_cols.append(col)
