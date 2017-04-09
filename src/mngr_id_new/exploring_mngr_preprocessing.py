@@ -163,6 +163,48 @@ test_geo_file = '../data/redhoop/with_geo/test_geo.json'
 # train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 # test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
 
+BED_NORMALIZED = 'bed_norm'
+BATH_NORMALIZED = 'bath_norm'
+
+
+def normalize_bed_bath_good(df):
+    df['bed_bath']=df[[BEDROOMS, BATHROOMS]].apply(lambda s: (s[BEDROOMS], s[BATHROOMS]), axis=1)
+    def norm(s):
+        bed=s[0]
+        bath=s[1]
+        if bed==0:
+            if bath>=1.5:
+                return [0,2.0]
+        elif bed==1:
+            if bath>=2.5:
+                return [1,2.0]
+        elif bed==2:
+            if bath>=3.0:
+                return [2,3.0]
+        elif bed==3:
+            if bath>=4.0:
+                return [3,4.0]
+        elif bed==4:
+            if bath==0:
+                return [4,1]
+            elif bath>=4.5:
+                return [4,4.5]
+        elif bed>=5:
+            if bath <=1.5:
+                return [5,1.5]
+            elif bath <=2.5:
+                return [5,2.5]
+            elif bath <=3.5:
+                return [5,3]
+            else:
+                return [5,4]
+
+        return [bed, bath]
+
+    df['bed_bath']=df['bed_bath'].apply(norm)
+    df[BED_NORMALIZED]=df['bed_bath'].apply(lambda s:s[0])
+    df[BATH_NORMALIZED]=df['bed_bath'].apply(lambda s:s[1])
+
 def load_df(file, geo_file):
     df = pd.read_json(file)
     geo = pd.read_json(geo_file)
@@ -171,6 +213,7 @@ def load_df(file, geo_file):
     df[NEI_1]=df['tmp'].apply(lambda s:None if s is None else s[0])
     df[NEI_2]=df['tmp'].apply(lambda s:None if s is None else s[1])
     df[NEI_3]=df['tmp'].apply(lambda s:None if s is None else s[2])
+    normalize_bed_bath_good(df)
     return basic_preprocess(df)
 
 

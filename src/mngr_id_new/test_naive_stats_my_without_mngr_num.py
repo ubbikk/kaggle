@@ -77,47 +77,6 @@ def process_listing_id(train_df, test_df):
 
 
 
-BED_NORMALIZED = 'bed_norm'
-BATH_NORMALIZED = 'bath_norm'
-
-
-def normalize_bed_bath_good(df):
-    df['bed_bath']=df[[BEDROOMS, BATHROOMS]].apply(lambda s: (s[BEDROOMS], s[BATHROOMS]), axis=1)
-    def norm(s):
-        bed=s[0]
-        bath=s[1]
-        if bed==0:
-            if bath>=1.5:
-                return [0,2.0]
-        elif bed==1:
-            if bath>=2.5:
-                return [1,2.0]
-        elif bed==2:
-            if bath>=3.0:
-                return [2,3.0]
-        elif bed==3:
-            if bath>=4.0:
-                return [3,4.0]
-        elif bed==4:
-            if bath==0:
-                return [4,1]
-            elif bath>=4.5:
-                return [4,4.5]
-        elif bed>=5:
-            if bath <=1.5:
-                return [5,1.5]
-            elif bath <=2.5:
-                return [5,2.5]
-            elif bath <=3.5:
-                return [5,3]
-            else:
-                return [5,4]
-
-        return [bed, bath]
-
-    df['bed_bath']=df['bed_bath'].apply(norm)
-    df[BED_NORMALIZED]=df['bed_bath'].apply(lambda s:s[0])
-    df[BATH_NORMALIZED]=df['bed_bath'].apply(lambda s:s[1])
 
 
 
@@ -372,7 +331,6 @@ def load_df(file, geo_file):
     df[NEI_1] = df['tmp'].apply(lambda s: None if s is None else s[0])
     df[NEI_2] = df['tmp'].apply(lambda s: None if s is None else s[1])
     df[NEI_3] = df['tmp'].apply(lambda s: None if s is None else s[2])
-    normalize_bed_bath(df)
     return basic_preprocess(df)
 
 
@@ -599,37 +557,33 @@ def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo
 
 # ========================================================
 
-gr_by_mngr_bed_bath_diff_median = 'gr_by_mngr_bed_bath_diff_median'
-gr_by_mngr_bed_bath_diff_mean = 'gr_by_mngr_bed_bath_diff_mean'
-gr_by_mngr_bed_bath_ratio_median = 'gr_by_mngr_bed_bath_ratio_median'
-gr_by_mngr_bed_bath_ratio_mean = 'gr_by_mngr_bed_bath_ratio_mean'
-bed_bath_diff = 'bed_bath_diff'
-bed_bath_ratio = 'bed_bath_ratio'
+def process_mngr_target_ratios_fixed_my(train_df, test_df):
+    col = MANAGER_ID
+    return process_target_ratios_my(test_df, train_df, col)
 
-def process_mngr_avg_median_price(train_df, test_df):
-    df = pd.concat([train_df, test_df])
 
-    bed_bath_median = 'bed_bath_median'
-
-    df[bed_bath_median] = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
-
-    df[bed_bath_diff]=df[PRICE]-df[bed_bath_median]
-
-    df[bed_bath_ratio]=df[bed_bath_diff]/df['bed_bath_median']
-
-    df[gr_by_mngr_bed_bath_diff_median]=df.groupby(MANAGER_ID)[bed_bath_diff].transform('median')
-    df[gr_by_mngr_bed_bath_diff_mean]=df.groupby(MANAGER_ID)[bed_bath_diff].transform('mean')
-
-    df[gr_by_mngr_bed_bath_ratio_median]=df.groupby(MANAGER_ID)[bed_bath_ratio].transform('median')
-    df[gr_by_mngr_bed_bath_ratio_mean]=df.groupby(MANAGER_ID)[bed_bath_ratio].transform('mean')
-
-    new_cols= ['bed_bath_diff','bed_bath_ratio',
-               gr_by_mngr_bed_bath_diff_median, gr_by_mngr_bed_bath_diff_mean,
-               gr_by_mngr_bed_bath_ratio_median, gr_by_mngr_bed_bath_ratio_mean]
-
-    for col in new_cols:
-        train_df[col]=df.loc[train_df.index, col]
-        test_df[col]=df.loc[test_df.index, col]
+def process_target_ratios_my(test_df, train_df, col):
+    target_vals = ['high', 'medium', 'low']
+    dummies = {k: 'interest_level_{}'.format(k) for k in target_vals}
+    new_cols = ['{}_ratio_of_{}'.format(col, t) for t in target_vals]
+    df = pd.get_dummies(train_df, columns=[TARGET])
+    bl = df[[dummies[t] for t in target_vals] + [col]].groupby(col).sum()
+    bl['sum'] = sum([bl[dummies[t]] for t in target_vals])
+    bl = bl.rename(columns={'interest_level_{}'.format(t): '{}_ratio_of_{}'.format(col, t) for t in target_vals})
+    df = pd.merge(df, bl, left_on=col, right_index=True)
+    ratios_part = df[new_cols]
+    dumies_part = df[[dummies[t] for t in target_vals]].rename(
+        columns={'interest_level_{}'.format(t): '{}_ratio_of_{}'.format(col, t) for t in target_vals})
+    df.loc[:, new_cols] = ratios_part - dumies_part
+    train_df[new_cols] = df[new_cols]
+    train_df['sum_bl'] = df['sum']
+    train_df['sum_bl'] -= 1
+    for t in target_vals:
+        train_df['{}_ratio_of_{}'.format(col, t)] = train_df['{}_ratio_of_{}'.format(col, t)] / train_df['sum_bl']
+    for t in target_vals:
+        bl['{}_ratio_of_{}'.format(col, t)] = bl['{}_ratio_of_{}'.format(col, t)] / bl['sum']
+    bl = bl[new_cols]
+    test_df = pd.merge(test_df, bl, left_on=col, right_index=True)
 
     return train_df, test_df, new_cols
 
@@ -700,13 +654,13 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df = split_df(df, 0.7)
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -721,6 +675,10 @@ def loss_with_per_tree_stats(df, new_cols):
     features += new_cols
 
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_mngr_target_ratios_fixed_my(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -766,21 +724,13 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     results = []
     l_1K = []
     train_df = load_train()
-    test_df =load_test()
-    features=[]
-
     train_df, new_cols = process_features(train_df)
-    features+=new_cols
-
-    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    features+=new_cols
-
     ii = []
     for x in range(num):
         t = time()
         df = train_df.copy()
 
-        loss, loss1K, res, imp = loss_with_per_tree_stats(df, features)
+        loss, loss1K, res, imp = loss_with_per_tree_stats(df, new_cols)
         ii.append(imp.tolist())
 
         t = time() - t
@@ -792,29 +742,4 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_avg_mngr_price', sys.argv[1])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-features=['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month', 'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'elevator', 'hardwood floors', 'cats allowed', 'dogs allowed', 'doorman', 'dishwasher', 'laundry in building', 'no fee', 'reduced fee', 'fitness center', 'pre-war', 'roof deck', 'outdoor space', 'common outdoor space', 'private outdoor space', 'dining room', 'high speed internet', 'balcony', 'swimming pool', 'new construction', 'terrace', 'exclusive', 'loft', 'garden/patio', 'wheelchair access', 'fireplace', 'simplex', 'lowrise', 'garage', 'furnished', 'multi-level', 'high ceilings', 'parking space', 'live in super', 'renovated', 'green building', 'storage', 'washer', 'stainless steel appliances', 'bed_bath_diff', 'bed_bath_ratio', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num', 'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'freq_of_nei1', 'freq_of_nei2', 'freq_of_nei1, with bed=0', 'freq_of_nei1, with bed=1', 'freq_of_nei1, with bed=2', 'freq_of_nei1, with bed=3', 'freq_of_nei2, with bed=0', 'freq_of_nei2, with bed=1', 'freq_of_nei2, with bed=2', 'freq_of_nei2, with bed=3', 'freq_of_nei3, with bed=0', 'freq_of_nei3, with bed=1', 'freq_of_nei3, with bed=2', 'freq_of_nei3, with bed=3', 'median_ratio_of_nei1', 'median_ratio_of_nei2', 'nei1_central park', 'nei1_downtown brooklyn', 'nei1_dyker heights', 'nei1_little italy', 'nei1_long island city', 'nei1_murray hill', 'nei1_rockaway beach', 'nei1_concourse', 'nei1_richmond hill', 'nei1_bedford-stuyvesant', 'nei1_midtown east', 'nei1_university heights', 'nei1_woodside', 'nei1_coney island', 'nei1_belmont', 'nei1_kew gardens hills', 'nei1_gravesend', 'nei1_red hook', 'nei1_fordham manor', 'nei1_forest hills', 'nei1_wakefield', 'nei1_williamsbridge', 'nei1_hollis', 'nei1_east village', 'nei1_glendale', 'nei1_morris heights', 'nei1_glen oaks', 'nei1_bensonhurst', 'nei1_bushwick', 'nei1_jamaica', 'nei1_marble hill', 'nei1_financial district', 'nei1_flatiron district', 'nei1_middle village', 'nei1_prospect heights', 'nei1_greenpoint', 'nei1_brighton beach', 'nei1_jackson heights', 'nei1_kensington', 'nei1_flushing', 'nei1_inwood', 'nei1_jamaica estates', 'nei1_kingsbridge', 'nei1_boerum hill', 'nei1_greenwood heights', 'nei1_canarsie', 'nei1_upper east side', 'nei1_flatlands', 'nei1_whitestone', 'nei1_brooklyn heights', 'nei1_stuyvesant town - peter cooper village', 'nei1_borough park', 'nei1_sheepshead bay', 'nei1_west harlem', 'nei1_south ozone park', 'nei1_hunts point', 'nei1_noho', 'nei1_park slope', 'nei1_highbridge', 'nei1_windsor terrace', 'nei1_roosevelt island', 'nei1_east harlem', 'nei1_rego park', 'nei1_bedford park', 'nei1_ridgewood', 'nei1_east tremont', 'nei1_cobble hill', 'nei1_unionport', 'nei1_far rockaway', 'nei1_ozone park', 'nei1_bath beach', 'nei1_astoria', 'nei1_elmhurst', 'nei1_briarwood', 'nei1_gowanus', 'nei1_parkchester', 'nei1_lower east side', 'nei1_mott haven', 'nei1_norwood', 'nei1_tribeca', 'nei1_chinatown', 'nei1_midtown', 'nei1_clinton hill', 'nei1_chelsea', 'nei1_marine park', 'nei1_morris park', 'nei1_van cortlandt park', 'nei1_sunset park', 'nei1_garment district', 'nei1_not_mapped_yet', 'nei1_midwood', 'nei1_maspeth', 'nei1_bay ridge', 'nei1_bayside', 'nei1_gramercy park', 'nei1_sunnyside', 'nei1_carroll gardens', 'nei1_williamsburg', 'nei1_mount hope', 'nei1_pelham bay', 'nei1_battery park city', 'nei1_west village', 'nei1_flatbush', 'nei1_brownsville', 'nei1_ocean hill', "nei1_hell's kitchen", 'nei1_dumbo', 'nei1_east flatbush', 'nei1_washington heights', 'nei1_east elmhurst', 'nei1_harlem', 'nei1_greenwich village', 'nei1_crown heights', 'nei1_fort greene', 'nei1_corona', 'nei1_east new york', 'nei1_soho', 'nei1_upper west side', 'nei1_riverdale', 'nei1_woodhaven', 'nei1_kew gardens', 'nei2_west bronx', 'nei2_central brooklyn', 'nei2_northwestern brooklyn', 'nei2_southeastern brooklyn', 'nei2_northwestern queens', 'nei2_eastern brooklyn', 'nei2_southern brooklyn', 'nei2_not_mapped_yet', 'nei2_south brooklyn', 'nei2_upper manhattan', 'nei2_east bronx', 'nei2_other', 'nei2_midtown manhattan', 'nei2_rockaway peninsula', 'nei2_southwestern brooklyn', 'nei2_northeastern queens', 'nei2_southwestern queens', 'nei2_northern brooklyn', 'nei2_downtown manhattan', 'nei2_southeastern queens', 'nei3_not_mapped_yet', 'nei3_manhattan', 'nei3_brooklyn', 'nei3_bronx', 'nei3_queens']
-"""
+do_test_with_xgboost_stats_per_tree(1000, 'test_naive_stats_my_without_mngr_num', sys.argv[1])

@@ -63,3 +63,7 @@ low          0.990825688073
 52)Load medians from Renthop by ListingId
 53) Load this data 1BR / 1BA apartments in Kips Bay with Doorman, Elevator from Renthop
 
+54)percintile for new features gr_by_mngr_ratio_mean etc
+
+55)hcc for nei+bed+bath !!!!!!!!!!!
+

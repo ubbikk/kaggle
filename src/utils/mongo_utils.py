@@ -74,7 +74,10 @@ def load_importance_raw(name):
     collection = db[name]
     return [x['importance'] for x in collection.find()]
 
-def explore_importance(name, features, N):
+def explore_importance(name, features, N=None):
+    if N is None:
+        N=len(features)
+
     res = load_importance(name, features)
     res=res[:N]
     xs = [x[0] for x in res]
