@@ -72,8 +72,8 @@ def process_target_ratios(train_df, test_df, col, folds, N):
             small = train_df.iloc[small_ind]
             calc_target_ratios(big, small, col, new_cols, update_df)
 
-    for col in new_cols.values():
-        train_df[col]=np.mean([x[col] for x in results])
+    for x in new_cols.values():
+        train_df[x]=np.mean([x[x] for x in results])
 
     calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
 

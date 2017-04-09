@@ -717,8 +717,8 @@ def process_target_ratios(train_df, test_df, col, folds, N):
             small = train_df.iloc[small_ind]
             calc_target_ratios(big, small, col, new_cols, update_df)
 
-    for col in new_cols.values():
-        train_df[col]=np.mean([x[col] for x in results])
+    for x in new_cols.values():
+        train_df[x]=np.mean([x[x] for x in results])
 
     calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
 
@@ -732,6 +732,7 @@ def calc_target_ratios(big, small, col, new_cols, update_df):
     big['target_cp'] = big[TARGET].copy()
     big= pd.get_dummies(big, columns=['target_cp'])
     grouped = big.groupby(col).mean()
+    print small.columns.values
     small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
     for t in target_vals:
         new_col = new_cols[t]
@@ -748,9 +749,9 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df = split_df(df, 0.7)
 
-    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
+    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
