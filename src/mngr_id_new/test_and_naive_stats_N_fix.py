@@ -748,9 +748,9 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df = split_df(df, 0.7)
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -844,7 +844,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_and_naive_stats_N', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_and_naive_stats_N_fix', sys.argv[1])
 
 
 
