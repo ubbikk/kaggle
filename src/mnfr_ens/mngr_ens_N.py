@@ -52,7 +52,7 @@ def add_log_reg_cols(train_df, test_df, variable, folds, N):
     prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
     results=[]
     for _ in range(N):
-        skf = StratifiedKFold(folds)
+        skf = StratifiedKFold(folds, random_state=time(), shuffle=True)
         update_df = train_df[PRICE].to_frame('bl')
         results.append(update_df)
         for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df[TARGET]):

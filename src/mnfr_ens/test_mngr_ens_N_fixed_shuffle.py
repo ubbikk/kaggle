@@ -699,7 +699,7 @@ def add_log_reg_cols(train_df, test_df, variable, folds, N):
     prior = pd.get_dummies(train_df, columns=[TARGET])[['interest_level_high', 'interest_level_medium', 'interest_level_low']].mean()
     results=[]
     for _ in range(N):
-        skf = StratifiedKFold(folds)
+        skf = StratifiedKFold(folds, random_state=time(), shuffle=True)
         update_df = train_df[PRICE].to_frame('bl')
         results.append(update_df)
         for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df[TARGET]):
@@ -857,7 +857,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_mngr_ens_N', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_mngr_ens_N_fixed_shuffle', sys.argv[1])
 
 
 
