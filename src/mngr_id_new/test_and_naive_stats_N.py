@@ -732,7 +732,6 @@ def calc_target_ratios(big, small, col, new_cols, update_df):
     big['target_cp'] = big[TARGET].copy()
     big= pd.get_dummies(big, columns=['target_cp'])
     grouped = big.groupby(col).mean()
-    print small.columns.values
     small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
     for t in target_vals:
         new_col = new_cols[t]
