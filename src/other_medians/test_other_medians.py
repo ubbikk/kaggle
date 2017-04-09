@@ -698,7 +698,7 @@ def process_other_mngr_medians(train_df, test_df):
         if f in [BATH_NORMALIZED, BED_NORMALIZED]:
             continue
 
-        col = 'get_by_mngr_{}_median'
+        col = 'get_by_mngr_{}_median'.format(f)
         new_cols.append(col)
         df[col] = df.groupby(MANAGER_ID)[f].transform('median')
 
