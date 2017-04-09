@@ -203,7 +203,7 @@ def process_bid_categ_preprocessing(train_df, test_df):
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
-        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
+        train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col,1)
         new_cols.append(new_col)
 
     return train_df, test_df, new_cols
