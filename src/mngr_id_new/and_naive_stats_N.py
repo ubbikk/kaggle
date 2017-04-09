@@ -49,7 +49,9 @@ LABEL='lbl'
 
 
 def process_mngr_target_ratios(train_df, test_df):
-    return process_target_ratios(train_df, test_df, MANAGER_ID, 5)
+    N=10
+    folds=5
+    return process_target_ratios(train_df, test_df, MANAGER_ID, folds, N)
 
 
 
