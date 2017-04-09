@@ -692,6 +692,52 @@ def get_loss_at1K(estimator):
     return results_on_test[1000]
 
 
+#############################################################
+def process_mngr_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, MANAGER_ID, 5)
+
+
+
+def process_target_ratios(train_df, test_df, col, folds, N):
+    target_vals = ['high', 'medium', 'low']
+    new_cols = {k: '{}_target_ratios_{}'.format(col, k) for k in target_vals}
+    results=[]
+    for _ in range(N):
+        random_state = int(time())
+        skf = StratifiedKFold(folds, random_state=random_state, shuffle=True)
+        print random_state
+
+        update_df = train_df[PRICE].to_frame('bl')
+        results.append(update_df)
+
+        for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+            big = train_df.iloc[big_ind]
+            small = train_df.iloc[small_ind]
+            calc_target_ratios(big, small, col, new_cols, update_df)
+
+    for col in new_cols.values():
+        train_df[col]=np.mean([x[col] for x in results])
+
+    calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
+
+    return train_df, test_df, new_cols.values()
+
+
+def calc_target_ratios(big, small, col, new_cols, update_df):
+    target_vals = ['high', 'medium', 'low']
+    dummies = {k:'target_cp_{}'.format(k) for k in target_vals}
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
+    for t in target_vals:
+        new_col = new_cols[t]
+        update_df.loc[small.index, new_col] = small[dummies[t]]
+
+
+###########################################################
+
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -700,9 +746,9 @@ def loss_with_per_tree_stats(df, new_cols):
 
     train_df, test_df = split_df(df, 0.7)
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -721,6 +767,10 @@ def loss_with_per_tree_stats(df, new_cols):
     features += new_cols
 
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -760,13 +810,6 @@ def xgboost_per_tree_results(estimator):
         'test': results_on_test
     }
 
-####################################################
-#######################################################
-
-
-####################################################
-#######################################################
-
 
 def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     l = []
@@ -799,7 +842,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_avg_mngr_price', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_and_naive_stats_N', sys.argv[1])
 
 
 
@@ -822,6 +865,4 @@ do_test_with_xgboost_stats_per_tree(1000, 'test_avg_mngr_price', sys.argv[1])
 
 
 
-"""
-features=['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month', 'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'elevator', 'hardwood floors', 'cats allowed', 'dogs allowed', 'doorman', 'dishwasher', 'laundry in building', 'no fee', 'reduced fee', 'fitness center', 'pre-war', 'roof deck', 'outdoor space', 'common outdoor space', 'private outdoor space', 'dining room', 'high speed internet', 'balcony', 'swimming pool', 'new construction', 'terrace', 'exclusive', 'loft', 'garden/patio', 'wheelchair access', 'fireplace', 'simplex', 'lowrise', 'garage', 'furnished', 'multi-level', 'high ceilings', 'parking space', 'live in super', 'renovated', 'green building', 'storage', 'washer', 'stainless steel appliances', 'bed_bath_diff', 'bed_bath_ratio', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num', 'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'freq_of_nei1', 'freq_of_nei2', 'freq_of_nei1, with bed=0', 'freq_of_nei1, with bed=1', 'freq_of_nei1, with bed=2', 'freq_of_nei1, with bed=3', 'freq_of_nei2, with bed=0', 'freq_of_nei2, with bed=1', 'freq_of_nei2, with bed=2', 'freq_of_nei2, with bed=3', 'freq_of_nei3, with bed=0', 'freq_of_nei3, with bed=1', 'freq_of_nei3, with bed=2', 'freq_of_nei3, with bed=3', 'median_ratio_of_nei1', 'median_ratio_of_nei2', 'nei1_central park', 'nei1_downtown brooklyn', 'nei1_dyker heights', 'nei1_little italy', 'nei1_long island city', 'nei1_murray hill', 'nei1_rockaway beach', 'nei1_concourse', 'nei1_richmond hill', 'nei1_bedford-stuyvesant', 'nei1_midtown east', 'nei1_university heights', 'nei1_woodside', 'nei1_coney island', 'nei1_belmont', 'nei1_kew gardens hills', 'nei1_gravesend', 'nei1_red hook', 'nei1_fordham manor', 'nei1_forest hills', 'nei1_wakefield', 'nei1_williamsbridge', 'nei1_hollis', 'nei1_east village', 'nei1_glendale', 'nei1_morris heights', 'nei1_glen oaks', 'nei1_bensonhurst', 'nei1_bushwick', 'nei1_jamaica', 'nei1_marble hill', 'nei1_financial district', 'nei1_flatiron district', 'nei1_middle village', 'nei1_prospect heights', 'nei1_greenpoint', 'nei1_brighton beach', 'nei1_jackson heights', 'nei1_kensington', 'nei1_flushing', 'nei1_inwood', 'nei1_jamaica estates', 'nei1_kingsbridge', 'nei1_boerum hill', 'nei1_greenwood heights', 'nei1_canarsie', 'nei1_upper east side', 'nei1_flatlands', 'nei1_whitestone', 'nei1_brooklyn heights', 'nei1_stuyvesant town - peter cooper village', 'nei1_borough park', 'nei1_sheepshead bay', 'nei1_west harlem', 'nei1_south ozone park', 'nei1_hunts point', 'nei1_noho', 'nei1_park slope', 'nei1_highbridge', 'nei1_windsor terrace', 'nei1_roosevelt island', 'nei1_east harlem', 'nei1_rego park', 'nei1_bedford park', 'nei1_ridgewood', 'nei1_east tremont', 'nei1_cobble hill', 'nei1_unionport', 'nei1_far rockaway', 'nei1_ozone park', 'nei1_bath beach', 'nei1_astoria', 'nei1_elmhurst', 'nei1_briarwood', 'nei1_gowanus', 'nei1_parkchester', 'nei1_lower east side', 'nei1_mott haven', 'nei1_norwood', 'nei1_tribeca', 'nei1_chinatown', 'nei1_midtown', 'nei1_clinton hill', 'nei1_chelsea', 'nei1_marine park', 'nei1_morris park', 'nei1_van cortlandt park', 'nei1_sunset park', 'nei1_garment district', 'nei1_not_mapped_yet', 'nei1_midwood', 'nei1_maspeth', 'nei1_bay ridge', 'nei1_bayside', 'nei1_gramercy park', 'nei1_sunnyside', 'nei1_carroll gardens', 'nei1_williamsburg', 'nei1_mount hope', 'nei1_pelham bay', 'nei1_battery park city', 'nei1_west village', 'nei1_flatbush', 'nei1_brownsville', 'nei1_ocean hill', "nei1_hell's kitchen", 'nei1_dumbo', 'nei1_east flatbush', 'nei1_washington heights', 'nei1_east elmhurst', 'nei1_harlem', 'nei1_greenwich village', 'nei1_crown heights', 'nei1_fort greene', 'nei1_corona', 'nei1_east new york', 'nei1_soho', 'nei1_upper west side', 'nei1_riverdale', 'nei1_woodhaven', 'nei1_kew gardens', 'nei2_west bronx', 'nei2_central brooklyn', 'nei2_northwestern brooklyn', 'nei2_southeastern brooklyn', 'nei2_northwestern queens', 'nei2_eastern brooklyn', 'nei2_southern brooklyn', 'nei2_not_mapped_yet', 'nei2_south brooklyn', 'nei2_upper manhattan', 'nei2_east bronx', 'nei2_other', 'nei2_midtown manhattan', 'nei2_rockaway peninsula', 'nei2_southwestern brooklyn', 'nei2_northeastern queens', 'nei2_southwestern queens', 'nei2_northern brooklyn', 'nei2_downtown manhattan', 'nei2_southeastern queens', 'nei3_not_mapped_yet', 'nei3_manhattan', 'nei3_brooklyn', 'nei3_bronx', 'nei3_queens']
-"""
+
