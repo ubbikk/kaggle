@@ -156,14 +156,6 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
 
     return train_df, test_df, hcc_name
 
-
-def get_exp_lambda(k, f):
-    def res(n):
-        return 1 / (1 + math.exp(float(k - n) / f))
-
-    return res
-
-
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols = []
