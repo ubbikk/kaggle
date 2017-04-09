@@ -694,7 +694,7 @@ def get_loss_at1K(estimator):
 
 #############################################################
 def process_mngr_target_ratios(train_df, test_df):
-    N=10
+    N=20
     folds=5
     return process_target_ratios(train_df, test_df, MANAGER_ID, folds, N)
 
@@ -718,7 +718,7 @@ def process_target_ratios(train_df, test_df, col, folds, N):
             calc_target_ratios(big, small, col, new_cols, update_df)
 
     for blja_col in new_cols.values():
-        train_df[blja_col]=np.mean([x[blja_col] for x in results])
+        train_df[blja_col]=np.median([x[blja_col] for x in results])
 
     calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
 
@@ -844,7 +844,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_and_naive_stats_N_fix', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_and_naive_stats_N_median', sys.argv[1])
 
 
 
