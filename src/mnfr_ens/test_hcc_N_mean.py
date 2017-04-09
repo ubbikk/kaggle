@@ -156,7 +156,7 @@ def hcc_encode(train_df, test_df, variable, binary_target,N,  k=5, f=1, g=1, r_k
             update_df.loc[small.index, hcc_name] = small[hcc_name]
 
     # print results
-    train_df[hcc_name]=np.mean([x[hcc_name] for x in results])
+    train_df[hcc_name]=np.median([x[hcc_name] for x in results])
 
     grouped = train_df.groupby(variable)[binary_target].agg({"size": "size", "mean": "mean"})
     grouped["lambda"] = 1 / (g + np.exp((k - grouped["size"]) / f))
@@ -170,7 +170,7 @@ def hcc_encode(train_df, test_df, variable, binary_target,N,  k=5, f=1, g=1, r_k
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols = []
-    N=10
+    N=5
     for df in [train_df, test_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
@@ -803,7 +803,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_hcc_N_mean10', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_hcc_N_median5', sys.argv[1])
 
 
 
