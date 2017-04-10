@@ -973,7 +973,7 @@ def submit_all_5():
         test_df[cl] = proba[:, classes.index(cl)]
 
     res = test_df[['listing_id', 'high', 'medium', 'low']]
-    res.to_csv('results2.csv', index=False)
+    res.to_csv('results3.csv', index=False)
 
 
 submit_all_5()
