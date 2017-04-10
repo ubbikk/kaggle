@@ -67,3 +67,4 @@ low          0.990825688073
 
 55)hcc for nei+bed+bath !!!!!!!!!!!
 
+56)median_diff_nei1 + median_diff_nei2

@@ -1,6 +1,7 @@
 import json
 import os
-from time import time
+import traceback
+from time import time, sleep
 
 import seaborn as sns
 import pandas as pd
@@ -581,7 +582,16 @@ def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo
     collection = db[name]
     losses = l[len(l) - 1]
     importance = ii[len(ii) - 1]
-    collection.insert_one({'results': losses, 'importance': importance})
+    retries=5
+    while retries>=0:
+        try:
+            collection.insert_one({'results': losses, 'importance': importance})
+            break
+        except:
+            traceback.print_exc()
+            retries-=1
+            sleep(30)
+
     fp = name + '.json' if fldr is None else os.path.join(name + '.json')
     ii_fp = name + '_importance.json' if fldr is None else os.path.join(name + '_importance.json')
     with open(fp, 'w+') as f:
@@ -591,6 +601,14 @@ def write_results(l, ii, name, mongo_host, fldr=None):  # results, ii, fp, mongo
 
 
 # ========================================================
+
+gr_by_mngr_bed_bath_diff_median = 'gr_by_mngr_bed_bath_diff_median'
+gr_by_mngr_bed_bath_diff_mean = 'gr_by_mngr_bed_bath_diff_mean'
+gr_by_mngr_bed_bath_ratio_median = 'gr_by_mngr_bed_bath_ratio_median'
+gr_by_mngr_bed_bath_ratio_mean = 'gr_by_mngr_bed_bath_ratio_mean'
+bed_bath_diff = 'bed_bath_diff'
+bed_bath_ratio = 'bed_bath_ratio'
+
 # ========================================================
 # VALIDATION
 def split_df(df, c):
@@ -651,14 +669,8 @@ def get_loss_at1K(estimator):
 
 ####################################################
 #######################################################
-
-def process_mngr_quantiles(train_df, test_df):
-    quantiles = [0.1*x for x in range(1, 10)]
+def process_mngr_avg_median_price(train_df, test_df):
     df = pd.concat([train_df, test_df])
-
-    total_minutes_col='total_minutes'
-    df[total_minutes_col] = df[CREATED_MINUTE]+24*df[CREATED_HOUR]
-
     bed_bath_median = 'bed_bath_median'
     df[bed_bath_median] = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
 
@@ -668,27 +680,95 @@ def process_mngr_quantiles(train_df, test_df):
     bed_bath_raio = 'bed_bath_ratio'
     df[bed_bath_raio]=df[bed_bath_diff]/df['bed_bath_median']
 
-    cols_to_quantile = ['bed_bath_diff', 'bed_bath_ratio',
-                        PRICE, LATITUDE, LONGITUDE, BED_NORMALIZED, BATH_NORMALIZED,
-                        'num_features', 'num_photos', 'word_num_in_descr', total_minutes_col]
-    new_cols=[bed_bath_median, bed_bath_diff, bed_bath_raio]
+    group_by = df.groupby(MANAGER_ID)[bed_bath_diff]
+    df['gr_by_mngr_bed_bath_diff_median']= group_by.transform('median')
+    df['gr_by_mngr_bed_bath_diff_quantile_0.25']= group_by.transform('quantile', 0.25)
+    df['gr_by_mngr_bed_bath_diff_quantile_0.75']= group_by.transform('quantile', 0.75)
+    df['gr_by_mngr_bed_bath_diff_mean']= group_by.transform('mean')
 
-    group_by = df.groupby(MANAGER_ID)
-    for col in cols_to_quantile:
-        new_col = 'gr_by_mngr_mean_of_{}'.format(col)
-        df[new_col] = group_by[col].transform('mean')
-        new_cols.append(new_col)
-        for q in quantiles:
-            new_col = 'gr_by_mngr_{}_quantile_of_{}'.format(q, col)
-            df[new_col] = group_by[col].transform('quantile', q)
-            new_cols.append(new_col)
+    group_by = df.groupby(MANAGER_ID)[bed_bath_raio]
+    df['gr_by_mngr_bed_bath_ratio_median']= group_by.transform('median')
+    df['gr_by_mngr_bed_bath_ratio_quantile_0.25']= group_by.transform('quantile', 0.25)
+    df['gr_by_mngr_bed_bath_ratio_quantile_0.75']= group_by.transform('quantile', 0.75)
+    df['gr_by_mngr_bed_bath_ratio_mean']= group_by.transform('mean')
 
+    new_cols= ['bed_bath_diff','bed_bath_ratio','bed_bath_median',
+               'gr_by_mngr_bed_bath_diff_median','gr_by_mngr_bed_bath_diff_mean',
+               'gr_by_mngr_bed_bath_diff_quantile_0.25','gr_by_mngr_bed_bath_diff_quantile_0.75',
+               'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean' ,
+               'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75'
+               ]
 
     for col in new_cols:
         train_df[col]=df.loc[train_df.index, col]
         test_df[col]=df.loc[test_df.index, col]
 
     return train_df, test_df, new_cols
+
+
+def process_other_mngr_medians(train_df, test_df):
+    features = ['num_features', 'num_photos', 'word_num_in_descr', BED_NORMALIZED, BATH_NORMALIZED]
+    df = pd.concat([train_df, test_df])
+    new_cols = []
+    for f in features:
+        col = 'get_by_mngr_{}_mean'.format(f)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('mean')
+        new_cols.append(col)
+        if f in [BATH_NORMALIZED, BED_NORMALIZED]:
+            continue
+
+        col = 'get_by_mngr_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('median')
+
+    for col in new_cols:
+        train_df[col]=df.loc[train_df.index, col]
+        test_df[col]=df.loc[test_df.index, col]
+
+    return train_df, test_df, new_cols
+
+
+def get_main_value(s):
+    n = int(0.66*len(s))
+    vals = {k:0 for k in set(s)}
+    for x in s:
+        vals[x]+=1
+
+    for k,v in vals.iteritems():
+        if v>=n:
+            return k
+
+
+
+def process_other_mngr_medians_new(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    total_minutes_col='total_minutes'
+    df[total_minutes_col] = df[CREATED_MINUTE]+24*df[CREATED_HOUR]
+    features = [PRICE, LATITUDE, LONGITUDE, total_minutes_col]
+    new_cols = []
+    for f in features:
+        col = 'get_by_mngr_{}_mean'.format(f)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('mean')
+        new_cols.append(col)
+
+        col = 'get_by_mngr_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('median')
+
+    main_hour='main_hour'
+    bl = df.groupby(MANAGER_ID)[CREATED_HOUR].apply(get_main_value).to_frame(main_hour)
+    df = pd.merge(df, bl, left_on=MANAGER_ID, right_index=True)
+    new_cols.append(main_hour)
+
+    for col in new_cols:
+        train_df[col]=df.loc[train_df.index, col]
+        test_df[col]=df.loc[test_df.index, col]
+
+
+
+
+    return train_df, test_df, new_cols
+
 ####################################################
 #######################################################
 
@@ -723,6 +803,24 @@ def loss_with_per_tree_stats(df, new_cols):
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
+
+    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+
 
     train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
     del train_df[TARGET]
@@ -772,7 +870,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     train_df, new_cols = process_features(train_df)
     features+=new_cols
 
-    train_df, test_df, new_cols = process_mngr_quantiles(train_df, test_df)
+    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     features+=new_cols
 
     ii = []
@@ -792,13 +890,14 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_mngr_quantiles_w_tot_time', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_merged_mngr_medians', sys.argv[1])
 
 
 
 
-
-
+"""
+['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month', 'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'elevator', 'hardwood floors', 'cats allowed', 'dogs allowed', 'doorman', 'dishwasher', 'laundry in building', 'no fee', 'reduced fee', 'fitness center', 'pre-war', 'roof deck', 'outdoor space', 'common outdoor space', 'private outdoor space', 'dining room', 'high speed internet', 'balcony', 'swimming pool', 'new construction', 'terrace', 'exclusive', 'loft', 'garden/patio', 'wheelchair access', 'fireplace', 'simplex', 'lowrise', 'garage', 'furnished', 'multi-level', 'high ceilings', 'parking space', 'live in super', 'renovated', 'green building', 'storage', 'washer', 'stainless steel appliances', 'bed_bath_diff', 'bed_bath_ratio', 'bed_bath_median', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_diff_quantile_0.25', 'gr_by_mngr_bed_bath_diff_quantile_0.75', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num', 'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'freq_of_nei1', 'freq_of_nei2', 'freq_of_nei1, with bed=0', 'freq_of_nei1, with bed=1', 'freq_of_nei1, with bed=2', 'freq_of_nei1, with bed=3', 'freq_of_nei2, with bed=0', 'freq_of_nei2, with bed=1', 'freq_of_nei2, with bed=2', 'freq_of_nei2, with bed=3', 'freq_of_nei3, with bed=0', 'freq_of_nei3, with bed=1', 'freq_of_nei3, with bed=2', 'freq_of_nei3, with bed=3', 'median_ratio_of_nei1', 'median_ratio_of_nei2', 'nei1_fordham manor', 'nei1_downtown brooklyn', 'nei1_dyker heights', 'nei1_little italy', 'nei1_long island city', 'nei1_murray hill', 'nei1_rockaway beach', 'nei1_concourse', 'nei1_richmond hill', 'nei1_bedford-stuyvesant', 'nei1_midtown east', 'nei1_university heights', 'nei1_woodside', 'nei1_coney island', 'nei1_belmont', 'nei1_east elmhurst', 'nei1_gravesend', 'nei1_red hook', 'nei1_forest hills', 'nei1_marble hill', 'nei1_middle village', 'nei1_williamsbridge', 'nei1_hollis', 'nei1_east village', 'nei1_glendale', 'nei1_morris heights', 'nei1_glen oaks', 'nei1_bensonhurst', 'nei1_bushwick', 'nei1_jamaica', 'nei1_financial district', 'nei1_flatiron district', 'nei1_wakefield', 'nei1_prospect heights', 'nei1_greenpoint', 'nei1_brighton beach', 'nei1_jackson heights', 'nei1_kensington', 'nei1_flushing', 'nei1_inwood', 'nei1_jamaica estates', 'nei1_kingsbridge', 'nei1_boerum hill', 'nei1_greenwood heights', 'nei1_canarsie', 'nei1_upper east side', 'nei1_flatlands', 'nei1_whitestone', 'nei1_brooklyn heights', 'nei1_stuyvesant town - peter cooper village', 'nei1_borough park', 'nei1_sheepshead bay', 'nei1_west harlem', 'nei1_south ozone park', 'nei1_hunts point', 'nei1_noho', 'nei1_park slope', 'nei1_highbridge', 'nei1_windsor terrace', 'nei1_roosevelt island', 'nei1_east harlem', 'nei1_rego park', 'nei1_bedford park', 'nei1_ridgewood', 'nei1_east tremont', 'nei1_cobble hill', 'nei1_unionport', 'nei1_far rockaway', 'nei1_ozone park', 'nei1_central park', 'nei1_bath beach', 'nei1_astoria', 'nei1_elmhurst', 'nei1_briarwood', 'nei1_gowanus', 'nei1_parkchester', 'nei1_lower east side', 'nei1_mott haven', 'nei1_norwood', 'nei1_tribeca', 'nei1_chinatown', 'nei1_midtown', 'nei1_clinton hill', 'nei1_chelsea', 'nei1_marine park', 'nei1_morris park', 'nei1_van cortlandt park', 'nei1_sunset park', 'nei1_garment district', 'nei1_not_mapped_yet', 'nei1_midwood', 'nei1_maspeth', 'nei1_bay ridge', 'nei1_bayside', 'nei1_gramercy park', 'nei1_sunnyside', 'nei1_carroll gardens', 'nei1_williamsburg', 'nei1_mount hope', 'nei1_pelham bay', 'nei1_battery park city', 'nei1_west village', 'nei1_flatbush', 'nei1_brownsville', 'nei1_ocean hill', "nei1_hell's kitchen", 'nei1_dumbo', 'nei1_east flatbush', 'nei1_washington heights', 'nei1_kew gardens hills', 'nei1_riverdale', 'nei1_greenwich village', 'nei1_crown heights', 'nei1_fort greene', 'nei1_corona', 'nei1_east new york', 'nei1_soho', 'nei1_upper west side', 'nei1_harlem', 'nei1_woodhaven', 'nei1_kew gardens', 'nei2_west bronx', 'nei2_northwestern brooklyn', 'nei2_southeastern brooklyn', 'nei2_northwestern queens', 'nei2_eastern brooklyn', 'nei2_central brooklyn', 'nei2_south brooklyn', 'nei2_upper manhattan', 'nei2_east bronx', 'nei2_other', 'nei2_midtown manhattan', 'nei2_southeastern queens', 'nei2_southwestern brooklyn', 'nei2_not_mapped_yet', 'nei2_rockaway peninsula', 'nei2_northeastern queens', 'nei2_southwestern queens', 'nei2_northern brooklyn', 'nei2_downtown manhattan', 'nei2_southern brooklyn', 'nei3_not_mapped_yet', 'nei3_brooklyn', 'nei3_bronx', 'nei3_manhattan', 'nei3_queens', 'bed_bath_diff', 'bed_bath_ratio', 'bed_bath_median', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_diff_quantile_0.25', 'gr_by_mngr_bed_bath_diff_quantile_0.75', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75', 'get_by_mngr_num_features_mean', 'get_by_mngr_num_features_median', 'get_by_mngr_num_photos_mean', 'get_by_mngr_num_photos_median', 'get_by_mngr_word_num_in_descr_mean', 'get_by_mngr_word_num_in_descr_median', 'get_by_mngr_bed_norm_mean', 'get_by_mngr_bath_norm_mean', 'get_by_mngr_price_mean', 'get_by_mngr_price_median', 'get_by_mngr_latitude_mean', 'get_by_mngr_latitude_median', 'get_by_mngr_longitude_mean', 'get_by_mngr_longitude_median', 'get_by_mngr_total_minutes_mean', 'get_by_mngr_total_minutes_median', 'main_hour']
+"""
 
 
 

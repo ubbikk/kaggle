@@ -32,9 +32,13 @@ BED_NORMALIZED = 'bed_norm'
 BATH_NORMALIZED = 'bath_norm'
 
 
-def process_mngr_avg_median_price(train_df, test_df):
+def process_mngr_quantiles(train_df, test_df):
     quantiles = [0.1*x for x in range(1, 10)]
     df = pd.concat([train_df, test_df])
+
+    total_minutes_col='total_minutes'
+    df[total_minutes_col] = df[CREATED_MINUTE]+24*df[CREATED_HOUR]
+
     bed_bath_median = 'bed_bath_median'
     df[bed_bath_median] = df.groupby([BED_NORMALIZED, BATH_NORMALIZED])[PRICE].transform('median')
 
@@ -46,7 +50,7 @@ def process_mngr_avg_median_price(train_df, test_df):
 
     cols_to_quantile = ['bed_bath_diff', 'bed_bath_ratio',
                         PRICE, LATITUDE, LONGITUDE, BED_NORMALIZED, BATH_NORMALIZED,
-                        'num_features', 'num_photos', 'word_num_in_descr']
+                        'num_features', 'num_photos', 'word_num_in_descr', total_minutes_col]
     new_cols=[bed_bath_median, bed_bath_diff, bed_bath_raio]
 
     group_by = df.groupby(MANAGER_ID)
