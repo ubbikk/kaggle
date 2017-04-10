@@ -954,9 +954,8 @@ def submit_all_5():
 
 
 
-    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+    train_target = train_df[TARGET].values
     del train_df[TARGET]
-    del test_df[TARGET]
 
     train_df = train_df[features]
     test_df = test_df[features]
