@@ -900,6 +900,7 @@ def submit_all_5():
     features=[]
 
     train_df, new_cols = process_features(train_df)
+    test_df, blja = process_features(test_df)
     features+=new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
