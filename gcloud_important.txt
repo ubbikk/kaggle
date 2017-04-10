@@ -1,1 +1,5 @@
+1)list of instances:
 gcloud compute instances list
+
+2)copy from remote:
+gcloud compute copy-files kg3:/home/dd_petrovskiy/kg/kaggle/src/all5/results2.csv .
