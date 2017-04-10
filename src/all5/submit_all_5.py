@@ -161,7 +161,7 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols = []
-    for df in [train_df, test_df]:
+    for df in [train_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
