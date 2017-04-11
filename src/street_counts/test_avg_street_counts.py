@@ -712,7 +712,7 @@ def process_other_mngr_medians(train_df, test_df):
     df[total_minutes_col] = df[CREATED_MINUTE]+24*df[CREATED_HOUR]
     features = [PRICE, 'num_features', 'num_photos', 'word_num_in_descr',
                 BED_NORMALIZED, BATH_NORMALIZED,
-                LATITUDE, LONGITUDE, total_minutes_col]
+                LATITUDE, LONGITUDE, total_minutes_col, STREET_POPULARITY]
     new_cols = []
     for f in features:
         col = 'get_by_mngr_{}_mean'.format(f)
@@ -750,6 +750,84 @@ def get_main_value(s):
 ####################################################
 #######################################################
 
+STREET_POPULARITY = 'street_popularity'
+NORMALIZED_DISPLAY_ADDRESS = 'normalized_display_address'
+MANAGER_ID = 'manager_id'
+
+def reverse_norm_map(m):
+    res = {}
+    for k, v in m.iteritems():
+        for s in v:
+            res[s.lower()] = k.lower()
+
+    return res
+
+
+NORMALIZATION_MAP = {
+    'street': ['St', 'St.', 'Street', 'St,', 'st..', 'street.'],
+    'avenue': ['Avenue', 'Ave', 'Ave.'],
+    'square': ['Square'],
+    'east': ['e', 'east', 'e.'],
+    'west': ['w', 'west', 'w.'],
+    'road':['road', 'rd', 'rd.']
+}
+
+REVERSE_NORM_MAP = reverse_norm_map(NORMALIZATION_MAP)
+
+
+# Fifth, Third
+
+def normalize_tokens(s):
+    tokens = s.split()
+    for i in range(len(tokens)):
+        tokens[i] = if_starts_with_digit_return_digit_prefix(tokens[i])
+        t = tokens[i]
+        if t.lower() in REVERSE_NORM_MAP:
+            tokens[i] = REVERSE_NORM_MAP[t.lower()]
+    return ' '.join(tokens)
+
+def if_starts_with_digit_return_digit_prefix(s):
+    if not s[0].isdigit():
+        return s
+    last=0
+    for i in range(len(s)):
+        if s[i].isdigit():
+            last=i
+        else:
+            break
+
+    return s[0:last+1]
+
+
+def normalize_string(s):
+    s = normalize_tokens(s)
+    if s == '':
+        return s
+
+    s=s.lower()
+
+    tokens = s.split()
+    if len(tokens) == 2:
+        return ' '.join(tokens)
+    if tokens[0].replace('.', '').replace('-', '').isdigit():
+        return ' '.join(tokens[1:])
+    else:
+        return ' '.join(tokens)
+
+def normalize_display_address_df(df):
+    df[NORMALIZED_DISPLAY_ADDRESS] = df[DISPLAY_ADDRESS].apply(normalize_string)
+
+def process_street_counts(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    normalize_display_address_df(df)
+    df[STREET_POPULARITY] = df.groupby(NORMALIZED_DISPLAY_ADDRESS)[MANAGER_ID].transform('count')
+    train_df[STREET_POPULARITY]=df.loc[train_df.index, STREET_POPULARITY]
+    test_df[STREET_POPULARITY]=df.loc[test_df.index, STREET_POPULARITY]
+
+    return train_df, test_df, [STREET_POPULARITY]
+
+####################################################
+#######################################################
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
                 'num_features', 'num_photos', 'word_num_in_descr',
@@ -833,6 +911,11 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+
+    train_df, test_df, new_cols = process_street_counts(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
+
     ii = []
     for x in range(num):
         t = time()
@@ -850,7 +933,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'fixed_all5', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_avg_street_counts', sys.argv[1])
 
 
 
