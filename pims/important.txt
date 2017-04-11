@@ -46,3 +46,6 @@ docker volume inspect pims_mongodb-log
 echo "db.restoreInProgressMonitor.insert({'restoreInProgress':true});" | mongo --host mongodb --port 27017 --username pims --password pims pims
 mongorestore --nsExclude pims.auditTrail,pims.externalOperationLogEntry --keepIndexVersion --host mongodb --port 27017 --username backup_restore_pims --password backup_restore_pims --db pims --drop --gzip --restoreDbUsersAndRoles --archive=pims.managed-production-env-2017_04_03_17_36-mongo.gz
 echo "db.restoreInProgressMonitor.remove({'restoreInProgress':true}); db.restoreInProgressMonitor.drop();" | mongo --host mongodb --port 27017 --username pims --password pims pims
+
+19)problems with compilation EdiModelServiceAmazon855 etc:
+    In module edi-gen mark directory  target/ejc as  'src-root'
