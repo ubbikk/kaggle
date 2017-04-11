@@ -749,6 +749,49 @@ def get_main_value(s):
 
 ####################################################
 #######################################################
+TOTAL_10_MINUTES='total_10_minutes'
+TOTAL_60_MINUTES='total_60_minutes'
+
+def process_time_density_new(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    df[TOTAL_MINUTES] = df[CREATED_MINUTE]+24*df[CREATED_HOUR]
+    df[TOTAL_10_MINUTES] = df[TOTAL_MINUTES].apply(lambda s: s/10)
+    df[TOTAL_60_MINUTES] = df[TOTAL_MINUTES].apply(lambda s: s/60)
+
+    new_cols=[]
+
+    for col in [TOTAL_MINUTES, TOTAL_10_MINUTES, TOTAL_60_MINUTES]:
+        n_col = 'in_{}_num'.format(col)
+        df[n_col] = df.groupby(col)[MANAGER_ID].transform('count')
+        new_cols.append(n_col)
+
+    for col in new_cols:
+        train_df[col]=df.loc[train_df.index, col]
+        test_df[col]=df.loc[test_df.index, col]
+
+    return train_df, test_df, new_cols
+
+
+def process_avg_mngr_time(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    features = ['in_{}_num'.format(col) for col in [TOTAL_MINUTES, TOTAL_10_MINUTES, TOTAL_60_MINUTES]]
+    new_cols = []
+    for f in features:
+        col = 'get_by_mngr_{}_mean'.format(f)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('mean')
+        new_cols.append(col)
+
+        col = 'get_by_mngr_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = df.groupby(MANAGER_ID)[f].transform('median')
+
+    for col in new_cols:
+        train_df[col]=df.loc[train_df.index, col]
+        test_df[col]=df.loc[test_df.index, col]
+
+    return train_df, test_df, new_cols
+####################################################
+#######################################################
 
 def loss_with_per_tree_stats(df, new_cols):
     features = ['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price',
@@ -833,6 +876,14 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    train_df, test_df, new_cols = process_time_density_new(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_avg_mngr_time(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     ii = []
     for x in range(num):
         t = time()
@@ -850,7 +901,7 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'fixed_all5', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_time_density_new', sys.argv[1])
 
 
 
