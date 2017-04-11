@@ -772,6 +772,81 @@ def process_other_mngr_medians_new(train_df, test_df):
 ####################################################
 #######################################################
 
+NORMALIZED_DISPLAY_ADDRESS = 'normalized_display_address'
+MANAGER_ID = 'manager_id'
+
+def reverse_norm_map(m):
+    res = {}
+    for k, v in m.iteritems():
+        for s in v:
+            res[s.lower()] = k.lower()
+
+    return res
+
+
+NORMALIZATION_MAP = {
+    'street': ['St', 'St.', 'Street', 'St,', 'st..', 'street.'],
+    'avenue': ['Avenue', 'Ave', 'Ave.'],
+    'square': ['Square'],
+    'east': ['e', 'east', 'e.'],
+    'west': ['w', 'west', 'w.'],
+    'road':['road', 'rd', 'rd.']
+}
+
+REVERSE_NORM_MAP = reverse_norm_map(NORMALIZATION_MAP)
+
+
+# Fifth, Third
+
+def normalize_tokens(s):
+    tokens = s.split()
+    for i in range(len(tokens)):
+        tokens[i] = if_starts_with_digit_return_digit_prefix(tokens[i])
+        t = tokens[i]
+        if t.lower() in REVERSE_NORM_MAP:
+            tokens[i] = REVERSE_NORM_MAP[t.lower()]
+    return ' '.join(tokens)
+
+def if_starts_with_digit_return_digit_prefix(s):
+    if not s[0].isdigit():
+        return s
+    last=0
+    for i in range(len(s)):
+        if s[i].isdigit():
+            last=i
+        else:
+            break
+
+    return s[0:last+1]
+
+
+def normalize_string(s):
+    s = normalize_tokens(s)
+    if s == '':
+        return s
+
+    s=s.lower()
+
+    tokens = s.split()
+    if len(tokens) == 2:
+        return ' '.join(tokens)
+    if tokens[0].replace('.', '').replace('-', '').isdigit():
+        return ' '.join(tokens[1:])
+    else:
+        return ' '.join(tokens)
+
+def normalize_display_address_df(df):
+    df[NORMALIZED_DISPLAY_ADDRESS] = df[DISPLAY_ADDRESS].apply(normalize_string)
+
+def process_street_counts(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    normalize_display_address_df(df)
+    col = 'street_popularity'
+    df[col] = df.groupby(NORMALIZED_DISPLAY_ADDRESS)[MANAGER_ID].transform('count')
+    train_df[col]=df.loc[train_df.index, col]
+    test_df[col]=df.loc[test_df.index, col]
+
+    return train_df, test_df, [col]
 
 
 ####################################################
@@ -873,7 +948,12 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
     features=[]
 
     train_df, new_cols = process_features(train_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
+
+    train_df, test_df, new_cols = process_street_counts(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     features+=new_cols
@@ -895,14 +975,11 @@ def do_test_with_xgboost_stats_per_tree(num, fp, mongo_host):
         write_results(results, ii, fp, mongo_host)
 
 
-do_test_with_xgboost_stats_per_tree(1000, 'test_merged_mngr_medians', sys.argv[1])
+do_test_with_xgboost_stats_per_tree(1000, 'test_street_counts', sys.argv[1])
 
 
 
 
-"""
-['bathrooms', 'bedrooms', 'latitude', 'longitude', 'price', 'num_features', 'num_photos', 'word_num_in_descr', 'created_month', 'created_day', 'created_hour', 'created_minute', 'dayOfWeek', 'elevator', 'hardwood floors', 'cats allowed', 'dogs allowed', 'doorman', 'dishwasher', 'laundry in building', 'no fee', 'reduced fee', 'fitness center', 'pre-war', 'roof deck', 'outdoor space', 'common outdoor space', 'private outdoor space', 'dining room', 'high speed internet', 'balcony', 'swimming pool', 'new construction', 'terrace', 'exclusive', 'loft', 'garden/patio', 'wheelchair access', 'fireplace', 'simplex', 'lowrise', 'garage', 'furnished', 'multi-level', 'high ceilings', 'parking space', 'live in super', 'renovated', 'green building', 'storage', 'washer', 'stainless steel appliances', 'bed_bath_diff', 'bed_bath_ratio', 'bed_bath_median', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_diff_quantile_0.25', 'gr_by_mngr_bed_bath_diff_quantile_0.75', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75', 'hcc_manager_id_target_high', 'hcc_manager_id_target_medium', 'manager_num', 'hcc_building_id_target_high', 'hcc_building_id_target_medium', 'bid_num', 'listing_id', 'freq_of_nei1', 'freq_of_nei2', 'freq_of_nei1, with bed=0', 'freq_of_nei1, with bed=1', 'freq_of_nei1, with bed=2', 'freq_of_nei1, with bed=3', 'freq_of_nei2, with bed=0', 'freq_of_nei2, with bed=1', 'freq_of_nei2, with bed=2', 'freq_of_nei2, with bed=3', 'freq_of_nei3, with bed=0', 'freq_of_nei3, with bed=1', 'freq_of_nei3, with bed=2', 'freq_of_nei3, with bed=3', 'median_ratio_of_nei1', 'median_ratio_of_nei2', 'nei1_fordham manor', 'nei1_downtown brooklyn', 'nei1_dyker heights', 'nei1_little italy', 'nei1_long island city', 'nei1_murray hill', 'nei1_rockaway beach', 'nei1_concourse', 'nei1_richmond hill', 'nei1_bedford-stuyvesant', 'nei1_midtown east', 'nei1_university heights', 'nei1_woodside', 'nei1_coney island', 'nei1_belmont', 'nei1_east elmhurst', 'nei1_gravesend', 'nei1_red hook', 'nei1_forest hills', 'nei1_marble hill', 'nei1_middle village', 'nei1_williamsbridge', 'nei1_hollis', 'nei1_east village', 'nei1_glendale', 'nei1_morris heights', 'nei1_glen oaks', 'nei1_bensonhurst', 'nei1_bushwick', 'nei1_jamaica', 'nei1_financial district', 'nei1_flatiron district', 'nei1_wakefield', 'nei1_prospect heights', 'nei1_greenpoint', 'nei1_brighton beach', 'nei1_jackson heights', 'nei1_kensington', 'nei1_flushing', 'nei1_inwood', 'nei1_jamaica estates', 'nei1_kingsbridge', 'nei1_boerum hill', 'nei1_greenwood heights', 'nei1_canarsie', 'nei1_upper east side', 'nei1_flatlands', 'nei1_whitestone', 'nei1_brooklyn heights', 'nei1_stuyvesant town - peter cooper village', 'nei1_borough park', 'nei1_sheepshead bay', 'nei1_west harlem', 'nei1_south ozone park', 'nei1_hunts point', 'nei1_noho', 'nei1_park slope', 'nei1_highbridge', 'nei1_windsor terrace', 'nei1_roosevelt island', 'nei1_east harlem', 'nei1_rego park', 'nei1_bedford park', 'nei1_ridgewood', 'nei1_east tremont', 'nei1_cobble hill', 'nei1_unionport', 'nei1_far rockaway', 'nei1_ozone park', 'nei1_central park', 'nei1_bath beach', 'nei1_astoria', 'nei1_elmhurst', 'nei1_briarwood', 'nei1_gowanus', 'nei1_parkchester', 'nei1_lower east side', 'nei1_mott haven', 'nei1_norwood', 'nei1_tribeca', 'nei1_chinatown', 'nei1_midtown', 'nei1_clinton hill', 'nei1_chelsea', 'nei1_marine park', 'nei1_morris park', 'nei1_van cortlandt park', 'nei1_sunset park', 'nei1_garment district', 'nei1_not_mapped_yet', 'nei1_midwood', 'nei1_maspeth', 'nei1_bay ridge', 'nei1_bayside', 'nei1_gramercy park', 'nei1_sunnyside', 'nei1_carroll gardens', 'nei1_williamsburg', 'nei1_mount hope', 'nei1_pelham bay', 'nei1_battery park city', 'nei1_west village', 'nei1_flatbush', 'nei1_brownsville', 'nei1_ocean hill', "nei1_hell's kitchen", 'nei1_dumbo', 'nei1_east flatbush', 'nei1_washington heights', 'nei1_kew gardens hills', 'nei1_riverdale', 'nei1_greenwich village', 'nei1_crown heights', 'nei1_fort greene', 'nei1_corona', 'nei1_east new york', 'nei1_soho', 'nei1_upper west side', 'nei1_harlem', 'nei1_woodhaven', 'nei1_kew gardens', 'nei2_west bronx', 'nei2_northwestern brooklyn', 'nei2_southeastern brooklyn', 'nei2_northwestern queens', 'nei2_eastern brooklyn', 'nei2_central brooklyn', 'nei2_south brooklyn', 'nei2_upper manhattan', 'nei2_east bronx', 'nei2_other', 'nei2_midtown manhattan', 'nei2_southeastern queens', 'nei2_southwestern brooklyn', 'nei2_not_mapped_yet', 'nei2_rockaway peninsula', 'nei2_northeastern queens', 'nei2_southwestern queens', 'nei2_northern brooklyn', 'nei2_downtown manhattan', 'nei2_southern brooklyn', 'nei3_not_mapped_yet', 'nei3_brooklyn', 'nei3_bronx', 'nei3_manhattan', 'nei3_queens', 'bed_bath_diff', 'bed_bath_ratio', 'bed_bath_median', 'gr_by_mngr_bed_bath_diff_median', 'gr_by_mngr_bed_bath_diff_mean', 'gr_by_mngr_bed_bath_diff_quantile_0.25', 'gr_by_mngr_bed_bath_diff_quantile_0.75', 'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean', 'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75', 'get_by_mngr_num_features_mean', 'get_by_mngr_num_features_median', 'get_by_mngr_num_photos_mean', 'get_by_mngr_num_photos_median', 'get_by_mngr_word_num_in_descr_mean', 'get_by_mngr_word_num_in_descr_median', 'get_by_mngr_bed_norm_mean', 'get_by_mngr_bath_norm_mean', 'get_by_mngr_price_mean', 'get_by_mngr_price_median', 'get_by_mngr_latitude_mean', 'get_by_mngr_latitude_median', 'get_by_mngr_longitude_mean', 'get_by_mngr_longitude_median', 'get_by_mngr_total_minutes_mean', 'get_by_mngr_total_minutes_median', 'main_hour']
-"""
 
 
 

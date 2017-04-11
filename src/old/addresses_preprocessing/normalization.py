@@ -46,8 +46,8 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 500)
 
-train_file = '../../data/redhoop/train.json'
-test_file = '../../data/redhoop/test.json'
+train_file = '../data/redhoop/train.json'
+test_file = '../data/redhoop/test.json'
 
 
 def basic_preprocess(df):
@@ -74,11 +74,12 @@ def reverse_norm_map(m):
 
 
 NORMALIZATION_MAP = {
-    'street': ['St', 'St.', 'Street', 'St,'],
+    'street': ['St', 'St.', 'Street', 'St,', 'st..', 'street.'],
     'avenue': ['Avenue', 'Ave', 'Ave.'],
     'square': ['Square'],
-    'east': ['e', 'east'],
-    'west': ['w', 'west']
+    'east': ['e', 'east', 'e.'],
+    'west': ['w', 'west', 'w.'],
+    'road':['road', 'rd', 'rd.']
 }
 
 REVERSE_NORM_MAP = reverse_norm_map(NORMALIZATION_MAP)
@@ -154,4 +155,4 @@ def test():
     return count_map
 
 
-test_blja()
+# test_blja()
