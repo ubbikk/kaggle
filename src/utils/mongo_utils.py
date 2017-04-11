@@ -79,6 +79,7 @@ def explore_importance(name, features, N=None):
         N=len(features)
 
     res = load_importance(name, features)
+    print res
     res=res[:N]
     xs = [x[0] for x in res]
     ys=[x[1] for x in res]
