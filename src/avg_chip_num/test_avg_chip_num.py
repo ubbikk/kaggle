@@ -755,7 +755,7 @@ def process_avg_chip_num(train_df, test_df):
     new_cols=[]
 
     tmp = 'tmp'
-    df[tmp] = df['median_ratio'].apply(lambda s: 1 if s<=0 else 0)
+    df[tmp] = df['bed_bath_median'].apply(lambda s: 1 if s<=0 else 0)
 
     col ='mngr_cheap_rent'
     groupby_manager_id_tmp_ = df.groupby(MANAGER_ID)[tmp]
