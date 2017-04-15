@@ -71,14 +71,19 @@ test_file = '../../data/redhoop/test.json'
 train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
 rent_file = '../with_geo/data/neis_from_renthop_lower.json'
+
 seeds_fp = '../../seeds.json'
+splits_big_fp='../../splits_big.json'
+splits_small_fp='../../splits_small.json'
 
 # train_file = '../data/redhoop/train.json'
 # test_file = '../data/redhoop/test.json'
 # train_geo_file = '../data/redhoop/with_geo/train_geo.json'
 # test_geo_file = '../data/redhoop/with_geo/test_geo.json'
 # rent_file = 'with_geo/data/neis_from_renthop_lower.json'
-# seeds_fp = '../seeds.json'
+# seeds_fp = '../../seeds.json'
+# splits_big_fp='../../splits_big.json'
+# splits_small_fp='../../splits_small.json'
 
 
 #########################################################################################
@@ -86,19 +91,11 @@ seeds_fp = '../../seeds.json'
 #########################################################################################
 
 SEEDS = json.load(open(seeds_fp))
+SPLITS_BIG=json.load(open(splits_big_fp))
+SPLITS_SMALL=json.load(open(splits_small_fp))
 
 
 def getN(mongo_host, name, experiment_max_time):
-    retries = 5
-    while retries >= 0:
-        try:
-            return getNinner(mongo_host, name, experiment_max_time)
-        except:
-            traceback.print_exc()
-            retries -= 1
-            sleep(30)
-
-def getNinner(mongo_host, name, experiment_max_time):
     client = MongoClient(mongo_host, 27017)
     db = client[name]
     collection = db['splits_control'.format(name)]
@@ -117,21 +114,8 @@ def getNinner(mongo_host, name, experiment_max_time):
 
     return N
 
-
 def split_from_N(df, N):
-    folds = 5
-    seed = SEEDS[N / folds]
-    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
-
-    gen = skf.split(np.zeros(len(df)), df['interest_level'])
-    kfold_ind = N % folds
-
-    counter = 0
-    for big_ind, small_ind in gen:
-        if counter == kfold_ind:
-            return df.iloc[big_ind], df.iloc[small_ind]
-        counter += 1
-
+    return df.loc[SPLITS_BIG[N],:], df.loc[SPLITS_SMALL[N], :]
 
 
 def complete_split_mongo(N, name, mongo_host, probs, test_indexes, losses, importance, f_names):

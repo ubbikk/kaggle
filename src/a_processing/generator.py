@@ -32,8 +32,8 @@ splits_big_fp='../splits_big.json'
 splits_small_fp='../splits_small.json'
 
 SEEDS = json.load(open(seeds_fp))
-# SPLITS_BIG=json.load(open(splits_big_fp))
-# SPLITS_SMALL=json.load(open(splits_small_fp))
+SPLITS_BIG=json.load(open(splits_big_fp))
+SPLITS_SMALL=json.load(open(splits_small_fp))
 
 
 def getN(mongo_host, name, experiment_max_time):
@@ -57,21 +57,6 @@ def getN(mongo_host, name, experiment_max_time):
 
 def split_from_N(df, N):
     return df.loc[SPLITS_BIG[N],:], df.loc[SPLITS_SMALL[N], :]
-
-def generate_and_write_splits(df):
-    res_small = []
-    res_big = []
-    folds = 5
-    for n in range(50):
-        seed = SEEDS[n]
-        skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
-        gen = skf.split(np.zeros(len(df)), df['interest_level'])
-        for big_ind, small_ind in gen:
-            res_small.append(list(df.iloc[small_ind].index.values))
-            res_big.append(list(df.iloc[big_ind].index.values))
-
-    json.dump(res_small, open('../splits_small.json', 'w+'))
-    json.dump(res_big, open('../splits_big.json', 'w+'))
 
 
 def complete_split_mongo(N, name, mongo_host, probs, test_indexes, losses, importance, f_names):
