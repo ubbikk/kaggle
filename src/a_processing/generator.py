@@ -26,6 +26,7 @@ from pymongo import MongoClient
 # seeds_fp = '../../seeds.json'
 seeds_fp = '../seeds.json'
 SEEDS = json.load(open(seeds_fp))
+SPLITS=json.load(open('../splits.json', 'w+'))
 
 
 def getN(mongo_host, name, experiment_max_time):
@@ -47,6 +48,17 @@ def getN(mongo_host, name, experiment_max_time):
 
     return N
 
+def generate_and_write_splits(df):
+    res = []
+    folds = 5
+    for n in range(200):
+        seed = SEEDS[n]
+        skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
+        gen = skf.split(np.zeros(len(df)), df['interest_level'])
+        for big_ind, small_ind in gen:
+            res.append(list(small_ind))
+
+    json.dump(res, open('../splits.json', 'w+'))
 
 def split_from_N(df, N):
     folds = 5
