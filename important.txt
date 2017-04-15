@@ -68,3 +68,14 @@ low          0.990825688073
 55)hcc for nei+bed+bath !!!!!!!!!!!
 
 56)median_diff_nei1 + median_diff_nei2
+
+57)drop big prices :
+explore_target(df[df[BED_BATH_RATIO]>=1])
+high         0.00340715502555
+medium       0.0289608177172
+low          0.967632027257
+
+
+58)mngr works with low feature, num of <=0.3
+
+59)something like hcc for neis(percent of target=high etc)

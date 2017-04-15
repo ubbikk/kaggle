@@ -427,22 +427,26 @@ target_vals = ['high', 'medium', 'low']
 train_df, test_df = load_train(), load_test()
 train_df, test_df, new_cols = process_nei123(train_df, test_df)
 train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+BED_BATH_MEDIAN= 'bed_bath_median'
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+MNGR_COUNT='mngr_count'
 
-
-COLS_TO_SHOW_1=[MANAGER_ID, TARGET,PRICE,
+COLS_TO_SHOW_1=[TARGET,PRICE,
                 'bed_bath_median', 'bed_bath_diff','bed_bath_ratio',
                 CREATED_HOUR,BEDROOMS, BATHROOMS,NEI_1, NEI_2,
                  # 'median_ratio_of_nei1', 'median_ratio_of_nei2',
-                 'num_features','num_photos','word_num_in_descr'
+                 'num_features','num_photos','word_num_in_descr', MANAGER_ID
                  ]
 
 def show_mngr(mngr_id):
     return train_df[train_df[MANAGER_ID]==mngr_id][COLS_TO_SHOW_1]
 
-df = explore_bad_good_mngrs(train_df)
-high = df.sort_values(by='interest_level_high')
-low = df.sort_values(by='interest_level_low')
 df = format_df(train_df)
+# df = explore_bad_good_mngrs(train_df)
+# high = df.sort_values(by='interest_level_high')
+# low = df.sort_values(by='interest_level_low')
+# df = format_df(train_df)
 #interesting_mngr_h='35f11f952ba96803a9d9e23e83e7f972'
 #interesting_mngr_l='d1762ef0af965cfb5946ba0e209cc1c5'
 
