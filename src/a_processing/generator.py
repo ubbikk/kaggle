@@ -24,9 +24,11 @@ import math
 from pymongo import MongoClient
 
 # seeds_fp = '../../seeds.json'
+# splits_fp='../../splits.json'
 seeds_fp = '../seeds.json'
+splits_fp='../splits.json'
 SEEDS = json.load(open(seeds_fp))
-SPLITS=json.load(open('../splits.json', 'w+'))
+# SPLITS=json.load(open(splits_fp))
 
 
 def getN(mongo_host, name, experiment_max_time):
@@ -48,31 +50,10 @@ def getN(mongo_host, name, experiment_max_time):
 
     return N
 
-def generate_and_write_splits(df):
-    res = []
-    folds = 5
-    for n in range(200):
-        seed = SEEDS[n]
-        skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
-        gen = skf.split(np.zeros(len(df)), df['interest_level'])
-        for big_ind, small_ind in gen:
-            res.append(list(small_ind))
-
-    json.dump(res, open('../splits.json', 'w+'))
-
 def split_from_N(df, N):
-    folds = 5
-    seed = SEEDS[N / folds]
-    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
-
-    gen = skf.split(np.zeros(len(df)), df['interest_level'])
-    kfold_ind = N % folds
-
-    counter = 0
-    for big_ind, small_ind in gen:
-        if counter == kfold_ind:
-            return df.iloc[big_ind], df.iloc[small_ind]
-        counter += 1
+    small = SPLITS[N]
+    big = [x for x in df.index.values if x not in small]
+    return df.loc[big], df.loc[small]
 
 
 def get_next_split(df, mongo_host, name, experiment_max_time):
