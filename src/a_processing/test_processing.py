@@ -87,17 +87,8 @@ seeds_fp = '../../seeds.json'
 
 SEEDS = json.load(open(seeds_fp))
 
-def getN(mongo_host, name, experiment_max_time):
-    retries = 5
-    while retries >= 0:
-        try:
-            return getNinner(mongo_host, name, experiment_max_time)
-        except:
-            traceback.print_exc()
-            retries -= 1
-            sleep(30)
 
-def getNinner(mongo_host, name, experiment_max_time):
+def getN(mongo_host, name, experiment_max_time):
     client = MongoClient(mongo_host, 27017)
     db = client[name]
     collection = db['splits_control'.format(name)]
@@ -130,6 +121,19 @@ def split_from_N(df, N):
         if counter == kfold_ind:
             return df.iloc[big_ind], df.iloc[small_ind]
         counter += 1
+
+
+def get_next_split(df, mongo_host, name, experiment_max_time):
+    N = getN(mongo_host, name, experiment_max_time)
+    train_df, test_df = split_from_N(df, N)
+
+    client = MongoClient(mongo_host, 27017)
+    db = client[name]
+
+    collection = db['splits']
+    collection.insert_one({'N': N, 'train': list(train_df.index.values), 'test': list(test_df.index.values)})
+
+    return train_df, test_df
 
 
 def complete_split_mongo(N, name, mongo_host, probs, test_indexes, losses, importance, f_names):
@@ -387,8 +391,7 @@ def transform_geo_to_rent(s):
 # Creating Neis
 #########################################################################################
 
-def shuffle_df(df):
-    return df.iloc[np.random.permutation(len(df))]
+
 
 
 def get_loss_at1K(estimator):
@@ -469,8 +472,8 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=30*60):
     l_results_per_tree = []
     losses_at_1K = []
 
-    train_df = load_train()
-    test_df = load_test()
+    train_df = load_train().head(1000)
+    test_df = load_test().head(1000)
 
     train_df, test_df, features = process_all_name(train_df, test_df)
 
@@ -492,3 +495,9 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=30*60):
 
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
+
+
+name = 'test_processing'
+mongo_host='10.20.0.144'
+
+do_test_xgboost(name, mongo_host, 700)
