@@ -387,7 +387,9 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
     prior_prob = train_df[binary_target].mean()
     hcc_name = "_".join(["hcc", variable, binary_target])
 
-    skf = StratifiedKFold(folds)
+    seed = int(time())
+    print 'seed hcc {}'.format(seed)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
     for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
         big = train_df.iloc[big_ind]
         small = train_df.iloc[small_ind]
@@ -805,11 +807,13 @@ def loss_with_per_tree_stats(train_df, test_df, new_cols):
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
+    seed = int(time())
+    print 'XGB seed {}'.format(seed)
     estimator = xgb.XGBClassifier(n_estimators=1100,
                                   objective='mlogloss',
                                   subsample=0.8,
                                   colsample_bytree=0.8,
-                                  seed=int(time()))
+                                  seed=seed)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
