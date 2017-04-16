@@ -1,4 +1,5 @@
 import math
+from time import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,6 +22,7 @@ host = gc_host
 client = MongoClient(host, 27017)
 CV = 5
 TARGET = 'interest_level'
+LISTING_ID = 'listing_id'
 
 
 def load_results(name):
@@ -220,3 +222,26 @@ def explore_cv_errors(probs_raw, train_df):
         ('flat_std', np.std(errors_flat)),
         ('flat_max', np.max(errors_flat)),
         ('flat_min', np.min(errors_flat)), ]
+
+
+def res_to_df(res):
+    return pd.DataFrame({k: res[k] for k in ['high', 'low', 'medium']}, index=res[LISTING_ID])
+
+
+def create_avg_submit(name):
+    results = load_res_name(name)
+
+    df = sum(results)/len(results)
+    df[LISTING_ID] = df.index.values
+    df = df[[LISTING_ID, 'high', 'medium', 'low']]
+    fp = '{}_results_{}.csv'.format(name, int(time()))
+    df.to_csv(fp, index=False)
+
+
+def load_res_name(name):
+    db = client[name]
+    collection = db['results']
+    results = [x for x in collection.find()]
+    results = [res_to_df(x) for x in results]
+    return results
+
