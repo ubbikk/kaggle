@@ -120,10 +120,35 @@ def get_probs(name, n=0):
     if len(probs)<CV:
         raise
 
-    dfs=[]
+    return df_from_list(probs)
 
+
+def df_from_list(probs):
+    dfs = []
     for p in probs:
         df = pd.DataFrame(p['val'], index=p['index'])
         dfs.append(df)
-
     return pd.concat(dfs)[['low', 'medium', 'high']]
+
+
+def get_all_probs(name):
+    probs_map={}
+    db=client[name]
+    collection = db['probs']
+    for p in collection.find():
+        N = p['N']
+        probs_map[N] = p
+
+    m = (1+max(probs_map.keys()))/CV
+    res = []
+    for j in range(m):
+        probs =[]
+        for i in range(CV*j, CV*(j+1)):
+            if i in probs_map:
+                probs.append(probs_map[i])
+
+        if len(probs)!=CV:
+            continue
+        res.append(df_from_list(probs))
+
+    return res
