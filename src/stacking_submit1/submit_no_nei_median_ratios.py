@@ -530,12 +530,12 @@ def process_nei123(train_df, test_df):
             df[new_col] = df[new_col] / sz
             new_cols.append(new_col)
 
-    for col in [NEI_1, NEI_2]:
-        new_col = 'median_ratio_of_{}'.format(col)
-        df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
-        df[new_col] = df[PRICE] - df['tmp']
-        df[new_col] = df[new_col] / df['tmp']
-        new_cols.append(new_col)
+    # for col in [NEI_1, NEI_2]:
+    #     new_col = 'median_ratio_of_{}'.format(col)
+    #     df['tmp'] = df.groupby([col, BEDROOMS])[PRICE].transform('median')
+    #     df[new_col] = df[PRICE] - df['tmp']
+    #     df[new_col] = df[new_col] / df['tmp']
+    #     new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2, NEI_3]:
         vals = set(df[col])

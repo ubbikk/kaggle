@@ -537,13 +537,13 @@ def process_nei123(train_df, test_df):
         df[new_col] = df[new_col] / df['tmp']
         new_cols.append(new_col)
 
-    for col in [NEI_1, NEI_2, NEI_3]:
-        vals = set(df[col])
-        if None in vals:
-            vals.remove(None)
-        df = pd.get_dummies(df, columns=[col])
-        dummies = get_dummy_cols(col, vals)
-        new_cols += dummies
+    # for col in [NEI_1, NEI_2, NEI_3]:
+    #     vals = set(df[col])
+    #     if None in vals:
+    #         vals.remove(None)
+    #     df = pd.get_dummies(df, columns=[col])
+    #     dummies = get_dummy_cols(col, vals)
+    #     new_cols += dummies
 
     for d in [train_df, test_df]:
         for col in new_cols:

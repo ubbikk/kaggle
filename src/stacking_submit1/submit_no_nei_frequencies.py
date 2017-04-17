@@ -516,19 +516,19 @@ def process_nei123(train_df, test_df):
     sz = float(len(df))
     # neis_cols = [NEI_1, NEI_2, NEI_3]
     new_cols = []
-    for col in [NEI_1, NEI_2]:
-        new_col = 'freq_of_{}'.format(col)
-        df[new_col] = df.groupby(col)[PRICE].transform('count')
-        df[new_col] = df[new_col] / sz
-        new_cols.append(new_col)
-
-    beds_vals = [0, 1, 2, 3]
-    for col in [NEI_1, NEI_2, NEI_3]:
-        for bed in beds_vals:
-            new_col = 'freq_of_{}, with bed={}'.format(col, bed)
-            df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
-            df[new_col] = df[new_col] / sz
-            new_cols.append(new_col)
+    # for col in [NEI_1, NEI_2]:
+    #     new_col = 'freq_of_{}'.format(col)
+    #     df[new_col] = df.groupby(col)[PRICE].transform('count')
+    #     df[new_col] = df[new_col] / sz
+    #     new_cols.append(new_col)
+    #
+    # beds_vals = [0, 1, 2, 3]
+    # for col in [NEI_1, NEI_2, NEI_3]:
+    #     for bed in beds_vals:
+    #         new_col = 'freq_of_{}, with bed={}'.format(col, bed)
+    #         df[new_col] = df.groupby([col, BED_NORMALIZED])[PRICE].transform('count')
+    #         df[new_col] = df[new_col] / sz
+    #         new_cols.append(new_col)
 
     for col in [NEI_1, NEI_2]:
         new_col = 'median_ratio_of_{}'.format(col)

@@ -874,10 +874,10 @@ def process_all_name(train_df, test_df):
                 "created_month", "created_day",
                 CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
 
-    train_df, new_cols = process_features(train_df)
-    test_df, blja = process_features(test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, new_cols = process_features(train_df)
+    # test_df, blja = process_features(test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)

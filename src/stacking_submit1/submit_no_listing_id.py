@@ -855,9 +855,9 @@ def process_split(train_df, test_df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_listing_id(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)

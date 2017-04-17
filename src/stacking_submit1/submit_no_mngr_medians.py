@@ -879,17 +879,17 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+    #
+    # train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+    #
+    # train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     return train_df, test_df, features
 
