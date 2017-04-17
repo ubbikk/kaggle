@@ -26,93 +26,6 @@ CV = 5
 TARGET = 'interest_level'
 LISTING_ID = 'listing_id'
 
-def load_results(name):
-    db = client[name]
-    collection = db['losses']
-    return [x['val'] for x in collection.find()]
-
-
-def load_results_1K(name):
-    db = client[name]
-    collection = db['losses']
-    return [x['val']['test'][1000] for x in collection.find()]
-
-
-def load_results_atN(name, N):
-    db = client[name]
-    collection = db['losses']
-    return [x['val']['test'][N] for x in collection.find()]
-
-
-def load_features_names(name):
-    db = client[name]
-    collection = db['features']
-    for x in collection.find():
-        return x['val']
-
-
-def load_importance(name):
-    features = load_features_names(name)
-    sz = len(features)
-    arr = load_importance_raw(name)
-    res = [np.mean([x[j] for x in arr]) for j in range(sz)]
-    stds = [np.std([x[j] for x in arr]) for j in range(sz)]
-    res = zip(features, res, stds)
-    res.sort(key=lambda s: s[1], reverse=True)
-    return res
-
-
-def load_importance_raw(name):
-    db = client[name]
-    collection = db['importance']
-    return [x['val'] for x in collection.find()]
-
-
-def explore_importance(name, N=None):
-    features = load_features_names(name)
-    if N is None:
-        N = len(features)
-
-    res = load_importance(name)
-    print res
-    res = res[:N]
-    xs = [x[0] for x in res]
-    ys = [x[1] for x in res]
-    sns.barplot(xs, ys)
-    sns.plt.show()
-
-
-def explore_res_name(name):
-    res = load_results_1K(name)
-    s = std(res) / math.sqrt(len(res))
-    m = mean(res)
-    return [
-        ('avg_loss  ', m),
-        ('max       ', max(res)),
-        ('min       ', min(res)),
-        ('2s        ', '[{}, {}]'.format(m - 2 * s, m + 2 * s)),
-        ('3s        ', '[{}, {}]'.format(m - 3 * s, m + 3 * s)),
-        ('norm      ', normaltest(res).pvalue),
-        ('std       ', np.std(res)),
-        ('mean_std  ', s),
-        ('len       ', len(res))
-    ]
-
-
-def plot_errors_name(name):
-    results = load_results(name)
-    train_runs = [x['train'] for x in results]
-    test_runs = [x['test'] for x in results]
-
-    sz = len(train_runs[0])
-    x_axis = range(sz)
-    y_train = [np.mean([x[j] for x in train_runs]) for j in x_axis]
-    y_test = [np.mean([x[j] for x in test_runs]) for j in x_axis]
-
-    fig, ax = plt.subplots()
-    ax.plot(x_axis, y_train, label='train')
-    ax.plot(x_axis, y_test, label='test')
-    ax.legend()
 
 
 ######################################################3
@@ -142,15 +55,6 @@ def load_from_db_avg_validation_df(name):
 
     return df
 
-def load_from_fs_avg_validation_df(name, folder=None):
-    if folder is None:
-        folder = stacking_fp
-
-    for f in os.listdir(folder):
-        if f.startswith(name):
-            return pd.read_csv(os.path.join(folder, f), index_col=LISTING_ID)
-
-    raise
 
 def get_fold_index(i):
     if isinstance(i, np.int64):
@@ -287,33 +191,41 @@ def explore_cv_errors(probs_raw, train_df):
 #######################################################
 #Results
 #######################################################
+stacking_submit_fp = '../stacking_submit_data'
 
-
-def results_item_to_df(res):
+def submit_item_to_df(res):
     return pd.DataFrame({k: res[k] for k in ['high', 'low', 'medium']}, index=res[LISTING_ID])
 
 
-def create_avg_submit(name):
-    probs = load_from_results_db(name)
-    create_avg_submit_from_probs(probs, name)
+# def create_avg_submit(name):
+#     probs = load_from_db_submit_raw(name)
+#     create_avg_submit_from_probs(probs, name)
+#
+#
+# def create_avg_submit_from_probs(probs, name):
+#     print 'len = {}'.format(len(probs))
+#
+#     df = sum(probs) / len(probs)
+#     df[LISTING_ID] = df.index.values
+#     df = df[[LISTING_ID, 'high', 'medium', 'low']]
+#     fp = '{}_results_{}.csv'.format(name, int(time()))
+#     df.to_csv(fp, index=False)
 
 
-def create_avg_submit_from_probs(probs, name):
-    print 'len = {}'.format(len(probs))
+def load_from_db_and_store_avg_submit_df(name, fp=None):
+    probs = load_from_db_avg_submit(name)
+    if fp is None:
+        fp = os.path.join(stacking_submit_fp, '{}_{}.csv'.format(name, len(probs)))
 
-    df = sum(probs) / len(probs)
-    df[LISTING_ID] = df.index.values
-    df = df[[LISTING_ID, 'high', 'medium', 'low']]
-    fp = '{}_results_{}.csv'.format(name, int(time()))
-    df.to_csv(fp, index=False)
+    df = sum(probs)/len(probs)
+    df.to_csv(fp, index_label=LISTING_ID)
 
-
-def load_from_results_db(name):
-    results = load_from_results_db_raw(name)
-    results = [results_item_to_df(x) for x in results]
+def load_from_db_avg_submit(name):
+    results = load_from_db_submit_raw(name)
+    results = [submit_item_to_df(x) for x in results]
     return results
 
-def load_from_results_db_raw(name):
+def load_from_db_submit_raw(name):
     db = client[name]
     collection = db['results']
     return [x for x in collection.find()]
