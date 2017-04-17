@@ -909,7 +909,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     train_df, test_df, features = process_all_name(train_df, test_df)
 
     ii_importance = []
-    for counter in range(25):
+    for counter in range(15):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
