@@ -931,4 +931,4 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
 
 
 
-do_test_xgboost('all5_seeds', sys.argv[1])
+do_test_xgboost('all5_seeds_split1', sys.argv[1])

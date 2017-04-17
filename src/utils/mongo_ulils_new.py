@@ -1,3 +1,4 @@
+import json
 import math
 from time import time
 
@@ -10,6 +11,7 @@ from pymongo import MongoClient
 from scipy.stats import normaltest
 import pandas as pd
 from sklearn.metrics import log_loss
+import os
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -23,7 +25,6 @@ client = MongoClient(host, 27017)
 CV = 5
 TARGET = 'interest_level'
 LISTING_ID = 'listing_id'
-
 
 def load_results(name):
     db = client[name]
@@ -114,7 +115,52 @@ def plot_errors_name(name):
     ax.legend()
 
 
-def get_probs(name, n=0):
+######################################################3
+#VALIDATION
+######################################################3
+
+splits_small_fp='../splits_small.json'
+SPLITS_SMALL=json.load(open(splits_small_fp))[:5]
+stacking_fp = '../stacking_data'
+
+def load_from_db_and_store_avg_validation_df(name, fp=None):
+    probs = get_all_probs(name)
+    if fp is None:
+        fp = os.path.join(stacking_fp, '{}_{}.csv'.format(name, len(probs)))
+    df = sum(probs)/len(probs)
+    df['fold'] = df['fold'].astype(np.int64)
+    df.to_csv(fp, index_label=LISTING_ID)
+
+def load_from_db_avg_validation_df(name):
+    probs = get_all_probs(name)
+    df = sum(probs)/len(probs)
+    df['fold'] = df['fold'].astype(np.int64)
+
+    return df
+
+def load_from_fs_avg_validation_df(name, folder=None):
+    if folder is None:
+        folder = stacking_fp
+
+    for f in os.listdir(folder):
+        if f.startswith(name):
+            return pd.read_csv(os.path.join(folder, f), index_col=LISTING_ID)
+
+    raise
+
+def get_fold_index(i):
+    if isinstance(i, np.int64):
+        i=i.item()
+    elif isinstance(i, str):
+        i=int(i)
+    for j in range(CV):
+        if i in SPLITS_SMALL[j]:
+            return j
+
+    raise
+
+
+def get_one_cv__probs(name, n=0):
     probs = []
     ns = [CV * n + j for j in range(CV)]
     db = client[name]
@@ -129,15 +175,17 @@ def get_probs(name, n=0):
     if len(probs) < CV:
         raise
 
-    return df_from_list(probs)
+    return convert_5_cv_entries_to_df(probs)
 
 
-def df_from_list(probs):
+def convert_5_cv_entries_to_df(probs):
     dfs = []
     for p in probs:
         df = pd.DataFrame(p['val'], index=p['index'])
+        fold = get_fold_index(df.index.values[0])
+        df['fold'] = fold
         dfs.append(df)
-    return pd.concat(dfs)[['low', 'medium', 'high']]
+    return pd.concat(dfs)[['low', 'medium', 'high', 'fold']]
 
 
 def get_all_probs_very_raw(name):
@@ -148,7 +196,7 @@ def get_all_probs_very_raw(name):
 
 def get_all_probs(name):
     res = get_all_probs_raw(name)
-    return [df_from_list(p) for p in res]
+    return [convert_5_cv_entries_to_df(p) for p in res]
 
 
 def get_all_probs_raw(name):
@@ -222,6 +270,13 @@ def explore_cv_errors(probs_raw, train_df):
         ('flat_std', np.std(errors_flat)),
         ('flat_max', np.max(errors_flat)),
         ('flat_min', np.min(errors_flat)), ]
+
+
+
+
+######################################################3
+#VALIDATION
+######################################################3
 
 
 
