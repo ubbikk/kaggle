@@ -214,6 +214,7 @@ def submit_item_to_df(res):
 
 def load_from_db_and_store_avg_submit_df(name, fp=None):
     probs = load_from_db_avg_submit(name)
+    print '{}_{}'.format(name, len(probs))
     if fp is None:
         fp = os.path.join(stacking_submit_fp, '{}_{}.csv'.format(name, len(probs)))
 

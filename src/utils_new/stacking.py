@@ -120,6 +120,7 @@ def load_from_fs_avg_validation_df(name, folder=None):
         if f.startswith(name):
             return pd.read_csv(os.path.join(folder, f), index_col=LISTING_ID)
 
+    print name
     raise
 
 
@@ -160,8 +161,36 @@ def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
 ###################################################
 #SUBMITTING....
 ###################################################
+def submit_xgb(experiments, train_df, test_df,
+               stacking_fldr=stacking_fp,
+               submit_fldr=stacking_submit_fp):
+    train = load_and_unite_expiriments_fs(experiments, stacking_fldr)
+    test = load_and_unite_submits_fs(experiments, submit_fldr)
+
+    features = train.columns.values
+
+    train[TARGET] = train_df[TARGET]
+    train_arr, train_target = train[features], train[TARGET]
+    test_arr = test[features]
+
+    model = xgb.XGBClassifier()
+    model.fit(train_arr, train_target)
+    proba = model.predict_proba(test_arr)
+    classes = [x for x in model.classes_]
+    for cl in classes:
+        test[cl] = proba[:, classes.index(cl)]
+
+    test[LISTING_ID] = test.index.values
+    res = test[['listing_id', 'high', 'medium', 'low']]
+
+    fp= 'stacking_blja_{}.csv'.format(int(time()))
+    res.to_csv(fp, index=False)
+
+
+
 def load_and_unite_submits_fs(experiments, folder=stacking_submit_fp):
-    dfs = [(e, load_from_fs_avg_validation_df(e, folder)) for e in experiments]
+    submit_names = ['submit_{}'.format(x)  for x in experiments]
+    dfs = [(e, load_from_fs_avg_validation_df(e, folder)) for e in submit_names]
     targets = ['low', 'medium', 'high']
     res_df = None
     counter = 0
