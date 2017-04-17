@@ -940,4 +940,4 @@ def submit(name, mongo_host):
 
 
 
-submit('submit_all_5_seed', sys.argv[1])
+submit('submit_no_nei_dummies', sys.argv[1])

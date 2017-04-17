@@ -119,9 +119,13 @@ def plot_errors_name(name):
 #VALIDATION
 ######################################################3
 
-splits_small_fp='../splits_small.json'
-SPLITS_SMALL=json.load(open(splits_small_fp))[:5]
 stacking_fp = '../stacking_data'
+splits_small_fp='../splits_small.json'
+splits_big_fp='../splits_big.json'
+SPLITS_SMALL=json.load(open(splits_small_fp))[:5]
+SPLITS_BIG=json.load(open(splits_big_fp))
+
+
 
 def load_from_db_and_store_avg_validation_df(name, fp=None):
     probs = get_all_probs(name)

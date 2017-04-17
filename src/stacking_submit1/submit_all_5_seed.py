@@ -1,4 +1,3 @@
-
 import json
 import os
 import traceback
@@ -418,7 +417,7 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols = []
-    for df in [train_df]:
+    for df in [train_df, test_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
@@ -456,7 +455,7 @@ def process_manager_num(train_df, test_df):
 def process_bid_categ_preprocessing(train_df, test_df):
     col = BUILDING_ID
     new_cols = []
-    for df in [train_df]:
+    for df in [train_df, test_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
     for binary_col in ['target_high', 'target_medium']:
@@ -794,12 +793,13 @@ def get_loss_at1K(estimator):
     return results_on_test[1000]
 
 
-def run_xgb(train_df, test_df, new_cols):
+def loss_with_per_tree_stats(train_df, test_df, new_cols):
     features, test_df, train_df = process_split(train_df, test_df, new_cols)
 
-    train_target = train_df[TARGET].values
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
 
     del train_df[TARGET]
+    del test_df[TARGET]
 
     train_df = train_df[features]
     test_df = test_df[features]
@@ -809,30 +809,20 @@ def run_xgb(train_df, test_df, new_cols):
 
     seed = int(time())
     print 'XGB seed {}'.format(seed)
-    estimator = xgb.XGBClassifier(n_estimators=1000,
+    estimator = xgb.XGBClassifier(n_estimators=1100,
                                   objective='mlogloss',
                                   subsample=0.8,
                                   colsample_bytree=0.8,
                                   seed=seed)
-    estimator.fit(train_arr, train_target)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
     proba = estimator.predict_proba(test_arr)
-    classes = [x for x in estimator.classes_]
-    for cl in classes:
-        test_df[cl] = proba[:, classes.index(cl)]
 
-    res = test_df[['listing_id', 'high', 'medium', 'low']]
-
-    return convert_res_to_dict(res)
-
-
-def convert_res_to_dict(res):
-    d = {}
-    d['listing_id'] = [x for x in res['listing_id']]
-    for c in ['high', 'medium', 'low']:
-        d[c] = [x.item() for x in res[c]]
-
-    return d
+    loss = log_loss(test_target, proba)
+    loss1K = get_loss_at1K(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator), \
+           estimator.feature_importances_, get_probs_from_est(estimator, proba, test_df), features
 
 
 def process_split(train_df, test_df, new_cols):
@@ -875,7 +865,6 @@ def process_all_name(train_df, test_df):
                 CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
 
     train_df, new_cols = process_features(train_df)
-    test_df, blja = process_features(test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -886,6 +875,7 @@ def process_all_name(train_df, test_df):
     train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
 
     train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -902,42 +892,37 @@ def xgboost_per_tree_results(estimator):
         'test': results_on_test
     }
 
-def write_res(name, mongo_host, res):
-    client = MongoClient(mongo_host, 27017)
-    db = client[name]
 
-    collection = db['results']
-    collection.insert_one(res)
+def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
+    all_losses = []
+    l_results_per_tree = []
+    losses_at_1K = []
 
-
-def do_submit_all5(train_df, test_df, name, mongo_host):
-    train_df, test_df, features = process_all_name(train_df, test_df)
-    res = run_xgb(train_df, test_df, features)
-
-    retries = 5
-    while retries >= 0:
-        try:
-            write_res(name, mongo_host, res)
-            break
-        except:
-            traceback.print_exc()
-            retries -= 1
-            sleep(30)
-
-
-def submit(name, mongo_host):
     train_df = load_train()
     test_df = load_test()
 
-    for n in range(1000):
-        print 'N={}'.format(n)
-        t=time()
-        do_submit_all5(train_df.copy(), test_df.copy(), name, mongo_host)
-        print 'time={}'.format(time()-t)
+    train_df, test_df, features = process_all_name(train_df, test_df)
+
+    ii_importance = []
+    for counter in range(12):
+        cur_time = time()
+        N = getN(mongo_host, name, experiment_max_time)
+
+        train, test = split_from_N(train_df.copy(), N)
+
+        loss, loss1K, losses_per_tree, importance, probs_data, f_names = \
+            loss_with_per_tree_stats(train, test, features)
+        probs, test_indexes = probs_data
+
+        ii_importance.append(importance.tolist())
+        cur_time = time() - cur_time
+        all_losses.append(loss)
+        losses_at_1K.append(loss1K)
+        l_results_per_tree.append(losses_per_tree)
+
+        out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
+        write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
 
-    print '================  DONE!  ======================'
 
-
-
-submit('submit_all_5_seed', sys.argv[1])
+do_test_xgboost('all5_seeds', sys.argv[1])

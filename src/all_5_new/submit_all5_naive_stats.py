@@ -784,6 +784,47 @@ def process_features(df):
 #  FEATURES
 #########################################################################################
 
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
+def process_mngr_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, MANAGER_ID, 5)
+
+
+
+def process_target_ratios(train_df, test_df, col, folds):
+    seed = int(time())
+    print 'seed naive_stats {}'.format(seed)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
+    target_vals = ['high', 'medium', 'low']
+    new_cols = {k: '{}_target_ratios_{}'.format(col, k) for k in target_vals}
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        calc_target_ratios(big, small, col, new_cols, train_df)
+
+    calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
+
+    return train_df, test_df, new_cols.values()
+
+
+def calc_target_ratios(big, small, col, new_cols, update_df):
+    target_vals = ['high', 'medium', 'low']
+    dummies = {k:'target_cp_{}'.format(k) for k in target_vals}
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
+    for t in target_vals:
+        new_col = new_cols[t]
+        update_df.loc[small.index, new_col] = small[dummies[t]]
+
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -839,7 +880,11 @@ def process_split(train_df, test_df, new_cols):
     features = []
     features += new_cols
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+
+    train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -864,6 +909,20 @@ def process_split(train_df, test_df, new_cols):
     features += new_cols
 
 
+    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     return features, test_df, train_df
 
 
@@ -880,14 +939,6 @@ def process_all_name(train_df, test_df):
     features += new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -936,8 +987,7 @@ def submit(name, mongo_host):
         print 'time={}'.format(time()-t)
 
 
-    print '================  DONE!  ======================'
 
 
 
-submit('submit_all_5_seed', sys.argv[1])
+submit('submit_all5_naive_stats', sys.argv[1])
