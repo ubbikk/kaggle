@@ -929,7 +929,7 @@ def submit(name, mongo_host):
     train_df = load_train()
     test_df = load_test()
 
-    for n in range(1000):
+    for n in range(3):
         print 'N={}'.format(n)
         t=time()
         do_submit_all5(train_df.copy(), test_df.copy(), name, mongo_host)
