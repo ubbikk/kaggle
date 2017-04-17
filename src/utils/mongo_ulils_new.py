@@ -224,24 +224,44 @@ def explore_cv_errors(probs_raw, train_df):
         ('flat_min', np.min(errors_flat)), ]
 
 
-def res_to_df(res):
+
+#######################################################
+#Results
+#######################################################
+
+
+def results_item_to_df(res):
     return pd.DataFrame({k: res[k] for k in ['high', 'low', 'medium']}, index=res[LISTING_ID])
 
 
 def create_avg_submit(name):
-    results = load_res_name(name)
+    probs = load_from_results_db(name)
+    create_avg_submit_from_probs(probs, name)
 
-    df = sum(results)/len(results)
+
+def create_avg_submit_from_probs(probs, name):
+    print 'len = {}'.format(len(probs))
+
+    df = sum(probs) / len(probs)
     df[LISTING_ID] = df.index.values
     df = df[[LISTING_ID, 'high', 'medium', 'low']]
     fp = '{}_results_{}.csv'.format(name, int(time()))
     df.to_csv(fp, index=False)
 
 
-def load_res_name(name):
+def load_from_results_db(name):
+    results = load_from_results_db_raw(name)
+    results = [results_item_to_df(x) for x in results]
+    return results
+
+def load_from_results_db_raw(name):
     db = client[name]
     collection = db['results']
-    results = [x for x in collection.find()]
-    results = [res_to_df(x) for x in results]
-    return results
+    return [x for x in collection.find()]
+
+
+
+#######################################################
+#Results
+#######################################################
 
