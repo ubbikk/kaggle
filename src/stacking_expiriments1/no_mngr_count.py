@@ -66,24 +66,24 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 
-# train_file = '../../data/redhoop/train.json'
-# test_file = '../../data/redhoop/test.json'
-# train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
-# test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
-# rent_file = '../with_geo/data/neis_from_renthop_lower.json'
-#
+train_file = '../../data/redhoop/train.json'
+test_file = '../../data/redhoop/test.json'
+train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
+test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
+rent_file = '../with_geo/data/neis_from_renthop_lower.json'
+
+seeds_fp = '../../seeds.json'
+splits_big_fp='../../splits_big.json'
+splits_small_fp='../../splits_small.json'
+
+# train_file = '../data/redhoop/train.json'
+# test_file = '../data/redhoop/test.json'
+# train_geo_file = '../data/redhoop/with_geo/train_geo.json'
+# test_geo_file = '../data/redhoop/with_geo/test_geo.json'
+# rent_file = 'with_geo/data/neis_from_renthop_lower.json'
 # seeds_fp = '../../seeds.json'
 # splits_big_fp='../../splits_big.json'
 # splits_small_fp='../../splits_small.json'
-
-train_file = '../data/redhoop/train.json'
-test_file = '../data/redhoop/test.json'
-train_geo_file = '../data/redhoop/with_geo/train_geo.json'
-test_geo_file = '../data/redhoop/with_geo/test_geo.json'
-rent_file = 'with_geo/data/neis_from_renthop_lower.json'
-seeds_fp = '../seeds.json'
-splits_big_fp='../splits_big.json'
-splits_small_fp='../splits_small.json'
 
 
 #########################################################################################
@@ -804,22 +804,25 @@ def loss_with_per_tree_stats(train_df, test_df, new_cols):
     train_df = train_df[features]
     test_df = test_df[features]
 
-    print train_df[train_df.isnull()]
-
     train_arr, test_arr = train_df.values, test_df.values
     print features
 
     seed = int(time())
     print 'XGB seed {}'.format(seed)
-    estimator = RandomForestClassifier(n_estimators=100)
-    estimator.fit(train_arr, train_target)
+    estimator = xgb.XGBClassifier(n_estimators=1100,
+                                  objective='mlogloss',
+                                  subsample=0.8,
+                                  colsample_bytree=0.8,
+                                  seed=seed)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
 
     proba = estimator.predict_proba(test_arr)
 
     loss = log_loss(test_target, proba)
-    loss1K = loss
-    return loss, loss1K, [], estimator.feature_importances_, \
-           get_probs_from_est(estimator, proba, test_df), features
+    loss1K = get_loss_at1K(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator), \
+           estimator.feature_importances_, get_probs_from_est(estimator, proba, test_df), features
 
 
 def process_split(train_df, test_df, new_cols):
@@ -830,9 +833,9 @@ def process_split(train_df, test_df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    # train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
 
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -890,70 +893,36 @@ def xgboost_per_tree_results(estimator):
     }
 
 
-name= 'all_random_forest'
-mongo_host = '10.20.0.144'
-experiment_max_time=15 * 60
+def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
+    all_losses = []
+    l_results_per_tree = []
+    losses_at_1K = []
 
+    train_df = load_train()
+    test_df = load_test()
 
-all_losses = []
-l_results_per_tree = []
-losses_at_1K = []
+    train_df, test_df, features = process_all_name(train_df, test_df)
 
-train_df = load_train()
-test_df = load_test()
+    ii_importance = []
+    for counter in range(15):
+        cur_time = time()
+        N = getN(mongo_host, name, experiment_max_time)
 
-train_df, test_df, features = process_all_name(train_df, test_df)
+        train, test = split_from_N(train_df.copy(), N)
 
-ii_importance = []
-counter=0
-cur_time = time()
-# N = getN(mongo_host, name, experiment_max_time)
-#
-train, test = split_from_N(train_df.copy(), 0)
-#
-train_df, test_df = train, test
+        loss, loss1K, losses_per_tree, importance, probs_data, f_names = \
+            loss_with_per_tree_stats(train, test, features)
+        probs, test_indexes = probs_data
 
+        ii_importance.append(importance.tolist())
+        cur_time = time() - cur_time
+        all_losses.append(loss)
+        losses_at_1K.append(loss1K)
+        l_results_per_tree.append(losses_per_tree)
 
-new_cols = features
-
-features, test_df, train_df = process_split(train_df, test_df, new_cols)
-
-train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
-
-# del train_df[TARGET]
-# del test_df[TARGET]
-
-train_df = train_df[features]
-test_df = test_df[features]
+        out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
+        write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
 
 
-
-# print train_df[train_df.isnull()]
-
-# train_arr, test_arr = train_df.values, test_df.values
-# print features
-#
-# seed = int(time())
-# print 'XGB seed {}'.format(seed)
-#
-# estimator = RandomForestClassifier(n_estimators=100)
-# estimator.fit(train_arr, train_target)
-#
-# proba = estimator.predict_proba(test_arr)
-#
-# loss = log_loss(test_target, proba)
-# loss1K = loss
-# probs, test_indexes = probs_data
-
-# ii_importance.append(importance.tolist())
-# cur_time = time() - cur_time
-# all_losses.append(loss)
-# losses_at_1K.append(loss1K)
-# l_results_per_tree.append(losses_per_tree)
-#
-# out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
-# write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
-
-
-
+do_test_xgboost('no_mngr_count', sys.argv[1])
