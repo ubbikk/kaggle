@@ -49,3 +49,10 @@ echo "db.restoreInProgressMonitor.remove({'restoreInProgress':true}); db.restore
 
 19)problems with compilation EdiModelServiceAmazon855 etc:
     In module edi-gen mark directory  target/ejc as  'src-root'
+
+
+20) Pims Task:
+    ProgressBolt
+    ElasticSearchIdReader
+    search_model.js
+    DefaultCommandStatusReporter

@@ -783,7 +783,6 @@ def process_features(df):
 #  FEATURES
 #########################################################################################
 
-
 #########################################################################################
 #  NAIVE STATS
 #########################################################################################
@@ -871,6 +870,10 @@ def process_split(train_df, test_df, new_cols):
     features = []
     features += new_cols
 
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+
     train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
@@ -896,20 +899,6 @@ def process_split(train_df, test_df, new_cols):
     features += new_cols
 
 
-    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-
-    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-
-    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
     return features, test_df, train_df
 
 
@@ -925,6 +914,15 @@ def process_all_name(train_df, test_df):
     features += new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -951,7 +949,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     train_df, test_df, features = process_all_name(train_df, test_df)
 
     ii_importance = []
-    for counter in range(25):
+    for counter in range(1000):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -972,4 +970,4 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
 
 
 
-do_test_xgboost('all_and_naive_stats', sys.argv[1])
+do_test_xgboost('naive_stats', sys.argv[1])
