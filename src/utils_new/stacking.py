@@ -12,6 +12,7 @@ from scipy.stats import normaltest
 import pandas as pd
 from sklearn.metrics import log_loss
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
 import os
 
@@ -49,6 +50,22 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
         ('losses', losses)
     ]
 
+# [('avg', 0.51740182794744904),
+#  ('losses',
+#   [0.5156275620334051,
+#    0.52082806399913439,
+#    0.51685190142485371,
+#    0.51170957753207724,
+#    0.52199203474777456])]
+
+# [('avg', 0.51655722401313642),
+#  ('losses',
+#   [0.51357636065967682,
+#    0.51970377131222767,
+#    0.51620198486410518,
+#    0.51145152959603435,
+#    0.52185247363363862])]
+
 
 def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     data = create_data_for_running_fs(experiments, train_df, folder)
@@ -56,13 +73,35 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     run_results = []
     for train, test, train_target, test_target in data:
         eval_set = [(train.values, train_target), (test.values, test_target)]
-        model = xgb.XGBClassifier()
+        model = xgb.XGBClassifier(objective='multi:softprob')
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
         proba = model.predict_proba(test.values)
         loss = log_loss(test_target, proba)
         print loss
         losses.append(loss)
         run_results.append(xgboost_per_tree_results(model))
+
+    # plot_errors_xgboost(run_results)
+
+    return [
+        ('avg', np.mean(losses)),
+        ('losses', losses)
+    ]
+
+
+def run_rand_forest_cv(experiments, train_df, folder=stacking_fp):
+    data = create_data_for_running_fs(experiments, train_df, folder)
+    losses = []
+    run_results = []
+    for train, test, train_target, test_target in data:
+        eval_set = [(train.values, train_target), (test.values, test_target)]
+        model = RandomForestClassifier(n_estimators=100)
+        model.fit(train.values, train_target)
+        proba = model.predict_proba(test.values)
+        loss = log_loss(test_target, proba)
+        print loss
+        losses.append(loss)
+        # run_results.append(xgboost_per_tree_results(model))
 
     # plot_errors_xgboost(run_results)
 
