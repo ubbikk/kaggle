@@ -228,9 +228,9 @@ def load_df(file, geo_file):
     geo = pd.read_json(geo_file)
     df[NEI] = geo[NEI]
     df['tmp'] = df[NEI].apply(transform_geo_to_rent)
-    df[NEI_1] = df['tmp'].apply(lambda s: None if s is None else s[0])
-    df[NEI_2] = df['tmp'].apply(lambda s: None if s is None else s[1])
-    df[NEI_3] = df['tmp'].apply(lambda s: None if s is None else s[2])
+    df[NEI_1] = df['tmp'].apply(lambda s: 'not_mapped_yet' if s is None else s[0])
+    df[NEI_2] = df['tmp'].apply(lambda s: 'not_mapped_yet' if s is None else s[1])
+    df[NEI_3] = df['tmp'].apply(lambda s: 'not_mapped_yet' if s is None else s[2])
     normalize_bed_bath(df)
     return basic_preprocess(df)
 
@@ -440,6 +440,7 @@ def process_manager_num(train_df, test_df):
     df = df.to_frame(mngr_num_col)
     train_df = pd.merge(train_df, df, left_on=MANAGER_ID, right_index=True)
     test_df = pd.merge(test_df, df, left_on=MANAGER_ID, right_index=True, how='left')
+    test_df.loc[test_df['manager_num'].isnull()]=0
 
     return train_df, test_df, [mngr_num_col]
 
@@ -480,6 +481,7 @@ def process_bid_num(train_df, test_df):
     df = df.to_frame(bid_num_col)
     train_df = pd.merge(train_df, df, left_on=BUILDING_ID, right_index=True)
     test_df = pd.merge(test_df, df, left_on=BUILDING_ID, right_index=True, how='left')
+    test_df.loc[test_df['bid_num'].isnull()]=0
 
     return train_df, test_df, [bid_num_col]
 
@@ -511,6 +513,7 @@ def get_dummy_cols(col_name, col_values):
 
 def process_nei123(train_df, test_df):
     df = pd.concat([train_df, test_df])
+
     normalize_bed_bath(df)
     sz = float(len(df))
     # neis_cols = [NEI_1, NEI_2, NEI_3]
@@ -644,6 +647,8 @@ def get_main_value(s):
     for k,v in vals.iteritems():
         if v>=n:
             return k
+
+    return -1
 
 def process_other_mngr_medians_new(train_df, test_df):
     df = pd.concat([train_df, test_df])
@@ -802,9 +807,19 @@ def loss_with_per_tree_stats(train_df, test_df, new_cols):
     del test_df[TARGET]
 
     train_df = train_df[features]
+    test_df_cp = test_df.copy()
     test_df = test_df[features]
 
-    print train_df[train_df.isnull()]
+    null_cols = []
+    for c in test_df.columns.values:
+        if len(test_df[test_df[c].isnull()])>0:
+            null_cols.append(c)
+
+    print '=================NULL==============================='
+
+    print null_cols
+    print len(test_df_cp[test_df_cp['median_ratio_of_nei1'].isnull()])
+    print '=================NULL==============================='
 
     train_arr, test_arr = train_df.values, test_df.values
     print features

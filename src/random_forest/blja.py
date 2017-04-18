@@ -231,7 +231,9 @@ def load_df(file, geo_file):
     df[NEI_1] = df['tmp'].apply(lambda s: None if s is None else s[0])
     df[NEI_2] = df['tmp'].apply(lambda s: None if s is None else s[1])
     df[NEI_3] = df['tmp'].apply(lambda s: None if s is None else s[2])
+
     normalize_bed_bath(df)
+    df.loc[df[NEI_1].isnull(), [NEI_1, NEI_2, NEI_3]] = 'not_mapped_yet'
     return basic_preprocess(df)
 
 
@@ -645,6 +647,8 @@ def get_main_value(s):
         if v>=n:
             return k
 
+    return -1
+
 def process_other_mngr_medians_new(train_df, test_df):
     df = pd.concat([train_df, test_df])
     total_minutes_col='total_minutes'
@@ -917,6 +921,7 @@ train_df, test_df = train, test
 new_cols = features
 
 features, test_df, train_df = process_split(train_df, test_df, new_cols)
+train_df_cp = train_df.copy()
 
 train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
 
@@ -926,34 +931,6 @@ train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
 train_df = train_df[features]
 test_df = test_df[features]
 
-
-
-
-# print train_df[train_df.isnull()]
-
-# train_arr, test_arr = train_df.values, test_df.values
-# print features
-#
-# seed = int(time())
-# print 'XGB seed {}'.format(seed)
-#
-# estimator = RandomForestClassifier(n_estimators=100)
-# estimator.fit(train_arr, train_target)
-#
-# proba = estimator.predict_proba(test_arr)
-#
-# loss = log_loss(test_target, proba)
-# loss1K = loss
-# probs, test_indexes = probs_data
-
-# ii_importance.append(importance.tolist())
-# cur_time = time() - cur_time
-# all_losses.append(loss)
-# losses_at_1K.append(loss1K)
-# l_results_per_tree.append(losses_per_tree)
-#
-# out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
-# write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
 
 
