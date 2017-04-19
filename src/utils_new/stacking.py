@@ -73,15 +73,21 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     run_results = []
     for train, test, train_target, test_target in data:
         eval_set = [(train.values, train_target), (test.values, test_target)]
-        model = xgb.XGBClassifier(objective='multi:softprob')
-        model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
+        model = xgb.XGBClassifier(objective='multi:softprob',
+                                  subsample=0.8,
+                                  colsample_bytree=0.8,
+                                  n_estimators=100)
+        model.fit(train.values, train_target,
+                  eval_set=eval_set,
+                  eval_metric='mlogloss',
+                  verbose=False)
         proba = model.predict_proba(test.values)
         loss = log_loss(test_target, proba)
         print loss
         losses.append(loss)
         run_results.append(xgboost_per_tree_results(model))
 
-    # plot_errors_xgboost(run_results)
+    plot_errors_xgboost(run_results)
 
     return [
         ('avg', np.mean(losses)),
