@@ -72,8 +72,9 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     losses = []
     run_results = []
     for train, test, train_target, test_target in data:
+        # train, test = process_avg_mngr_score(train, test)
         eval_set = [(train.values, train_target), (test.values, test_target)]
-        model = xgb.XGBClassifier(objective='multi:softprob')
+        model = xgb.XGBClassifier(objective='multi:softprob', n_estimators=100)
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
         proba = model.predict_proba(test.values)
         loss = log_loss(test_target, proba)
@@ -81,12 +82,28 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
         losses.append(loss)
         run_results.append(xgboost_per_tree_results(model))
 
-    # plot_errors_xgboost(run_results)
+    plot_errors_xgboost(run_results)
 
     return [
         ('avg', np.mean(losses)),
         ('losses', losses)
     ]
+
+
+def process_avg_mngr_score(train, test):
+    MANAGER_ID = 'manager_id'
+    df = pd.concat([train, test])
+    # df = pd.merge(df, train_df[[MANAGER_ID, LISTING_ID]], left_index=True, right_on=LISTING_ID)
+    cols = ['all5_seed_{}'.format(x) for x in ['low', 'medium', 'high']]
+    new_cols = []
+    for col in cols:
+        new_col = 'mngr_{}'.format(col)
+        df[new_col] = df.groupby(MANAGER_ID)[col].mean()
+        new_cols.append(new_col)
+
+    del df[MANAGER_ID]
+
+    return df.loc[train.index], df.loc[test.index]
 
 
 def run_rand_forest_cv(experiments, train_df, folder=stacking_fp):
@@ -192,6 +209,23 @@ def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
         train_target = train_df.loc[big_indexes][TARGET]
         test_target = train_df.loc[small_indexes][TARGET]
         test = df.loc[small_indexes]
+        res.append((train, test, train_target, test_target))
+
+    return res
+
+def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_fp):
+    MANAGER_ID = 'manager_id'
+    df = load_and_unite_expiriments_fs(experiments, folder)
+    res = []
+    for cv in range(CV):
+        small_indexes = SPLITS_SMALL[cv]
+        big_indexes = SPLITS_BIG[cv]
+        train = df.loc[big_indexes]
+        train_target = train_df.loc[big_indexes][TARGET]
+        train[MANAGER_ID] = train_df.loc[big_indexes][MANAGER_ID]
+        test_target = train_df.loc[small_indexes][TARGET]
+        test = df.loc[small_indexes]
+        test[MANAGER_ID] = train_df.loc[small_indexes][MANAGER_ID]
         res.append((train, test, train_target, test_target))
 
     return res
