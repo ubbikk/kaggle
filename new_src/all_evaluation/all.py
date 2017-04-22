@@ -382,7 +382,7 @@ NEI_3 = 'nei3'
 NEI = 'neighbourhood'
 BORO = 'boro'
 
-rent_file = '../with_geo/data/neis_from_renthop_lower.json'
+rent_file = '../../data/neis_from_renthop_lower.json'
 
 EXACT_MAP = {
     'gramercy': 'gramercy park',

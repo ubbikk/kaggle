@@ -1,0 +1,227 @@
+{
+  "staten island": {
+    "staten island": [
+      "east shore",
+      "mid-island",
+      "north shore",
+      "south shore"
+    ]
+  },
+  "jersey city": {
+    "jersey city": [
+      "bergen - lafayette",
+      "greenville",
+      "historic downtown",
+      "mcginley square",
+      "the heights",
+      "the waterfront",
+      "west side"
+    ]
+  },
+  "brooklyn": {
+    "northwestern brooklyn": [
+      "brooklyn heights",
+      "brooklyn navy yard",
+      "clinton hill",
+      "dumbo",
+      "downtown brooklyn",
+      "fort greene",
+      "prospect heights",
+      "vinegar hill"
+    ],
+    "southeastern brooklyn": [
+      "bergen beach",
+      "flatlands",
+      "floyd bennett airfield",
+      "marine park",
+      "mill basin"
+    ],
+    "eastern brooklyn": [
+      "brownsville",
+      "canarsie",
+      "cypress hills",
+      "east new york"
+    ],
+    "central brooklyn": [
+      "crown heights",
+      "east flatbush",
+      "flatbush",
+      "kensington",
+      "midwood",
+      "ocean hill"
+    ],
+    "south brooklyn": [
+      "boerum hill",
+      "carroll gardens",
+      "cobble hill",
+      "gowanus",
+      "greenwood heights",
+      "park slope",
+      "prospect park",
+      "red hook",
+      "sunset park",
+      "windsor terrace"
+    ],
+    "southwestern brooklyn": [
+      "bath beach",
+      "bay ridge",
+      "bensonhurst",
+      "borough park",
+      "dyker heights",
+      "mapleton"
+    ],
+    "southern brooklyn": [
+      "brighton beach",
+      "coney island",
+      "gravesend",
+      "sheepshead bay"
+    ],
+    "northern brooklyn": [
+      "bedford-stuyvesant",
+      "bushwick",
+      "greenpoint",
+      "williamsburg"
+    ]
+  },
+  "bronx": {
+    "east bronx": [
+      "allerton",
+      "clason point",
+      "morris park",
+      "parkchester",
+      "pelham bay",
+      "pelham parkway",
+      "throgs neck",
+      "unionport",
+      "van nest",
+      "wakefield",
+      "westchester village",
+      "williamsbridge",
+      "woodlawn heights"
+    ],
+    "west bronx": [
+      "bedford park",
+      "belmont",
+      "bronx park",
+      "concourse",
+      "concourse village",
+      "east tremont",
+      "fordham heights",
+      "fordham manor",
+      "highbridge",
+      "hunts point",
+      "kingsbridge",
+      "longwood",
+      "marble hill",
+      "morris heights",
+      "morrisania",
+      "mott haven",
+      "mount eden",
+      "mount hope",
+      "norwood",
+      "riverdale",
+      "university heights",
+      "van cortlandt park",
+      "west farms"
+    ]
+  },
+  "manhattan": {
+    "midtown manhattan": [
+      "chelsea",
+      "flatiron district",
+      "garment district",
+      "gramercy park",
+      "hell's kitchen",
+      "kips bay",
+      "koreatown",
+      "midtown east",
+      "murray hill",
+      "nomad",
+      "stuyvesant town - peter cooper village",
+      "theater district"
+    ],
+    "other": [
+      "randalls-wards island",
+      "roosevelt island"
+    ],
+    "downtown manhattan": [
+      "battery park city",
+      "bowery",
+      "chinatown",
+      "civic center",
+      "east village",
+      "financial district",
+      "greenwich village",
+      "little italy",
+      "lower east side",
+      "noho",
+      "nolita",
+      "soho",
+      "tribeca",
+      "two bridges",
+      "west village"
+    ],
+    "upper manhattan": [
+      "central harlem",
+      "central park",
+      "east harlem",
+      "inwood",
+      "upper east side",
+      "upper west side",
+      "washington heights",
+      "west harlem"
+    ]
+  },
+  "queens": {
+    "northwestern queens": [
+      "astoria",
+      "corona",
+      "east elmhurst",
+      "elmhurst",
+      "forest hills",
+      "glendale",
+      "jackson heights",
+      "long island city",
+      "maspeth",
+      "middle village",
+      "rego park",
+      "ridgewood",
+      "sunnyside",
+      "woodside"
+    ],
+    "northeastern queens": [
+      "auburndale",
+      "bayside",
+      "college point",
+      "flushing",
+      "flushing meadows-corona park",
+      "fresh meadows",
+      "glen oaks",
+      "kew gardens",
+      "kew gardens hills",
+      "whitestone"
+    ],
+    "southeastern queens": [
+      "briarwood",
+      "hollis",
+      "holliswood",
+      "jamaica",
+      "jamaica estates",
+      "jamaica hills",
+      "south jamaica",
+      "st. albans"
+    ],
+    "rockaway peninsula": [
+      "far rockaway",
+      "rockaway beach"
+    ],
+    "southwestern queens": [
+      "forest park",
+      "howard beach",
+      "ozone park",
+      "richmond hill",
+      "south ozone park",
+      "woodhaven"
+    ]
+  }
+}
