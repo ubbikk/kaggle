@@ -70,11 +70,13 @@ train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
 train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
-rent_file = '../with_geo/data/neis_from_renthop_lower.json'
+rent_file = '../../data/neis_from_renthop_lower.json'
 
 seeds_fp = '../../seeds.json'
 splits_big_fp='../../splits_big.json'
 splits_small_fp='../../splits_small.json'
+
+magic_file = '../../data/redhoop/listing_image_time.csv'
 
 # train_file = '../data/redhoop/train.json'
 # test_file = '../data/redhoop/test.json'
@@ -811,8 +813,6 @@ def process_features(df):
 ####################################################
 #MAGIC
 #######################################################
-
-magic_file = '../../data/redhoop/listing_image_time.csv'
 
 def process_magic(train_df, test_df):
     image_date = pd.read_csv(magic_file)
