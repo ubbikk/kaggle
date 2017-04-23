@@ -968,6 +968,7 @@ def process_all_name(train_df, test_df):
 
 def run_xgb(train_df, test_df, new_cols):
     features, test_df, train_df = process_split(train_df, test_df, new_cols)
+    test_df_cp = test_df.copy()
 
     train_target = train_df[TARGET].values
 
@@ -991,9 +992,9 @@ def run_xgb(train_df, test_df, new_cols):
     proba = estimator.predict_proba(test_arr)
     classes = [x for x in estimator.classes_]
     for cl in classes:
-        test_df[cl] = proba[:, classes.index(cl)]
+        test_df_cp[cl] = proba[:, classes.index(cl)]
 
-    res = test_df[['listing_id', 'high', 'medium', 'low']]
+    res = test_df_cp[['listing_id', 'high', 'medium', 'low']]
 
     return convert_res_to_dict(res)
 
