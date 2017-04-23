@@ -1,4 +1,3 @@
-
 import json
 import os
 import traceback
@@ -54,6 +53,7 @@ NEI_2 = 'nei2'
 NEI_3 = 'nei3'
 NEI = 'neighbourhood'
 BORO = 'boro'
+INDEX_COPY = 'index_copy'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -71,11 +71,13 @@ train_file = '../../data/redhoop/train.json'
 test_file = '../../data/redhoop/test.json'
 train_geo_file = '../../data/redhoop/with_geo/train_geo.json'
 test_geo_file = '../../data/redhoop/with_geo/test_geo.json'
-rent_file = '../with_geo/data/neis_from_renthop_lower.json'
+rent_file = '../../data/neis_from_renthop_lower.json'
 
 seeds_fp = '../../seeds.json'
 splits_big_fp='../../splits_big.json'
 splits_small_fp='../../splits_small.json'
+
+magic_file = '../../data/redhoop/listing_image_time.csv'
 
 # train_file = '../data/redhoop/train.json'
 # test_file = '../data/redhoop/test.json'
@@ -272,8 +274,12 @@ def basic_preprocess(df):
     df[DAY_OF_WEEK] = df['created'].dt.dayofweek
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
+    df[INDEX_COPY] = df.index.values
 
     return df
+
+def fix_index(df):
+    df.index = df[INDEX_COPY]
 
 
 #########################################################################################
@@ -284,17 +290,42 @@ def basic_preprocess(df):
 # Creating Neis
 #########################################################################################
 def normalize_bed_bath(df):
-    df[BED_NORMALIZED] = df[BEDROOMS].apply(lambda s: s if s <= 3 else 3)
+    df['bed_bath']=df[[BEDROOMS, BATHROOMS]].apply(lambda s: (s[BEDROOMS], s[BATHROOMS]), axis=1)
+    def norm(s):
+        bed=s[0]
+        bath=s[1]
+        if bed==0:
+            if bath>=1.5:
+                return [0,2.0]
+        elif bed==1:
+            if bath>=2.5:
+                return [1,2.0]
+        elif bed==2:
+            if bath>=3.0:
+                return [2,3.0]
+        elif bed==3:
+            if bath>=4.0:
+                return [3,4.0]
+        elif bed==4:
+            if bath==0:
+                return [4,1]
+            elif bath>=4.5:
+                return [4,4.5]
+        elif bed>=5:
+            if bath <=1.5:
+                return [5,1.5]
+            elif bath <=2.5:
+                return [5,2.5]
+            elif bath <=3.5:
+                return [5,3]
+            else:
+                return [5,4]
 
-    def norm_bath(s):
-        s = round(s)
-        if s == 0:
-            return 1
-        if s >= 2:
-            return 2
-        return s
+        return [bed, bath]
 
-    df[BATH_NORMALIZED] = df[BATHROOMS].apply(norm_bath)
+    df['bed_bath']=df['bed_bath'].apply(norm)
+    df[BED_NORMALIZED]=df['bed_bath'].apply(lambda s:s[0])
+    df[BATH_NORMALIZED]=df['bed_bath'].apply(lambda s:s[1])
 
 
 EXACT_MAP = {
@@ -545,9 +576,9 @@ def process_nei123(train_df, test_df):
         dummies = get_dummy_cols(col, vals)
         new_cols += dummies
 
-    for d in [train_df, test_df]:
-        for col in new_cols:
-            d[col] = df.loc[d.index, col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
 
     return train_df, test_df, new_cols
 #########################################################################################
@@ -589,9 +620,9 @@ def process_mngr_avg_median_price(train_df, test_df):
                'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75'
                ]
 
-    for col in new_cols:
-        train_df[col]=df.loc[train_df.index, col]
-        test_df[col]=df.loc[test_df.index, col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
 
     return train_df, test_df, new_cols
 
@@ -620,9 +651,9 @@ def process_other_mngr_medians(train_df, test_df):
         new_cols.append(col)
         df[col] = df.groupby(MANAGER_ID)[f].transform('median')
 
-    for col in new_cols:
-        train_df[col]=df.loc[train_df.index, col]
-        test_df[col]=df.loc[test_df.index, col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
 
     return train_df, test_df, new_cols
 
@@ -666,9 +697,9 @@ def process_other_mngr_medians_new(train_df, test_df):
     df = pd.merge(df, bl, left_on=MANAGER_ID, right_index=True)
     new_cols.append(main_hour)
 
-    for col in new_cols:
-        train_df[col]=df.loc[train_df.index, col]
-        test_df[col]=df.loc[test_df.index, col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
 
 
 
@@ -784,9 +815,86 @@ def process_features(df):
 #  FEATURES
 #########################################################################################
 
-#########################################################################################
-#  PROCESSING
-#########################################################################################
+####################################################
+#MAGIC
+#######################################################
+
+def process_magic(train_df, test_df):
+    image_date = pd.read_csv(magic_file)
+    image_date.loc[80240,"time_stamp"] = 1478129766
+    # image_date.loc[image_date['Listing_Id']==7119094, "time_stamp"] = 1478129766
+    image_date["img_date"] = pd.to_datetime(image_date["time_stamp"], unit="s")
+    image_date["img_days_passed"] = (image_date["img_date"].max() - image_date["img_date"]).astype(
+        "timedelta64[D]").astype(int)
+    image_date["img_date_month"] = image_date["img_date"].dt.month
+    image_date["img_date_week"] = image_date["img_date"].dt.week
+    image_date["img_date_day"] = image_date["img_date"].dt.day
+    image_date["img_date_dayofweek"] = image_date["img_date"].dt.dayofweek
+    image_date["img_date_dayofyear"] = image_date["img_date"].dt.dayofyear
+    image_date["img_date_hour"] = image_date["img_date"].dt.hour
+    image_date["img_date_minute"] = image_date["img_date"].dt.minute
+    image_date["img_date_second"] = image_date["img_date"].dt.second
+    image_date["img_date_monthBeginMidEnd"] = image_date["img_date_day"].apply(
+        lambda x: 1 if x < 10 else 2 if x < 20 else 3)
+
+    df = pd.concat([train_df, test_df])
+    df = pd.merge(df, image_date, left_on=LISTING_ID, right_on='Listing_Id')
+    new_cols = ["img_days_passed","img_date_month","img_date_week",
+                "img_date_day","img_date_dayofweek","img_date_dayofyear",
+                "img_date_hour", "img_date_monthBeginMidEnd",
+                "img_date_minute", "img_date_second"]#+["img_date", "time_stamp"]
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+####################################################
+#MAGIC
+#######################################################
+
+
+def shuffle_df(df):
+    return df.iloc[np.random.permutation(len(df))]
+
+
+def get_loss_at1K(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    return results_on_test[999]
+
+
+def loss_with_per_tree_stats(train_df, test_df, new_cols):
+    features, test_df, train_df = process_split(train_df, test_df, new_cols)
+
+    train_target, test_target = train_df[TARGET].values, test_df[TARGET].values
+
+    del train_df[TARGET]
+    del test_df[TARGET]
+
+    train_df = train_df[features]
+    test_df = test_df[features]
+
+    train_arr, test_arr = train_df.values, test_df.values
+    print features
+
+    seed = int(time())
+    print 'XGB seed {}'.format(seed)
+    estimator = xgb.XGBClassifier(n_estimators=1000,
+                                  objective='mlogloss',
+                                  subsample=0.8,
+                                  colsample_bytree=0.8,
+                                  seed=seed)
+    eval_set = [(train_arr, train_target), (test_arr, test_target)]
+    estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
+
+    proba = estimator.predict_proba(test_arr)
+
+    loss = log_loss(test_target, proba)
+    loss1K = get_loss_at1K(estimator)
+    return loss, loss1K, xgboost_per_tree_results(estimator), \
+           estimator.feature_importances_, get_probs_from_est(estimator, proba, test_df), features
+
 
 def process_split(train_df, test_df, new_cols):
     features = []
@@ -796,23 +904,7 @@ def process_split(train_df, test_df, new_cols):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
     train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_nei123(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -827,37 +919,60 @@ def process_all_name(train_df, test_df):
                 "created_month", "created_day",
                 CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
 
-    train_df, new_cols = process_features(train_df)
-    test_df, blja = process_features(test_df)
+    # train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+
+    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
+    train_df, test_df, new_cols = process_listing_id(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_nei123(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, new_cols = process_features(train_df); test_df, blja = process_features(test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
 
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+
     train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
 
     train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    return train_df, test_df, features
-#########################################################################################
-#  PROCESSING
-#########################################################################################
+    train_df, test_df, new_cols = process_magic(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
 
+    return train_df, test_df, features
+
+
+def xgboost_per_tree_results(estimator):
+    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
+    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
+    return {
+        'train': results_on_train,
+        'test': results_on_test
+    }
 
 
 #########################################################################################
 #  FITTING AND WRITING RESULTS
 #########################################################################################
 
-
-def shuffle_df(df):
-    return df.iloc[np.random.permutation(len(df))]
 
 
 def run_xgb(train_df, test_df, new_cols):
@@ -936,7 +1051,7 @@ def submit(name, mongo_host):
     train_df = load_train()
     test_df = load_test()
 
-    for n in range(12):
+    for n in range(3):
         print 'N={}'.format(n)
         t=time()
         do_submit(train_df.copy(), test_df.copy(), name, mongo_host)
@@ -947,7 +1062,7 @@ def submit(name, mongo_host):
 
 
 
-submit('submit_all_5_seed', sys.argv[1])
+submit('sub_stacking_no_mngr_count', sys.argv[1])
 
 #########################################################################################
 #  FITTING AND WRITING RESULTS

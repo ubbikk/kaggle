@@ -50,21 +50,13 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
         ('losses', losses)
     ]
 
-# [('avg', 0.51740182794744904),
+# [('avg', 0.50343355521592148),
 #  ('losses',
-#   [0.5156275620334051,
-#    0.52082806399913439,
-#    0.51685190142485371,
-#    0.51170957753207724,
-#    0.52199203474777456])]
-
-# [('avg', 0.51655722401313642),
-#  ('losses',
-#   [0.51357636065967682,
-#    0.51970377131222767,
-#    0.51620198486410518,
-#    0.51145152959603435,
-#    0.52185247363363862])]
+#   [0.50300851757426812,
+#    0.50854799455858868,
+#    0.50179941660459038,
+#    0.49843412249451141,
+#    0.50537772484764865])]
 
 
 def run_xgb_cv(experiments, train_df, folder=stacking_fp):
@@ -72,7 +64,7 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     losses = []
     run_results = []
     for train, test, train_target, test_target in data:
-        # train, test = process_avg_mngr_score(train, test)
+        # train, test = process_avg_mngr_score(train, test, train_df)
         eval_set = [(train.values, train_target), (test.values, test_target)]
         model = xgb.XGBClassifier(objective='multi:softprob', n_estimators=100)
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
@@ -90,11 +82,12 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     ]
 
 
-def process_avg_mngr_score(train, test):
+def process_avg_mngr_score(train, test, train_df):
     MANAGER_ID = 'manager_id'
     df = pd.concat([train, test])
-    # df = pd.merge(df, train_df[[MANAGER_ID, LISTING_ID]], left_index=True, right_on=LISTING_ID)
-    cols = ['all5_seed_{}'.format(x) for x in ['low', 'medium', 'high']]
+
+    df = pd.merge(df, train_df[[MANAGER_ID]], left_index=True, right_index=True)
+    cols = ['stacking_all_{}'.format(x) for x in ['low', 'medium', 'high']]
     new_cols = []
     for col in cols:
         new_col = 'mngr_{}'.format(col)
@@ -102,6 +95,7 @@ def process_avg_mngr_score(train, test):
         new_cols.append(new_col)
 
     del df[MANAGER_ID]
+
 
     return df.loc[train.index], df.loc[test.index]
 
