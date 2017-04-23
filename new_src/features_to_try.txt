@@ -1,0 +1,7 @@
+1)streat popularity, diference with street ratio, street ratio
+2)dummies for most frequent MNGRS + BID
+3)mngr ens+mngr strength etc
+4)'tiny' features:
+month free, exclamations, phone number
+5)weighted price ratio
+6)woi

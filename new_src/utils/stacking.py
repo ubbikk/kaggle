@@ -50,6 +50,7 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
         ('losses', losses)
     ]
 
+#100\1\1
 # [('avg', 0.50343355521592148),
 #  ('losses',
 #   [0.50300851757426812,
@@ -59,7 +60,7 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.50537772484764865])]
 
 
-#0.8\0.8
+#100\0.8\0.8
 # [('avg', 0.50314508236119893),
 #  ('losses',
 #   [0.50254642769754998,
@@ -67,6 +68,28 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.50175941851710271,
 #    0.49786438547185091,
 #    0.50551780179321515])]
+
+
+#100/1/1 +rnd_forest
+# [('avg', 0.50268986529085102),
+#  ('losses',
+#   [0.50199733742705421,
+#    0.50740274435941213,
+#    0.50101593232235364,
+#    0.49787455105051448,
+#    0.50515876129492054])]
+
+
+#100/0.8/0.8
+# [('avg', 0.50263676242897237),
+#  ('losses',
+#   [0.50225325920570485,
+#    0.50768087578571286,
+#    0.50071042068922744,
+#    0.49709903467159272,
+#    0.50544022179262393])]
+
+
 
 
 
@@ -78,13 +101,14 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     features = None
     for train, test, train_target, test_target in data:
         features = train.columns.values
+        print features
         # train, test = process_avg_mngr_score(train, test, train_df)
         eval_set = [(train.values, train_target), (test.values, test_target)]
         model = xgb.XGBClassifier(
             objective='multi:softprob',
-            n_estimators=100,
-            # colsample_bytree=0.7,
-            # subsample=0.7
+            n_estimators=100
+            # colsample_bytree=0.8,
+            # subsample=0.8
         )
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
         proba = model.predict_proba(test.values)
