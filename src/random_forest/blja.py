@@ -893,6 +893,14 @@ def xgboost_per_tree_results(estimator):
         'test': results_on_test
     }
 
+def get_null_cols(df):
+    res =[]
+    for c in df.columns.values:
+        if len(df[df[c].isnull()]) >0:
+            res.append(c)
+
+    return res
+
 
 name= 'all_random_forest'
 mongo_host = '10.20.0.144'

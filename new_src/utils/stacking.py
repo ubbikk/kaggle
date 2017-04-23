@@ -59,23 +59,43 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.50537772484764865])]
 
 
+#0.8\0.8
+# [('avg', 0.50314508236119893),
+#  ('losses',
+#   [0.50254642769754998,
+#    0.50803737832627593,
+#    0.50175941851710271,
+#    0.49786438547185091,
+#    0.50551780179321515])]
+
+
+
 def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     data = create_data_for_running_fs(experiments, train_df, folder)
     losses = []
     run_results = []
+    imp =[]
+    features = None
     for train, test, train_target, test_target in data:
+        features = train.columns.values
         # train, test = process_avg_mngr_score(train, test, train_df)
         eval_set = [(train.values, train_target), (test.values, test_target)]
-        model = xgb.XGBClassifier(objective='multi:softprob', n_estimators=100)
+        model = xgb.XGBClassifier(
+            objective='multi:softprob',
+            n_estimators=100,
+            # colsample_bytree=0.7,
+            # subsample=0.7
+        )
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
         proba = model.predict_proba(test.values)
         loss = log_loss(test_target, proba)
         print loss
         losses.append(loss)
         run_results.append(xgboost_per_tree_results(model))
+        imp.append(model.feature_importances_)
 
     plot_errors_xgboost(run_results)
-
+    # plot_importance(imp, features)
     return [
         ('avg', np.mean(losses)),
         ('losses', losses)
@@ -120,6 +140,23 @@ def run_rand_forest_cv(experiments, train_df, folder=stacking_fp):
         ('avg', np.mean(losses)),
         ('losses', losses)
     ]
+
+
+def plot_importance(arr, features, N=None):
+    if N is None:
+        N=len(features)
+
+    sz = len(features)
+    res = [np.mean([x[j] for x in arr]) for j in range(sz)]
+    stds = [np.std([x[j] for x in arr]) for j in range(sz)]
+    res = zip(features, res, stds)
+    res.sort(key=lambda s: s[1], reverse=True)
+    print res
+    res=res[:N]
+    xs = [x[0] for x in res]
+    ys=[x[1] for x in res]
+    sns.barplot(xs, ys)
+    sns.plt.show()
 
 
 def xgboost_per_tree_results(estimator):
@@ -256,13 +293,13 @@ def submit_xgb(experiments, train_df, test_df,
 
 
 def load_and_unite_submits_fs(experiments, folder=stacking_submit_fp):
-    submit_names = ['submit_{}'.format(x)  for x in experiments]
+    submit_names = ['sub_{}'.format(x)  for x in experiments]
     dfs = [(e, load_from_fs_avg_validation_df(e, folder)) for e in submit_names]
     targets = ['low', 'medium', 'high']
     res_df = None
     counter = 0
     for e, df in dfs:
-        e=e.replace('submit_', '')
+        e=e.replace('sub_', '')
         if counter == 0:
             res_df = df[targets]
             res_df = res_df.rename(columns={k: '{}_{}'.format(e, k) for k in targets})

@@ -1,0 +1,15 @@
+sub_stacking_all.py                         kg2
+sub_stacking_different_magic.py             kg3
+sub_stacking_naive_stats.py                 kg4
+sub_stacking_no_bid_hcc.py                  kg5
+sub_stacking_no_features.py                 kg3
+sub_stacking_no_listing_id.py               kg4
+sub_stacking_no_magic.py                    kg6
+sub_stacking_no_mngr_count.py               kg5
+sub_stacking_no_mngr_hcc.py                 kg3
+sub_stacking_no_mngr_hcc_and_avg_price.py   kg4
+sub_stacking_no_mngr_medians.py             kg2
+sub_stacking_no_nei_dummies.py              kg6
+sub_stacking_no_nei_frequencies.py          kg5
+sub_stacking_no_nei_median_ratios.py        kg3
+sub_stacking_no_neis.py                     kg4
