@@ -53,6 +53,7 @@ NEI_2 = 'nei2'
 NEI_3 = 'nei3'
 NEI = 'neighbourhood'
 BORO = 'boro'
+INDEX_COPY = 'index_copy'
 
 FEATURES = [u'bathrooms', u'bedrooms', u'building_id', u'created',
             u'description', u'display_address', u'features',
@@ -273,8 +274,12 @@ def basic_preprocess(df):
     df[DAY_OF_WEEK] = df['created'].dt.dayofweek
     bc_price, tmp = boxcox(df['price'])
     df['bc_price'] = bc_price
+    df[INDEX_COPY] = df.index.values
 
     return df
+
+def fix_index(df):
+    df.index = df[INDEX_COPY]
 
 
 #########################################################################################
@@ -856,7 +861,7 @@ def shuffle_df(df):
 
 def get_loss_at1K(estimator):
     results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    return results_on_test[1000]
+    return results_on_test[999]
 
 
 def loss_with_per_tree_stats(train_df, test_df, new_cols):
@@ -973,6 +978,8 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     test_df = load_test()
 
     train_df, test_df, features = process_all_name(train_df, test_df)
+    fix_index(train_df)
+    fix_index(test_df)
 
     ii_importance = []
     for counter in range(1000):
