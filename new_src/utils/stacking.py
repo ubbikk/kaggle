@@ -302,7 +302,7 @@ def avg_submit_files(files, fp):
     for col in ['high', 'medium', 'low']:
         res[col] = sum([d[col] for d in dfs])/float(len(dfs))
 
-    res[[LISTING_ID, 'high', 'medium', 'low']].to_csv(fp)
+    res[[LISTING_ID, 'high', 'medium', 'low']].to_csv(fp, index=False)
 
 
 
