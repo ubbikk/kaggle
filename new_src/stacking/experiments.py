@@ -36,8 +36,8 @@ run1=['stacking_base_and_hcc', 'stacking_no_lat_log', 'stacking_only_base_featur
 
 run2= ['stacking_bid_prices_medians',
        'stacking_features_new',
-       'stacking_frequent_dummies',
-       'stacking_strange',
+       'stacking_new_heu_all',
+       # 'stacking_frequent_dummies',
        'stacking_street_avgs',
        'stacking_three_hcc',
        'stacking_weighted_price_ratio']

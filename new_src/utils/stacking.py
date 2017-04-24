@@ -90,6 +90,15 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.50544022179262393])]
 
 
+#100/0.8/0.8
+# [('avg', 0.50114397549622214),
+#  ('losses',
+#   [0.50040989328030627,
+#    0.50631434801408015,
+#    0.49921892655985017,
+#    0.49626061278835965,
+#    0.50351609683851462])]
+
 
 
 
@@ -100,15 +109,14 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
     imp =[]
     features = None
     for train, test, train_target, test_target in data:
-        features = train.columns.values
-        print features
         # train, test = process_avg_mngr_score(train, test, train_df)
         eval_set = [(train.values, train_target), (test.values, test_target)]
         model = xgb.XGBClassifier(
             objective='multi:softprob',
-            n_estimators=100
-            # colsample_bytree=0.8,
-            # subsample=0.8
+            n_estimators=150,
+            colsample_bytree=0.8,
+            subsample=0.8,
+            seed=int(time())
         )
         model.fit(train.values, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
         proba = model.predict_proba(test.values)
@@ -229,7 +237,9 @@ def load_from_fs_avg_validation_df(name, folder=None):
 
     for f in os.listdir(folder):
         if f.startswith(name):
-            return pd.read_csv(os.path.join(folder, f), index_col=LISTING_ID)
+            res = pd.read_csv(os.path.join(folder, f), index_col=LISTING_ID)
+            print name, len(res)
+            return res
 
     print name
     raise
