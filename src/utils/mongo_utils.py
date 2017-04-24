@@ -118,3 +118,20 @@ def plot_errors_name(name):
     ax.plot(x_axis, y_train, label='train')
     ax.plot(x_axis, y_test, label='test')
     ax.legend()
+
+def plot_errors_new(name):
+    db = client[name]
+    results = db['losses']
+    results = [x['val'] for x in results.find()]
+    train_runs= [x['train'] for x in results]
+    test_runs= [x['test'] for x in results]
+
+    sz=len(train_runs[0])
+    x_axis=range(sz)
+    y_train = [np.mean([x[j] for x in train_runs]) for j in x_axis]
+    y_test = [np.mean([x[j] for x in test_runs]) for j in x_axis]
+
+    fig, ax = plt.subplots()
+    ax.plot(x_axis, y_train, label='train')
+    ax.plot(x_axis, y_test, label='test')
+    ax.legend()

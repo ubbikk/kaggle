@@ -1349,6 +1349,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
+    print '================  DONE!  ======================'
 
 
 do_test_xgboost('stacking_new_heu_all07', sys.argv[1])
