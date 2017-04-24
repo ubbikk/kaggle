@@ -296,6 +296,17 @@ def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_
     return res
 
 
+def avg_submit_files(files, fp):
+    dfs = [pd.read_csv(f) for f in files]
+    res = dfs[0].copy()
+    for col in ['high', 'medium', 'low']:
+        res[col] = sum([d[col] for d in dfs])/float(len(dfs))
+
+    res[[LISTING_ID, 'high', 'medium', 'low']].to_csv(fp)
+
+
+
+
 ###################################################
 #SUBMITTING....
 ###################################################
