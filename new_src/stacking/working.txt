@@ -5,3 +5,17 @@ stacking_strange                kg5
 stacking_street_avgs            kg5
 stacking_three_hcc              kg2
 stacking_weighted_price_ratio
+
+
+
+
+
+to include
+    stacking_features_new
+    stacking_three_hcc
+    stacking_bid_prices_medians
+    stacking_street_avgs
+    stacking_naive_stats
+    stacking_weighted_price_ratio
+
+
