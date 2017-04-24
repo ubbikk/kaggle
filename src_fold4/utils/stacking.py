@@ -26,8 +26,8 @@ CV = 5
 TARGET = 'interest_level'
 LISTING_ID = 'listing_id'
 
-stacking_fp = '../stacking_data_fold2'
-stacking_submit_fp = '../stacking_submit_data_fold2'
+stacking_fp = '../stacking_data_fold4'
+stacking_submit_fp = '../stacking_submit_data_fold4'
 splits_small_fp = '../splits_small.json'
 splits_big_fp = '../splits_big.json'
 SPLITS_SMALL = json.load(open(splits_small_fp))
@@ -218,7 +218,7 @@ def avg_experiments(experiments, train_df, folder=stacking_fp):
     dfs=[x[1] for x in dfs]
     df = sum(dfs)/len(dfs)
     losses = []
-    for cv in range(10, 10+CV):
+    for cv in range(30,30+CV):
         index = SPLITS_SMALL[cv]
         proba = df.loc[index][['high', 'low', 'medium']]
         target = train_df.loc[index][TARGET]
@@ -267,7 +267,7 @@ def load_and_unite_expiriments_fs(experiments, folder=stacking_fp):
 def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
     df = load_and_unite_expiriments_fs(experiments, folder)
     res = []
-    for cv in range(10, 10+CV):
+    for cv in range(30,30+CV):
         small_indexes = SPLITS_SMALL[cv]
         big_indexes = SPLITS_BIG[cv]
         train = df.loc[big_indexes]
@@ -282,7 +282,7 @@ def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_
     MANAGER_ID = 'manager_id'
     df = load_and_unite_expiriments_fs(experiments, folder)
     res = []
-    for cv in range(10, 10+CV):
+    for cv in range(30,30+CV):
         small_indexes = SPLITS_SMALL[cv]
         big_indexes = SPLITS_BIG[cv]
         train = df.loc[big_indexes]

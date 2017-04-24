@@ -32,7 +32,7 @@ LISTING_ID = 'listing_id'
 #VALIDATION
 ######################################################3
 
-stacking_fp = '../stacking_data_fold2'
+stacking_fp = '../stacking_data_fold4'
 splits_small_fp='../splits_small.json'
 splits_big_fp='../splits_big.json'
 SPLITS_SMALL=json.load(open(splits_small_fp))[:5]
