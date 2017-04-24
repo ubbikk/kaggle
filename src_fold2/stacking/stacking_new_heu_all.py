@@ -1330,7 +1330,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(50):
+    for counter in range(30):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
