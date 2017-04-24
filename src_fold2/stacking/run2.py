@@ -30,5 +30,5 @@ for s in scripts[4:7]:
     print '=================================='
     print 'running {}...'.format(s)
     print '=================================='
-    subprocess.call([s, '-u', '35.187.46.132 '])
+    subprocess.call(['python', '-u', s, '35.187.46.132'])
 
