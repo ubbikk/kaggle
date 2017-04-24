@@ -1025,4 +1025,4 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
 
     print '================  DONE!  ======================'
 
-do_test_xgboost('stacking_all', sys.argv[1])
+do_test_xgboost('stacking_features_new', sys.argv[1])

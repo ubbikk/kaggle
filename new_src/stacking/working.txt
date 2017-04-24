@@ -1,7 +1,7 @@
-stacking_bid_prices_medians
-stacking_features_new
-stacking_frequent_dummies
-stacking_strange
-stacking_street_avgs
-stacking_three_hcc
+stacking_bid_prices_medians     kg2
+stacking_features_new           kg3
+stacking_frequent_dummies       kg4
+stacking_strange                kg5
+stacking_street_avgs            kg5
+stacking_three_hcc              kg2
 stacking_weighted_price_ratio

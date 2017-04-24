@@ -150,6 +150,10 @@ def explore_stack_cv_error(probs_raw, train_df):
     }
 
 
+def explore_cv_errors_name(name, train_df):
+    probs_raw = get_all_probs_raw(name)
+    return explore_cv_errors(probs_raw, train_df)
+
 
 def explore_cv_errors(probs_raw, train_df):
     cv_errors = []
