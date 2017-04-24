@@ -850,6 +850,61 @@ def process_magic(train_df, test_df):
 #MAGIC
 #######################################################
 
+####################################################
+#BID AVG
+#######################################################
+
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+
+
+def process_bid_prices_medians(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    bid__price_ratio_median = 'bid__price_ratio_median'
+    bid__price_ratio_mean = 'bid__price_ratio_mean'
+
+    bid__price_diff_median = 'bid__price_diff_median'
+    bid__price_diff_mean = 'bid__price_diff_mean'
+
+    group_by = df.groupby(BUILDING_ID)
+
+    df[bid__price_ratio_median] = group_by[BED_BATH_RATIO].transform('median')
+    df[bid__price_ratio_mean] = group_by[BED_BATH_RATIO].transform('mean')
+
+    df[bid__price_diff_median] = group_by[BED_BATH_DIFF].transform('median')
+    df[bid__price_diff_mean] = group_by[BED_BATH_DIFF].transform('mean')
+
+    bid_bias_price_diff = 'bid_bias_price_diff'
+    bid_bias_price_ratio = 'bid_bias_price_ratio'
+
+    df[bid_bias_price_diff] = df[BED_BATH_DIFF] - df[bid__price_diff_median]
+    df[bid_bias_price_ratio] = df[BED_BATH_RATIO] / df[bid__price_ratio_median]
+
+    new_cols = [
+        bid__price_ratio_median,
+        bid__price_ratio_mean,
+        bid__price_diff_median,
+        bid__price_diff_mean,
+        bid_bias_price_diff,
+        bid_bias_price_ratio
+    ]
+
+    features_to_avg = ['num_features', 'num_photos', 'word_num_in_descr']
+    for f in features_to_avg:
+        col = 'get_by_bid_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = group_by[f].transform('median')
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+####################################################
+#BID AVG
+#######################################################
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -953,6 +1008,10 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    train_df, test_df, new_cols = process_bid_prices_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     return train_df, test_df, features
 
 
@@ -978,7 +1037,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(1000):
+    for counter in range(25):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -997,6 +1056,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
+    print '================  DONE!  ======================'
 
 
-do_test_xgboost('stacking_all', sys.argv[1])
+do_test_xgboost('stacking_bid_prices_medians', sys.argv[1])

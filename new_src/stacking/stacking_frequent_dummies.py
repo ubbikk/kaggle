@@ -850,6 +850,43 @@ def process_magic(train_df, test_df):
 #MAGIC
 #######################################################
 
+####################################################
+#FREQUENT DUMMIES
+#######################################################
+def process_frequent_dummies(df, col, num):
+    df['num'] = df.groupby(col)[PRICE].transform('count')
+    small = df[df['num'] >= num][[col]]
+    bl = pd.get_dummies(small, columns=[col])
+
+    df = pd.merge(df, bl, left_index=True, right_index=True, how='left')
+    new_columns = list(bl.columns.values)
+    df.loc[df[df[new_columns[0]].isnull()].index,new_columns]=0
+    return df, new_columns
+
+def process_mngr_freaquent_dummies(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    df, new_cols = process_frequent_dummies(df, MANAGER_ID, 100)
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+def process_bid_freaquent_dummies(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    df, new_cols = process_frequent_dummies(df, BUILDING_ID, 100)
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+####################################################
+#FREQUENT DUMMIES
+#######################################################
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -896,12 +933,12 @@ def process_split(train_df, test_df, new_cols):
     features = []
     features += new_cols
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+    #
+    # train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
 
@@ -953,6 +990,14 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    train_df, test_df, new_cols = process_mngr_freaquent_dummies(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_bid_freaquent_dummies(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     return train_df, test_df, features
 
 
@@ -978,7 +1023,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(1000):
+    for counter in range(15):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -997,6 +1042,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
+    print '================  DONE!  ======================'
 
-
-do_test_xgboost('stacking_all', sys.argv[1])
+do_test_xgboost('stacking_frequent_dummies', sys.argv[1])

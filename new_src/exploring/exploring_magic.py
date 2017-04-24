@@ -64,34 +64,6 @@ pd.set_option('display.max_rows', 5000)
 train_file = '../data/redhoop/train.json'
 test_file = '../data/redhoop/test.json'
 
-def out(l, loss, l_1K, loss1K, num, t):
-    print '\n\n'
-    print '#{}'.format(num)
-    if loss1K is not None:
-        print 'loss1K {}'.format(loss1K)
-        print 'avg_loss1K {}'.format(np.mean(l_1K))
-        print get_3s_confidence_for_mean(l_1K)
-        print
-
-    print 'loss {}'.format(loss)
-    print 'avg_loss {}'.format(np.mean(l))
-    print get_3s_confidence_for_mean(l)
-    print 'std {}'.format(np.std(l))
-    print 'time {}'.format(t)
-
-def get_3s_confidence_for_mean(l):
-    std = np.std(l)/math.sqrt(len(l))
-    m = np.mean(l)
-    start = m -3*std
-    end = m+3*std
-
-    return '3s_confidence: [{}, {}]'.format(start, end)
-
-def write_results(l, fp):
-    with open(fp, 'w+') as f:
-        json.dump(l, f)
-
-
 def split_df(df, c):
     msk = np.random.rand(len(df)) < c
     return df[msk], df[~msk]
@@ -145,6 +117,8 @@ def basic_preprocess(df):
 
 magic_file = '../data/redhoop/listing_image_time.csv'
 LISTING_ID = 'listing_id'
+TIME_STAMP='time_stamp'
+MAGIC = "img_date"
 
 
 def process_magic(train_df, test_df):
@@ -171,7 +145,7 @@ def process_magic(train_df, test_df):
     new_cols = ["img_days_passed","img_date_month","img_date_week",
                 "img_date_day","img_date_dayofweek","img_date_dayofyear",
                 "img_date_hour", "img_date_monthBeginMidEnd",
-                "img_date_minute", "img_date_second"]#+["img_date", "time_stamp"]
+                "img_date_minute", "img_date_second", "img_date", "time_stamp"]
 
     # for col in new_cols:
     #     train_df[col] = df.loc[train_df.index, col]
@@ -197,15 +171,23 @@ def get_target_means_by_mngr(df):
     means['count'] = df.groupby(MANAGER_ID)[MANAGER_ID].count()
     return means.sort_values(by=['count'], ascending=False)
 
+def explore_target(df):
+    print 'high         {}'.format(len(df[df[TARGET]=='high'])/(1.0*len(df)))
+    print 'medium       {}'.format(len(df[df[TARGET]=='medium'])/(1.0*len(df)))
+    print 'low          {}'.format(len(df[df[TARGET]=='low'])/(1.0*len(df)))
 
-def xgboost_per_tree_results(estimator):
-    results_on_test = estimator.evals_result()['validation_1']['mlogloss']
-    results_on_train = estimator.evals_result()['validation_0']['mlogloss']
-    return {
-        'train':results_on_train,
-        'test':results_on_test
-    }
+def get_top_N_vals_of_column(df, col, N):
+    bl=df.groupby(col)[col].count().sort_values(ascending=False)
+    return bl.index[:N].values
 
+
+def visualize_condit_counts_of_target_on_top_N_values_of_col(df, col, target_col, N=None):
+    if N is None:
+        N=len(set(df[col]))
+
+    top_N = get_top_N_vals_of_column(df, col, N)
+    df = df[df[col].apply(lambda s: s in top_N)]
+    sns.factorplot(target_col, col=col, data=df, kind='count', estimator='mean')
 
 train_df, test_df = load_train(), load_test()
 train_df, test_df, magic_cols = process_magic(train_df, test_df)

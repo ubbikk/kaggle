@@ -850,6 +850,51 @@ def process_magic(train_df, test_df):
 #MAGIC
 #######################################################
 
+####################################################
+#weighted price ratio
+#######################################################
+BED_BATH_MEDIAN= 'bed_bath_median'
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+
+def process_mngr_weighted_price_ratio(train_df, test_df):
+    return process_weighted_price_ratio(train_df, test_df, MANAGER_ID, 5)
+
+
+
+def process_weighted_price_ratio(train_df, test_df, col, folds):
+    skf = StratifiedKFold(folds)
+    target_vals = ['high', 'medium', 'low']
+    new_cols = ['weighted_price_ratio', 'weighted_price_diff']
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        calc_weighted_price_ratio(big, small, col, train_df)
+
+    calc_weighted_price_ratio(train_df.copy(), test_df.copy(), col, update_df=test_df)
+
+    return train_df, test_df, new_cols
+
+
+def calc_weighted_price_ratio(big, small, col, update_df):
+    target_vals = ['high', 'medium', 'low']
+    new_cols = ['weighted_price_ratio', 'weighted_price_diff']
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    big['weighted_price_ratio'] = 3*big['target_cp_high']*big[BED_BATH_RATIO]+big['target_cp_medium']*big[BED_BATH_RATIO]
+    big['weighted_price_diff'] = 3*big['target_cp_high']*big[BED_BATH_DIFF]+big['target_cp_medium']*big[BED_BATH_DIFF]
+
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small[[col]], grouped[new_cols], left_on=col, right_index=True)
+    for new_col in new_cols:
+        update_df.loc[small.index, new_col] = small[new_col]
+
+
+####################################################
+#weighted price ratio
+#######################################################
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -953,6 +998,10 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    train_df, test_df, new_cols = process_mngr_weighted_price_ratio(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     return train_df, test_df, features
 
 
@@ -978,7 +1027,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(1000):
+    for counter in range(15):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -997,6 +1046,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
+    print '================  DONE!  ======================'
 
-
-do_test_xgboost('stacking_all', sys.argv[1])
+do_test_xgboost('stacking_weighted_price_ratio', sys.argv[1])

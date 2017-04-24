@@ -72,6 +72,7 @@ def process_street_counts(train_df, test_df):
     normalize_display_address_df(df)
     col = 'street_popularity'
     df[col] = df.groupby(NORMALIZED_DISPLAY_ADDRESS)[MANAGER_ID].transform('count')
+
     train_df[col]=df.loc[train_df.index, col]
     test_df[col]=df.loc[test_df.index, col]
 

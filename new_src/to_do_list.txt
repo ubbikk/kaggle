@@ -1,0 +1,5 @@
+1)diff magic-created
+2)ranks (diff_magic, magic)
+3)new avg mngr magic, magic diff, magic day\hour
+4)bid avg
+5)perceptron ????

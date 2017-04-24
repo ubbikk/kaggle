@@ -1,6 +1,6 @@
 import json
 import math
-from time import time
+from time import time, ctime
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -301,7 +301,13 @@ def submit_xgb(experiments, train_df, test_df,
     train_arr, train_target = train[features], train[TARGET]
     test_arr = test[features]
 
-    model = xgb.XGBClassifier()
+    model = xgb.XGBClassifier(
+        objective='multi:softprob',
+        n_estimators=100,
+        colsample_bytree=0.8,
+        subsample=0.8,
+        seed=int(time())
+    )
     model.fit(train_arr, train_target)
     proba = model.predict_proba(test_arr)
     classes = [x for x in model.classes_]
@@ -311,7 +317,7 @@ def submit_xgb(experiments, train_df, test_df,
     test[LISTING_ID] = test.index.values
     res = test[['listing_id', 'high', 'medium', 'low']]
 
-    fp= 'stacking_blja_{}.csv'.format(int(time()))
+    fp= 'stacking__{}.csv'.format(time_now_str())
     res.to_csv(fp, index=False)
 
 
@@ -335,6 +341,9 @@ def load_and_unite_submits_fs(experiments, folder=stacking_submit_fp):
         counter += 1
 
     return res_df
+
+def time_now_str():
+    return str(ctime()).replace(' ', '_')
 
 ###################################################
 #SUBMITTING....

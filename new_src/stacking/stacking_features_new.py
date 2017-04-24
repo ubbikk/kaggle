@@ -850,6 +850,32 @@ def process_magic(train_df, test_df):
 #MAGIC
 #######################################################
 
+####################################################
+#FEATURES NEW
+#######################################################
+from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
+
+
+def process_features_new(X_train, X_test):
+    fmt = lambda feat: [s.replace("\u00a0", "").strip().lower().replace(" ", "_") for s in feat]  # format features
+    X_train["features"] = X_train["features"].apply(fmt)
+    X_test["features"] = X_test["features"].apply(fmt)
+    features = [f for f_list in list(X_train["features"]) + list(X_test["features"]) for f in f_list]
+    ps = pd.Series(features)
+    grouped = ps.groupby(ps).agg(len)
+    features = grouped[grouped >= 10].index.sort_values().values    # limit to features with >=10 observations
+    mlb = MultiLabelBinarizer().fit([features])
+    columns = ['feature_' + s for s in mlb.classes_]
+    flt = lambda l: [i for i in l if i in mlb.classes_]     # filter out features not present in MultiLabelBinarizer
+    X_train = X_train.join(pd.DataFrame(data=mlb.transform(X_train["features"].apply(flt)), columns=columns, index=X_train.index))
+    X_test = X_test.join(pd.DataFrame(data=mlb.transform(X_test["features"].apply(flt)), columns=columns, index=X_test.index))
+
+    return X_train, X_test, columns
+
+####################################################
+#FEATURES NEW
+#######################################################
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -931,10 +957,6 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, new_cols = process_features(train_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features+=new_cols
-
     train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
@@ -952,6 +974,10 @@ def process_all_name(train_df, test_df):
     train_df, test_df, new_cols = process_magic(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
+    train_df, test_df, new_cols = process_features_new(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
 
     return train_df, test_df, features
 
@@ -978,7 +1004,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(1000):
+    for counter in range(15):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -997,6 +1023,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
-
+    print '================  DONE!  ======================'
 
 do_test_xgboost('stacking_all', sys.argv[1])

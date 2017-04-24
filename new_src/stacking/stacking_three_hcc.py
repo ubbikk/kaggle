@@ -452,7 +452,8 @@ def process_mngr_categ_preprocessing(train_df, test_df):
     for df in [train_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
-    for binary_col in ['target_high', 'target_medium']:
+        df['target_low'] = df[TARGET].apply(lambda s: 1 if s == 'low' else 0)
+    for binary_col in ['target_high', 'target_medium', 'target_low']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
@@ -490,7 +491,8 @@ def process_bid_categ_preprocessing(train_df, test_df):
     for df in [train_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
-    for binary_col in ['target_high', 'target_medium']:
+        df['target_low'] = df[TARGET].apply(lambda s: 1 if s == 'low' else 0)
+    for binary_col in ['target_high', 'target_medium', 'target_low']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
@@ -700,6 +702,10 @@ def process_other_mngr_medians_new(train_df, test_df):
     df_to_merge = df[[LISTING_ID] + new_cols]
     train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
     test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+
+
+
     return train_df, test_df, new_cols
 #########################################################################################
 # OTHER MEDIANS NEW
@@ -978,7 +984,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(1000):
+    for counter in range(25):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -997,6 +1003,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
+    print '================  DONE!  ======================'
 
-
-do_test_xgboost('stacking_all', sys.argv[1])
+do_test_xgboost('stacking_three_hcc', sys.argv[1])
