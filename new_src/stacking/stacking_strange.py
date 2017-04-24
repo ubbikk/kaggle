@@ -949,7 +949,7 @@ def process_frequent_dummies(df, col, num):
 
 def process_mngr_freaquent_dummies(train_df, test_df):
     df = pd.concat([train_df, test_df])
-    df, new_cols = process_frequent_dummies(df, MANAGER_ID, 100)
+    df, new_cols = process_frequent_dummies(df, MANAGER_ID, 200)
 
     df_to_merge = df[[LISTING_ID] + new_cols]
     train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
@@ -959,7 +959,7 @@ def process_mngr_freaquent_dummies(train_df, test_df):
 
 def process_bid_freaquent_dummies(train_df, test_df):
     df = pd.concat([train_df, test_df])
-    df, new_cols = process_frequent_dummies(df, BUILDING_ID, 100)
+    df, new_cols = process_frequent_dummies(df, BUILDING_ID, 200)
 
     df_to_merge = df[[LISTING_ID] + new_cols]
     train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
@@ -1253,25 +1253,37 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    print 'process_bid_prices_medians'
+
     train_df, test_df, new_cols = process_mngr_freaquent_dummies(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
+    print 'process_mngr_freaquent_dummies'
 
     train_df, test_df, new_cols = process_bid_freaquent_dummies(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    print 'process_bid_freaquent_dummies'
+
     train_df, test_df, new_cols = process_street_prices_medians(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
+
+    print 'process_street_prices_medians'
 
     train_df, test_df, new_cols = process_mngr_weighted_price_ratio(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
+    print 'process_mngr_weighted_price_ratio'
+
     train_df, test_df, new_cols = process_features_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
+
+    print 'process_features_new'
 
 
     return train_df, test_df, features
