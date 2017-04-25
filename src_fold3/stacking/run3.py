@@ -26,7 +26,7 @@ scripts = ['stacking_all.py',
            'stacking_three_hcc.py',
            'stacking_weighted_price_ratio.py']
 
-for s in scripts[7:12]:
+for s in scripts[12:15]:
     print '=================================='
     print 'running {}...'.format(s)
     print '=================================='

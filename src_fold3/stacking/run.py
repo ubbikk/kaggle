@@ -9,6 +9,8 @@ scripts = ['stacking_all.py',
            'stacking_new_heu_all.py',
            'stacking_no_bid_hcc.py',
            'stacking_no_features.py',
+
+
            'stacking_no_lat_log.py',
            'stacking_no_listing_id.py',
            'stacking_no_magic.py',
