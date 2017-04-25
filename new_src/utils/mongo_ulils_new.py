@@ -202,7 +202,9 @@ def plot_errors_new(name):
     ax.legend()
 
 
-
+def store_experiments(experiments):
+    for e in experiments:
+        load_from_db_and_store_avg_validation_df(e)
 
 ######################################################3
 #VALIDATION
@@ -214,6 +216,11 @@ def plot_errors_new(name):
 #Results
 #######################################################
 stacking_submit_fp = '../stacking_submit_data'
+
+
+def store_submits(experiments):
+    for e in experiments:
+        load_from_db_and_store_avg_submit_df(e)
 
 def submit_item_to_df(res):
     return pd.DataFrame({k: res[k] for k in ['high', 'low', 'medium']}, index=res[LISTING_ID])

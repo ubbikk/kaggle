@@ -15,6 +15,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
 import os
+from sklearn.feature_selection import RFECV
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -99,7 +100,18 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.49626061278835965,
 #    0.50351609683851462])]
 
+def xgb_feature_elimination(experiments, train_df, folder=stacking_fp):
+    data = create_data_for_running_fs(experiments, train_df, folder)
+    model = xgb.XGBClassifier(
+        objective='multi:softprob',
+        n_estimators=100,
+        colsample_bytree=0.8,
+        subsample=0.8,
+        seed=int(time())
+    )
 
+    rfe = RFECV(estimator=model, step=5, cv=data, n_jobs=-1, scoring='mlogloss')
+    rfe.fit()
 
 
 def run_xgb_cv(experiments, train_df, folder=stacking_fp):
@@ -277,6 +289,20 @@ def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
         res.append((train, test, train_target, test_target))
 
     return res
+
+def create_rfe_iterator(experiments, train_df, folder=stacking_fp):
+    df = load_and_unite_expiriments_fs(experiments, folder)
+    res = []
+    for cv in range(CV):
+        small_indexes = SPLITS_SMALL[cv]
+        big_indexes = SPLITS_BIG[cv]
+        train = df.loc[big_indexes]
+        train_target = train_df.loc[big_indexes][TARGET]
+        test_target = train_df.loc[small_indexes][TARGET]
+        test = df.loc[small_indexes]
+        res.append((big_indexes, small_indexes))
+
+    return res, df, train_df[TARGET]
 
 def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_fp):
     MANAGER_ID = 'manager_id'
