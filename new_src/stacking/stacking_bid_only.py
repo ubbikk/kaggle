@@ -615,11 +615,8 @@ def process_mngr_avg_median_price(train_df, test_df):
     df['gr_by_mngr_bed_bath_ratio_quantile_0.75']= group_by.transform('quantile', 0.75)
     df['gr_by_mngr_bed_bath_ratio_mean']= group_by.transform('mean')
 
-    new_cols= ['bed_bath_diff','bed_bath_ratio','bed_bath_median',
-               'gr_by_mngr_bed_bath_diff_median','gr_by_mngr_bed_bath_diff_mean',
-               'gr_by_mngr_bed_bath_diff_quantile_0.25','gr_by_mngr_bed_bath_diff_quantile_0.75',
-               'gr_by_mngr_bed_bath_ratio_median', 'gr_by_mngr_bed_bath_ratio_mean' ,
-               'gr_by_mngr_bed_bath_ratio_quantile_0.25', 'gr_by_mngr_bed_bath_ratio_quantile_0.75'
+    new_cols= ['bed_bath_diff','bed_bath_ratio','bed_bath_median'
+
                ]
 
     df_to_merge = df[[LISTING_ID] + new_cols]
@@ -1263,9 +1260,9 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    # train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
+    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
     #
     #
     # train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
