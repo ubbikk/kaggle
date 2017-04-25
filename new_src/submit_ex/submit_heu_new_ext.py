@@ -1342,7 +1342,7 @@ def run_xgb(train_df, test_df, new_cols):
         test_df[cl] = proba[:, classes.index(cl)]
 
     res = test_df[['listing_id', 'high', 'medium', 'low']]
-    res.to_csv('submit_heu_new_ext2.csv', index=False)
+    res.to_csv('submit_heu_new_ext3.csv', index=False)
 
 
 

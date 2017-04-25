@@ -1201,6 +1201,24 @@ def process_dummy_magic(train_df, test_df):
     return train_df, test_df, new_cols
 
 
+def process_agregated_mngr_magic(train_df, test_df):
+    col="img_date_dayofyear"
+    train_df['t'] = train_df[TARGET]
+    train_df = pd.get_dummies(train_df, columns=['t'])
+    train_df['l'] = train_df.groupby(col)['t_low'].transform('mean')
+    train_df['m'] = train_df.groupby(col)['t_medium'].transform('mean')
+    train_df['h'] = train_df.groupby(col)['t_high'].transform('mean')
+
+    blja = train_df.groupby(MANAGER_ID)[['l', 'm', 'h']].transform('mean')
+    for c in ['l', 'm', 'h']:
+        del train_df[c]
+
+    train_df=pd.merge(train_df, blja, how='left', left_on=MANAGER_ID, right_index=True)
+    test_df=pd.merge(test_df, blja, how='left', left_on=MANAGER_ID, right_index=True)
+
+    return train_df, test_df, ['l', 'm', 'h']
+
+
 
 
 
@@ -1333,6 +1351,11 @@ def process_all_name(train_df, test_df):
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
 
+
+    train_df, test_df, new_cols = process_agregated_mngr_magic(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
+
     return train_df, test_df, features
 
 
@@ -1379,4 +1402,4 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
 
 
 
-do_test_xgboost('stacking_dummy_magic', sys.argv[1])
+do_test_xgboost('stacking_dummy_magic_blja', sys.argv[1])

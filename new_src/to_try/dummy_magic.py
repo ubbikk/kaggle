@@ -11,7 +11,6 @@ import sys
 from matplotlib import pyplot
 from scipy.sparse import coo_matrix
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 import numpy as np
 import xgboost as xgb
@@ -44,7 +43,7 @@ CREATED_MINUTE = 'created_minute'
 CREATED_HOUR = 'created_hour'
 DAY_OF_WEEK = 'dayOfWeek'
 CREATED = 'created'
-LABEL = 'lbl'
+LABEL = 'ltrain_df'
 BED_NORMALIZED = 'bed_norm'
 BATH_NORMALIZED = 'bath_norm'
 COL = 'normalized_features'
@@ -73,3 +72,20 @@ def process_dummy_magic(train_df, test_df):
     test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
 
     return train_df, test_df, new_cols
+
+def process_agregated_mngr_magic(train_df, test_df):
+    col="img_date_dayofyear"
+    train_df['t'] = train_df[TARGET]
+    train_df = pd.get_dummies(train_df, columns=['t'])
+    train_df['l'] = train_df.groupby(col)['t_low'].transform('mean')
+    train_df['m'] = train_df.groupby(col)['t_medium'].transform('mean')
+    train_df['h'] = train_df.groupby(col)['t_high'].transform('mean')
+
+    blja = train_df.groupby(MANAGER_ID)[['l', 'm', 'h']].transform('mean')
+    for c in ['l', 'm', 'h']:
+        del train_df[c]
+
+    train_df=pd.merge(train_df, blja, how='left', left_on=MANAGER_ID, right_index=True)
+    test_df=pd.merge(test_df, blja, how='left', left_on=MANAGER_ID, right_index=True)
+
+    return train_df, test_df, ['l', 'm', 'h']
