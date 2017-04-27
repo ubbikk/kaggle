@@ -1,12 +1,13 @@
 import subprocess
 
-scripts = ['stacking_all.py',
-           'stacking_base_and_hcc.py',
-           'stacking_bid_prices_medians.py',
-           'stacking_different_magic.py',
-           'stacking_features_new.py',
-           'stacking_naive_stats.py',
-           'stacking_new_heu_all.py',
+scripts = [
+    # 'stacking_all.py',
+    #        'stacking_base_and_hcc.py',
+    #        'stacking_bid_prices_medians.py',
+    #        'stacking_different_magic.py',
+    #        'stacking_features_new.py',
+    #        'stacking_naive_stats.py',
+
            'stacking_no_bid_hcc.py',
            'stacking_no_features.py',
            'stacking_no_lat_log.py',
@@ -24,7 +25,9 @@ scripts = ['stacking_all.py',
            'stacking_random_forest.py',
            'stacking_street_avgs.py',
            'stacking_three_hcc.py',
-           'stacking_weighted_price_ratio.py']
+           'stacking_weighted_price_ratio.py',
+            'stacking_new_heu_all.py'
+]
 
 for s in scripts:
     print '=================================='
