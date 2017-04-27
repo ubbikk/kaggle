@@ -853,6 +853,33 @@ def process_magic(train_df, test_df):
 #######################################################
 
 ####################################################
+#FEATURES NEW
+#######################################################
+from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
+
+
+def process_features_new(X_train, X_test):
+    fmt = lambda feat: [s.replace("\u00a0", "").strip().lower().replace(" ", "_") for s in feat]  # format features
+    X_train["features"] = X_train["features"].apply(fmt)
+    X_test["features"] = X_test["features"].apply(fmt)
+    features = [f for f_list in list(X_train["features"]) + list(X_test["features"]) for f in f_list]
+    ps = pd.Series(features)
+    grouped = ps.groupby(ps).agg(len)
+    features = grouped[grouped >= 10].index.sort_values().values    # limit to features with >=10 observations
+    mlb = MultiLabelBinarizer().fit([features])
+    columns = ['feature_' + s for s in mlb.classes_]
+    flt = lambda l: [i for i in l if i in mlb.classes_]     # filter out features not present in MultiLabelBinarizer
+    X_train = X_train.join(pd.DataFrame(data=mlb.transform(X_train["features"].apply(flt)), columns=columns, index=X_train.index))
+    X_test = X_test.join(pd.DataFrame(data=mlb.transform(X_test["features"].apply(flt)), columns=columns, index=X_test.index))
+
+    return X_train, X_test, columns
+
+####################################################
+#FEATURES NEW
+#######################################################
+
+####################################################
 #BID AVG
 #######################################################
 
@@ -905,70 +932,6 @@ def process_bid_prices_medians(train_df, test_df):
 
 ####################################################
 #BID AVG
-#######################################################
-
-####################################################
-#FEATURES NEW
-#######################################################
-from sklearn.preprocessing import MultiLabelBinarizer
-import pandas as pd
-
-
-def process_features_new(X_train, X_test):
-    fmt = lambda feat: [s.replace("\u00a0", "").strip().lower().replace(" ", "_") for s in feat]  # format features
-    X_train["features"] = X_train["features"].apply(fmt)
-    X_test["features"] = X_test["features"].apply(fmt)
-    features = [f for f_list in list(X_train["features"]) + list(X_test["features"]) for f in f_list]
-    ps = pd.Series(features)
-    grouped = ps.groupby(ps).agg(len)
-    features = grouped[grouped >= 10].index.sort_values().values    # limit to features with >=10 observations
-    mlb = MultiLabelBinarizer().fit([features])
-    columns = ['feature_' + s for s in mlb.classes_]
-    flt = lambda l: [i for i in l if i in mlb.classes_]     # filter out features not present in MultiLabelBinarizer
-    X_train = X_train.join(pd.DataFrame(data=mlb.transform(X_train["features"].apply(flt)), columns=columns, index=X_train.index))
-    X_test = X_test.join(pd.DataFrame(data=mlb.transform(X_test["features"].apply(flt)), columns=columns, index=X_test.index))
-
-    return X_train, X_test, columns
-
-####################################################
-#FEATURES NEW
-#######################################################
-
-####################################################
-#FREQUENT DUMMIES
-#######################################################
-def process_frequent_dummies(df, col, num):
-    df['num'] = df.groupby(col)[PRICE].transform('count')
-    small = df[df['num'] >= num][[col]]
-    bl = pd.get_dummies(small, columns=[col])
-
-    df = pd.merge(df, bl, left_index=True, right_index=True, how='left')
-    new_columns = list(bl.columns.values)
-    df.loc[df[df[new_columns[0]].isnull()].index,new_columns]=0
-    return df, new_columns
-
-def process_mngr_freaquent_dummies(train_df, test_df):
-    df = pd.concat([train_df, test_df])
-    df, new_cols = process_frequent_dummies(df, MANAGER_ID, 200)
-
-    df_to_merge = df[[LISTING_ID] + new_cols]
-    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
-    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
-
-    return train_df, test_df, new_cols
-
-def process_bid_freaquent_dummies(train_df, test_df):
-    df = pd.concat([train_df, test_df])
-    df, new_cols = process_frequent_dummies(df, BUILDING_ID, 200)
-
-    df_to_merge = df[[LISTING_ID] + new_cols]
-    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
-    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
-
-    return train_df, test_df, new_cols
-
-####################################################
-#FREQUENT DUMMIES
 #######################################################
 
 ####################################################
@@ -1105,6 +1068,50 @@ def process_street_prices_medians(train_df, test_df):
 #STREET AVG
 #######################################################
 
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
+def process_mngr_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, MANAGER_ID, 5)
+
+def process_bid_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, BUILDING_ID, 5)
+
+
+
+def process_target_ratios(train_df, test_df, col, folds):
+    seed = int(time())
+    print 'seed naive_stats {}'.format(seed)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
+    target_vals = ['high', 'medium', 'low']
+    new_cols = {k: '{}_target_ratios_{}'.format(col, k) for k in target_vals}
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        calc_target_ratios(big, small, col, new_cols, train_df)
+
+    calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
+
+    return train_df, test_df, new_cols.values()
+
+
+def calc_target_ratios(big, small, col, new_cols, update_df):
+    target_vals = ['high', 'medium', 'low']
+    dummies = {k:'target_cp_{}'.format(k) for k in target_vals}
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
+    for t in target_vals:
+        new_col = new_cols[t]
+        update_df.loc[small.index, new_col] = small[dummies[t]]
+
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
 ####################################################
 #weighted price ratio
 #######################################################
@@ -1148,7 +1155,32 @@ def calc_weighted_price_ratio(big, small, col, update_df):
 
 ####################################################
 #weighted price ratio
-#######################################################
+####################################################
+
+
+####################################################
+#DISTANCE TO CENTER
+####################################################
+
+from haversine import haversine
+
+def process_distance_to_center(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    col='distance_to_center'
+    lat=df[LATITUDE].median()
+    long = df[LONGITUDE].median()
+
+    df[col] = df[[LATITUDE, LONGITUDE]].apply(lambda s: haversine((lat, long), (s[0], s[1])), axis=1)
+
+    new_cols=[col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+####################################################
+#DISTANCE TO CENTER
+####################################################
 
 
 def shuffle_df(df):
@@ -1196,11 +1228,11 @@ def process_split(train_df, test_df, new_cols):
     features = []
     features += new_cols
 
-    train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
+    train_df, test_df, new_cols = process_bid_target_ratios(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
@@ -1251,40 +1283,27 @@ def process_all_name(train_df, test_df):
 
     train_df, test_df, new_cols = process_bid_prices_medians(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
+    features+=new_cols
 
-    print 'process_bid_prices_medians'
-
-    train_df, test_df, new_cols = process_mngr_freaquent_dummies(train_df, test_df)
+    train_df, test_df, new_cols = process_street_counts(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
-
-    print 'process_mngr_freaquent_dummies'
-
-    train_df, test_df, new_cols = process_bid_freaquent_dummies(train_df, test_df)
-    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    features += new_cols
-
-    print 'process_bid_freaquent_dummies'
 
     train_df, test_df, new_cols = process_street_prices_medians(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    print 'process_street_prices_medians'
-
     train_df, test_df, new_cols = process_mngr_weighted_price_ratio(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features += new_cols
 
-    print 'process_mngr_weighted_price_ratio'
+    train_df, test_df, new_cols = process_distance_to_center(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
 
     train_df, test_df, new_cols = process_features_new(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     features+=new_cols
-
-    print 'process_features_new'
-
 
     return train_df, test_df, features
 
@@ -1311,7 +1330,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(15):
+    for counter in range(5):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -1330,6 +1349,8 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
-    print '================  DONE!  ======================'
 
-do_test_xgboost('stacking_strange', sys.argv[1])
+
+do_test_xgboost('stacking_new_heu_all', '35.187.46.132')
+
+print 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDOOOOOONNNNNNNNNNNNNNEEEEEEE!!!!!!!!!!!1'

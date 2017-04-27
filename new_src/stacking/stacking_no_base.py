@@ -1210,8 +1210,8 @@ def loss_with_per_tree_stats(train_df, test_df, new_cols):
     print 'XGB seed {}'.format(seed)
     estimator = xgb.XGBClassifier(n_estimators=1000,
                                   objective='mlogloss',
-                                  subsample=0.7,
-                                  colsample_bytree=0.7,
+                                  subsample=0.8,
+                                  colsample_bytree=0.8,
                                   seed=seed)
     eval_set = [(train_arr, train_target), (test_arr, test_target)]
     estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='mlogloss', verbose=False)
@@ -1241,11 +1241,12 @@ def process_split(train_df, test_df, new_cols):
 
 
 def process_all_name(train_df, test_df):
-    features = ['bathrooms', 'bedrooms', 'latitude',
-                'longitude', 'price',
-                'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day",
-                CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
+    # features = ['bathrooms', 'bedrooms', 'latitude',
+    #             'longitude', 'price',
+    #             'num_features', 'num_photos', 'word_num_in_descr',
+    #             "created_month", "created_day",
+    #             CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
+    features=[]
 
     train_df, test_df, new_cols = process_manager_num(train_df, test_df)
     train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
@@ -1330,7 +1331,7 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
     fix_index(test_df)
 
     ii_importance = []
-    for counter in range(15):
+    for counter in range(5):
         cur_time = time()
         N = getN(mongo_host, name, experiment_max_time)
 
@@ -1349,7 +1350,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
         out(all_losses, loss, losses_at_1K, loss1K, counter, cur_time)
         write_results(N, name, mongo_host, probs,test_indexes, l_results_per_tree, ii_importance, f_names)
 
-    print '================  DONE!  ======================'
 
 
-do_test_xgboost('stacking_new_heu_all07', sys.argv[1])
+do_test_xgboost('stacking_no_base', sys.argv[1])

@@ -23,3 +23,16 @@ experiments = ['stacking_all',
                'stacking_street_avgs',
                'stacking_three_hcc',
                'stacking_weighted_price_ratio']
+
+run=[
+    'stacking_avgs_only',
+    'stacking_base_and_hcc',
+    'stacking_bid_only',
+    'stacking_bid_prices_medians',
+    'stacking_listing_neis_magic',
+    'stacking_mngr_only',
+    'stacking_only_neis_hcc',
+    'stacking_street_avgs'
+
+
+]

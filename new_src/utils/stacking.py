@@ -101,7 +101,6 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
 #    0.50351609683851462])]
 
 def xgb_feature_elimination(experiments, train_df, folder=stacking_fp):
-    data = create_data_for_running_fs(experiments, train_df, folder)
     model = xgb.XGBClassifier(
         objective='multi:softprob',
         n_estimators=100,
@@ -110,8 +109,78 @@ def xgb_feature_elimination(experiments, train_df, folder=stacking_fp):
         seed=int(time())
     )
 
-    rfe = RFECV(estimator=model, step=5, cv=data, n_jobs=-1, scoring='mlogloss')
-    rfe.fit()
+    it, data, target = create_rfe_iterator(experiments, train_df)
+
+    rfe = RFECV(estimator=model, step=5, cv=it, n_jobs=-1, scoring='neg_log_loss', verbose=1)
+    rfe.fit(data, target)
+
+
+def xgb_feature_elimination_my(experiments, train_df):
+    model = xgb.XGBClassifier(
+        objective='multi:softprob',
+        n_estimators=100,
+        colsample_bytree=0.8,
+        subsample=0.8,
+        seed=int(time())
+    )
+
+    df = load_and_unite_expiriments_fs(experiments)
+    df['i'] = range(len(df))
+    target = train_df.loc[df.index][TARGET].values
+    print 'target shape {}'.format(target.shape)
+    it = []
+    for cv in range(CV):
+        small_indexes = SPLITS_SMALL[cv]
+        big_indexes = SPLITS_BIG[cv]
+        train = df.loc[big_indexes]['i'].values
+        test = df.loc[small_indexes]['i'].values
+        it.append((train, test))
+
+    del df['i']
+
+    return it, df.values, target
+
+
+def reduce_features(df, train_df, n):
+    losses = []
+    imp = []
+    for cv in range(CV):
+        small_indexes = SPLITS_SMALL[cv]
+        big_indexes = SPLITS_BIG[cv]
+        train = df.loc[big_indexes].values
+        test = df.loc[small_indexes].values
+        train_target = train_df.loc[big_indexes][TARGET]
+        test_target = train_df.loc[small_indexes][TARGET]
+        model = xgb.XGBClassifier(
+            objective='multi:softprob',
+            n_estimators=100,
+            colsample_bytree=0.8,
+            subsample=0.8,
+            seed=int(time())
+        )
+
+        model.fit(train, train_target)
+        proba = model.predict_proba(test)
+        loss = log_loss(test_target, proba)
+        print loss
+        losses.append(loss)
+        imp.append(model.feature_importances_)
+
+    loss = np.mean(losses)
+    print 'avg loss {}'.format(loss)
+
+    flen = len(imp[0])
+    imp = [np.mean([imp[j][i] for j in range(CV)]) for i in range(flen)]
+    imp = zip(imp, df.columns.values)
+    imp.sort(key=lambda s: s[0])
+    to_del = [x[1] for x in imp[:n]]
+    print to_del
+
+    for col in to_del:
+        del df[col]
+
+    return df
+
 
 
 def run_xgb_cv(experiments, train_df, folder=stacking_fp):
@@ -125,7 +194,7 @@ def run_xgb_cv(experiments, train_df, folder=stacking_fp):
         eval_set = [(train.values, train_target), (test.values, test_target)]
         model = xgb.XGBClassifier(
             objective='multi:softprob',
-            n_estimators=100,
+            n_estimators=150,
             colsample_bytree=0.8,
             subsample=0.8,
             seed=int(time())
@@ -292,17 +361,20 @@ def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
 
 def create_rfe_iterator(experiments, train_df, folder=stacking_fp):
     df = load_and_unite_expiriments_fs(experiments, folder)
-    res = []
+    df['i'] = range(len(df))
+    target = train_df.loc[df.index][TARGET].values
+    print 'target shape {}'.format(target.shape)
+    it = []
     for cv in range(CV):
         small_indexes = SPLITS_SMALL[cv]
         big_indexes = SPLITS_BIG[cv]
-        train = df.loc[big_indexes]
-        train_target = train_df.loc[big_indexes][TARGET]
-        test_target = train_df.loc[small_indexes][TARGET]
-        test = df.loc[small_indexes]
-        res.append((big_indexes, small_indexes))
+        train = df.loc[big_indexes]['i'].values
+        test = df.loc[small_indexes]['i'].values
+        it.append((train, test))
 
-    return res, df, train_df[TARGET]
+    del df['i']
+
+    return it, df.values, target
 
 def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_fp):
     MANAGER_ID = 'manager_id'

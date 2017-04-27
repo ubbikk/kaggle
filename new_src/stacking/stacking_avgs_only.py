@@ -449,10 +449,11 @@ def hcc_encode(train_df, test_df, variable, binary_target, k=5, f=1, g=1, r_k=0.
 def process_mngr_categ_preprocessing(train_df, test_df):
     col = MANAGER_ID
     new_cols = []
-    for df in [train_df, test_df]:
+    for df in [train_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
-    for binary_col in ['target_high', 'target_medium']:
+        df['target_low'] = df[TARGET].apply(lambda s: 1 if s == 'low' else 0)
+    for binary_col in ['target_high', 'target_medium', 'target_low']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
@@ -487,10 +488,11 @@ def process_manager_num(train_df, test_df):
 def process_bid_categ_preprocessing(train_df, test_df):
     col = BUILDING_ID
     new_cols = []
-    for df in [train_df, test_df]:
+    for df in [train_df]:
         df['target_high'] = df[TARGET].apply(lambda s: 1 if s == 'high' else 0)
         df['target_medium'] = df[TARGET].apply(lambda s: 1 if s == 'medium' else 0)
-    for binary_col in ['target_high', 'target_medium']:
+        df['target_low'] = df[TARGET].apply(lambda s: 1 if s == 'low' else 0)
+    for binary_col in ['target_high', 'target_medium', 'target_low']:
         train_df, test_df, new_col = hcc_encode(train_df, test_df, col, binary_col)
         new_cols.append(new_col)
 
@@ -700,10 +702,6 @@ def process_other_mngr_medians_new(train_df, test_df):
     df_to_merge = df[[LISTING_ID] + new_cols]
     train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
     test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
-
-
-
-
     return train_df, test_df, new_cols
 #########################################################################################
 # OTHER MEDIANS NEW
@@ -854,6 +852,336 @@ def process_magic(train_df, test_df):
 #MAGIC
 #######################################################
 
+####################################################
+#FEATURES NEW
+#######################################################
+from sklearn.preprocessing import MultiLabelBinarizer
+import pandas as pd
+
+
+def process_features_new(X_train, X_test):
+    fmt = lambda feat: [s.replace("\u00a0", "").strip().lower().replace(" ", "_") for s in feat]  # format features
+    X_train["features"] = X_train["features"].apply(fmt)
+    X_test["features"] = X_test["features"].apply(fmt)
+    features = [f for f_list in list(X_train["features"]) + list(X_test["features"]) for f in f_list]
+    ps = pd.Series(features)
+    grouped = ps.groupby(ps).agg(len)
+    features = grouped[grouped >= 10].index.sort_values().values    # limit to features with >=10 observations
+    mlb = MultiLabelBinarizer().fit([features])
+    columns = ['feature_' + s for s in mlb.classes_]
+    flt = lambda l: [i for i in l if i in mlb.classes_]     # filter out features not present in MultiLabelBinarizer
+    X_train = X_train.join(pd.DataFrame(data=mlb.transform(X_train["features"].apply(flt)), columns=columns, index=X_train.index))
+    X_test = X_test.join(pd.DataFrame(data=mlb.transform(X_test["features"].apply(flt)), columns=columns, index=X_test.index))
+
+    return X_train, X_test, columns
+
+####################################################
+#FEATURES NEW
+#######################################################
+
+####################################################
+#BID AVG
+#######################################################
+
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+
+
+def process_bid_prices_medians(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    bid__price_ratio_median = 'bid__price_ratio_median'
+    bid__price_ratio_mean = 'bid__price_ratio_mean'
+
+    bid__price_diff_median = 'bid__price_diff_median'
+    bid__price_diff_mean = 'bid__price_diff_mean'
+
+    group_by = df.groupby(BUILDING_ID)
+
+    df[bid__price_ratio_median] = group_by[BED_BATH_RATIO].transform('median')
+    df[bid__price_ratio_mean] = group_by[BED_BATH_RATIO].transform('mean')
+
+    df[bid__price_diff_median] = group_by[BED_BATH_DIFF].transform('median')
+    df[bid__price_diff_mean] = group_by[BED_BATH_DIFF].transform('mean')
+
+    bid_bias_price_diff = 'bid_bias_price_diff'
+    bid_bias_price_ratio = 'bid_bias_price_ratio'
+
+    df[bid_bias_price_diff] = df[BED_BATH_DIFF] - df[bid__price_diff_median]
+    df[bid_bias_price_ratio] = df[BED_BATH_RATIO] / df[bid__price_ratio_median]
+
+    new_cols = [
+        bid__price_ratio_median,
+        bid__price_ratio_mean,
+        bid__price_diff_median,
+        bid__price_diff_mean,
+        bid_bias_price_diff,
+        bid_bias_price_ratio
+    ]
+
+    features_to_avg = ['num_features', 'num_photos', 'word_num_in_descr']
+    for f in features_to_avg:
+        col = 'get_by_bid_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = group_by[f].transform('median')
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+####################################################
+#BID AVG
+#######################################################
+
+####################################################
+#STREET AVG
+#######################################################
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+DISPLAY_ADDRESS = 'display_address'
+NORMALIZED_DISPLAY_ADDRESS = 'normalized_display_address'
+MANAGER_ID = 'manager_id'
+
+def reverse_norm_map(m):
+    res = {}
+    for k, v in m.iteritems():
+        for s in v:
+            res[s.lower()] = k.lower()
+
+    return res
+
+
+NORMALIZATION_MAP = {
+    'street': ['St', 'St.', 'Street', 'St,', 'st..', 'street.'],
+    'avenue': ['Avenue', 'Ave', 'Ave.'],
+    'square': ['Square'],
+    'east': ['e', 'east', 'e.'],
+    'west': ['w', 'west', 'w.'],
+    'road':['road', 'rd', 'rd.']
+}
+
+REVERSE_NORM_MAP = reverse_norm_map(NORMALIZATION_MAP)
+
+
+# Fifth, Third
+
+def normalize_tokens(s):
+    tokens = s.split()
+    for i in range(len(tokens)):
+        tokens[i] = if_starts_with_digit_return_digit_prefix(tokens[i])
+        t = tokens[i]
+        if t.lower() in REVERSE_NORM_MAP:
+            tokens[i] = REVERSE_NORM_MAP[t.lower()]
+    return ' '.join(tokens)
+
+def if_starts_with_digit_return_digit_prefix(s):
+    if not s[0].isdigit():
+        return s
+    last=0
+    for i in range(len(s)):
+        if s[i].isdigit():
+            last=i
+        else:
+            break
+
+    return s[0:last+1]
+
+
+def normalize_string(s):
+    s = normalize_tokens(s)
+    if s == '':
+        return s
+
+    s=s.lower()
+
+    tokens = s.split()
+    if len(tokens) == 2:
+        return ' '.join(tokens)
+    if tokens[0].replace('.', '').replace('-', '').isdigit():
+        return ' '.join(tokens[1:])
+    else:
+        return ' '.join(tokens)
+
+def normalize_display_address_df(df):
+    df[NORMALIZED_DISPLAY_ADDRESS] = df[DISPLAY_ADDRESS].apply(normalize_string)
+
+def process_street_counts(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    normalize_display_address_df(df)
+    col = 'street_popularity'
+    df[col] = df.groupby(NORMALIZED_DISPLAY_ADDRESS)[MANAGER_ID].transform('count')
+
+    new_cols=[col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+
+def process_street_prices_medians(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    normalize_display_address_df(df)
+    street__price_ratio_median = 'street__price_ratio_median'
+    street__price_ratio_mean = 'street__price_ratio_mean'
+
+    street__price_diff_median = 'street__price_diff_median'
+    street__price_diff_mean = 'street__price_diff_mean'
+
+    group_by = df.groupby(NORMALIZED_DISPLAY_ADDRESS)
+
+    df[street__price_ratio_median] = group_by[BED_BATH_RATIO].transform('median')
+    df[street__price_ratio_mean] = group_by[BED_BATH_RATIO].transform('mean')
+
+    df[street__price_diff_median] = group_by[BED_BATH_DIFF].transform('median')
+    df[street__price_diff_mean] = group_by[BED_BATH_DIFF].transform('mean')
+
+    street_bias_price_diff = 'street_bias_price_diff'
+    street_bias_price_ratio = 'street_bias_price_ratio'
+
+    df[street_bias_price_diff] = df[BED_BATH_DIFF] - df[street__price_diff_median]
+    df[street_bias_price_ratio] = df[BED_BATH_RATIO] / df[street__price_ratio_median]
+
+    new_cols = [
+        street__price_ratio_median,
+        street__price_ratio_mean,
+        street__price_diff_median,
+        street__price_diff_mean,
+        street_bias_price_diff,
+        street_bias_price_ratio
+    ]
+
+    features_to_avg = ['num_features', 'num_photos', 'word_num_in_descr']
+    for f in features_to_avg:
+        col = 'get_by_street_{}_median'.format(f)
+        new_cols.append(col)
+        df[col] = group_by[f].transform('median')
+
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+
+####################################################
+#STREET AVG
+#######################################################
+
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
+def process_mngr_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, MANAGER_ID, 5)
+
+def process_bid_target_ratios(train_df, test_df):
+    return process_target_ratios(train_df, test_df, BUILDING_ID, 5)
+
+
+
+def process_target_ratios(train_df, test_df, col, folds):
+    seed = int(time())
+    print 'seed naive_stats {}'.format(seed)
+    skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
+    target_vals = ['high', 'medium', 'low']
+    new_cols = {k: '{}_target_ratios_{}'.format(col, k) for k in target_vals}
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        calc_target_ratios(big, small, col, new_cols, train_df)
+
+    calc_target_ratios(train_df.copy(), test_df.copy(),col, new_cols, update_df=test_df)
+
+    return train_df, test_df, new_cols.values()
+
+
+def calc_target_ratios(big, small, col, new_cols, update_df):
+    target_vals = ['high', 'medium', 'low']
+    dummies = {k:'target_cp_{}'.format(k) for k in target_vals}
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small, grouped[dummies.values()], left_on=col, right_index=True)
+    for t in target_vals:
+        new_col = new_cols[t]
+        update_df.loc[small.index, new_col] = small[dummies[t]]
+
+#########################################################################################
+#  NAIVE STATS
+#########################################################################################
+
+####################################################
+#weighted price ratio
+#######################################################
+BED_BATH_MEDIAN= 'bed_bath_median'
+BED_BATH_DIFF = 'bed_bath_diff'
+BED_BATH_RATIO = 'bed_bath_ratio'
+
+def process_mngr_weighted_price_ratio(train_df, test_df):
+    return process_weighted_price_ratio(train_df, test_df, MANAGER_ID, 5)
+
+
+
+def process_weighted_price_ratio(train_df, test_df, col, folds):
+    skf = StratifiedKFold(folds)
+    target_vals = ['high', 'medium', 'low']
+    new_cols = ['weighted_price_ratio', 'weighted_price_diff']
+    for big_ind, small_ind in skf.split(np.zeros(len(train_df)), train_df['interest_level']):
+        big = train_df.iloc[big_ind]
+        small = train_df.iloc[small_ind]
+        calc_weighted_price_ratio(big, small, col, train_df)
+
+    calc_weighted_price_ratio(train_df.copy(), test_df.copy(), col, update_df=test_df)
+
+    return train_df, test_df, new_cols
+
+
+def calc_weighted_price_ratio(big, small, col, update_df):
+    target_vals = ['high', 'medium', 'low']
+    new_cols = ['weighted_price_ratio', 'weighted_price_diff']
+
+    big['target_cp'] = big[TARGET].copy()
+    big= pd.get_dummies(big, columns=['target_cp'])
+    big['weighted_price_ratio'] = 3*big['target_cp_high']*big[BED_BATH_RATIO]+big['target_cp_medium']*big[BED_BATH_RATIO]
+    big['weighted_price_diff'] = 3*big['target_cp_high']*big[BED_BATH_DIFF]+big['target_cp_medium']*big[BED_BATH_DIFF]
+
+    grouped = big.groupby(col).mean()
+    small = pd.merge(small[[col]], grouped[new_cols], left_on=col, right_index=True)
+    for new_col in new_cols:
+        update_df.loc[small.index, new_col] = small[new_col]
+
+
+####################################################
+#weighted price ratio
+####################################################
+
+
+####################################################
+#DISTANCE TO CENTER
+####################################################
+
+from haversine import haversine
+
+def process_distance_to_center(train_df, test_df):
+    df = pd.concat([train_df, test_df])
+    col='distance_to_center'
+    lat=df[LATITUDE].median()
+    long = df[LONGITUDE].median()
+
+    df[col] = df[[LATITUDE, LONGITUDE]].apply(lambda s: haversine((lat, long), (s[0], s[1])), axis=1)
+
+    new_cols=[col]
+    df_to_merge = df[[LISTING_ID] + new_cols]
+    train_df = pd.merge(train_df, df_to_merge, on=LISTING_ID)
+    test_df = pd.merge(test_df, df_to_merge, on=LISTING_ID)
+
+    return train_df, test_df, new_cols
+####################################################
+#DISTANCE TO CENTER
+####################################################
+
 
 def shuffle_df(df):
     return df.iloc[np.random.permutation(len(df))]
@@ -900,11 +1228,11 @@ def process_split(train_df, test_df, new_cols):
     features = []
     features += new_cols
 
-    # train_df, test_df, new_cols = process_mngr_categ_preprocessing(train_df, test_df)
+    # train_df, test_df, new_cols = process_mngr_target_ratios(train_df, test_df)
     # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     # features += new_cols
     #
-    # train_df, test_df, new_cols = process_bid_categ_preprocessing(train_df, test_df)
+    # train_df, test_df, new_cols = process_bid_target_ratios(train_df, test_df)
     # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     # features += new_cols
 
@@ -913,20 +1241,16 @@ def process_split(train_df, test_df, new_cols):
 
 
 def process_all_name(train_df, test_df):
-    features = ['bathrooms', 'bedrooms', 'latitude',
-                'longitude', 'price',
-                'num_features', 'num_photos', 'word_num_in_descr',
-                "created_month", "created_day",
-                CREATED_HOUR, CREATED_MINUTE, DAY_OF_WEEK]
+    features = []
 
-    # train_df, test_df, new_cols = process_manager_num(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
-    #
-    # train_df, test_df, new_cols = process_bid_num(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
-    #
+    train_df, test_df, new_cols = process_manager_num(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_bid_num(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     # train_df, test_df, new_cols = process_listing_id(train_df, test_df)
     # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     # features += new_cols
@@ -934,28 +1258,48 @@ def process_all_name(train_df, test_df):
     # train_df, test_df, new_cols = process_nei123(train_df, test_df)
     # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     # features += new_cols
-    #
-    # train_df, new_cols = process_features(train_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features+=new_cols
-    #
-    # train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
-    #
-    #
-    # train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
-    #
-    #
-    # train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
-    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
-    # features += new_cols
-    #
+
+    train_df, test_df, new_cols = process_mngr_avg_median_price(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+
+    train_df, test_df, new_cols = process_other_mngr_medians_new(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
     # train_df, test_df, new_cols = process_magic(train_df, test_df)
     # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
     # features += new_cols
+
+    train_df, test_df, new_cols = process_bid_prices_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features+=new_cols
+
+    train_df, test_df, new_cols = process_street_counts(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_street_prices_medians(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    train_df, test_df, new_cols = process_mngr_weighted_price_ratio(train_df, test_df)
+    train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    features += new_cols
+
+    # train_df, test_df, new_cols = process_distance_to_center(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features += new_cols
+
+    # train_df, test_df, new_cols = process_features_new(train_df, test_df)
+    # train_df, test_df = shuffle_df(train_df), shuffle_df(test_df)
+    # features+=new_cols
 
     return train_df, test_df, features
 
@@ -1003,4 +1347,6 @@ def do_test_xgboost(name, mongo_host, experiment_max_time=15*60):
 
 
 
-do_test_xgboost('stacking_only_base_features', sys.argv[1])
+do_test_xgboost('stacking_avgs_only', '35.187.46.132')
+
+print 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDOOOOOONNNNNNNNNNNNNNEEEEEEE!!!!!!!!!!!1'

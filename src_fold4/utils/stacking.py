@@ -27,7 +27,7 @@ TARGET = 'interest_level'
 LISTING_ID = 'listing_id'
 
 stacking_fp = '../stacking_data_fold4'
-stacking_submit_fp = '../stacking_submit_data_fold4'
+stacking_submit_fp = '../stacking_submit_data'
 splits_small_fp = '../splits_small.json'
 splits_big_fp = '../splits_big.json'
 SPLITS_SMALL = json.load(open(splits_small_fp))
@@ -50,54 +50,27 @@ def run_log_reg_cv(experiments, train_df, folder=stacking_fp):
         ('losses', losses)
     ]
 
-#100\1\1
-# [('avg', 0.50343355521592148),
-#  ('losses',
-#   [0.50300851757426812,
-#    0.50854799455858868,
-#    0.50179941660459038,
-#    0.49843412249451141,
-#    0.50537772484764865])]
 
-
-#100\0.8\0.8
-# [('avg', 0.50314508236119893),
-#  ('losses',
-#   [0.50254642769754998,
-#    0.50803737832627593,
-#    0.50175941851710271,
-#    0.49786438547185091,
-#    0.50551780179321515])]
-
-
-#100/1/1 +rnd_forest
-# [('avg', 0.50268986529085102),
-#  ('losses',
-#   [0.50199733742705421,
-#    0.50740274435941213,
-#    0.50101593232235364,
-#    0.49787455105051448,
-#    0.50515876129492054])]
 
 
 #100/0.8/0.8
-# [('avg', 0.50263676242897237),
+# [('avg', 0.50044089117835766),
 #  ('losses',
-#   [0.50225325920570485,
-#    0.50768087578571286,
-#    0.50071042068922744,
-#    0.49709903467159272,
-#    0.50544022179262393])]
+#   [0.50141323396718396,
+#    0.49723731893768447,
+#    0.50164390462621455,
+#    0.50162538908336707,
+#    0.5002846092773382])]
+#
+# [('avg', 0.50032120473051689),
+#  ('losses',
+#   [0.50204663904177482,
+#    0.49694468377121204,
+#    0.50132715845359421,
+#    0.50110560988103436,
+#    0.50018193250496934])]
 
 
-#100/0.8/0.8
-# [('avg', 0.50114397549622214),
-#  ('losses',
-#   [0.50040989328030627,
-#    0.50631434801408015,
-#    0.49921892655985017,
-#    0.49626061278835965,
-#    0.50351609683851462])]
 
 
 
@@ -218,7 +191,7 @@ def avg_experiments(experiments, train_df, folder=stacking_fp):
     dfs=[x[1] for x in dfs]
     df = sum(dfs)/len(dfs)
     losses = []
-    for cv in range(30,30+CV):
+    for cv in range(10, 10+CV):
         index = SPLITS_SMALL[cv]
         proba = df.loc[index][['high', 'low', 'medium']]
         target = train_df.loc[index][TARGET]
@@ -246,7 +219,7 @@ def load_from_fs_avg_validation_df(name, folder=None):
 
 
 def load_and_unite_expiriments_fs(experiments, folder=stacking_fp):
-    dfs = [(e, load_from_fs_avg_validation_df(e, folder)) for e in experiments]
+    dfs = [(e, load_from_fs_avg_validation_df('fold4_'+e, folder)) for e in experiments]
     targets = ['low', 'medium', 'high']
     res_df = None
     counter = 0
@@ -267,7 +240,7 @@ def load_and_unite_expiriments_fs(experiments, folder=stacking_fp):
 def create_data_for_running_fs(experiments, train_df, folder=stacking_fp):
     df = load_and_unite_expiriments_fs(experiments, folder)
     res = []
-    for cv in range(30,30+CV):
+    for cv in range(10, 10+CV):
         small_indexes = SPLITS_SMALL[cv]
         big_indexes = SPLITS_BIG[cv]
         train = df.loc[big_indexes]
@@ -282,7 +255,7 @@ def create_data_for_running_fs_with_mngr(experiments, train_df, folder=stacking_
     MANAGER_ID = 'manager_id'
     df = load_and_unite_expiriments_fs(experiments, folder)
     res = []
-    for cv in range(30,30+CV):
+    for cv in range(10, 10+CV):
         small_indexes = SPLITS_SMALL[cv]
         big_indexes = SPLITS_BIG[cv]
         train = df.loc[big_indexes]
