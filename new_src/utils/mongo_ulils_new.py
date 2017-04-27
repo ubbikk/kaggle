@@ -202,6 +202,33 @@ def plot_errors_new(name):
     ax.legend()
 
 
+def load_importance_raw(name):
+    db = client[name]
+    collection = db['importance']
+    return [x['val'] for x in collection.find()]
+
+def load_importance(name, features):
+    arr = load_importance_raw(name)
+    sz = len(features)
+    res = [np.mean([x[j] for x in arr]) for j in range(sz)]
+    stds = [np.std([x[j] for x in arr]) for j in range(sz)]
+    res = zip(features, res, stds)
+    res.sort(key=lambda s: s[1], reverse=True)
+    return res
+
+def explore_importance_new(name, features, N=None):
+    if N is None:
+        N=len(features)
+
+    res = load_importance(name, features)
+    print res
+    res=res[:N]
+    xs = [x[0] for x in res]
+    ys=[x[1] for x in res]
+    sns.barplot(xs, ys)
+    sns.plt.show()
+
+
 def store_experiments(experiments):
     for e in experiments:
         load_from_db_and_store_avg_validation_df(e)
