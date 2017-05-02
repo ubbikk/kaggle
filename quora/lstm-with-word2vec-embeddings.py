@@ -45,8 +45,8 @@ sys.setdefaultencoding('utf-8')
 # TEST_DATA_FILE = '../data/quora/test.csv'
 
 EMBEDDING_FILE = '../../data/GoogleNews-vectors-negative300.bin'
-TRAIN_DATA_FILE = '../data/quora/train.csv'
-TEST_DATA_FILE = '../data/quora/test.csv'
+TRAIN_DATA_FILE = '../../data/train.csv'
+TEST_DATA_FILE = '../../data/test.csv'
 
 
 MAX_SEQUENCE_LENGTH = 30

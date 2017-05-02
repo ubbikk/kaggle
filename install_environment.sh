@@ -11,6 +11,13 @@ apt-get -y install htop
 apt-get -y install nmap
 apt-get -y install libcupti-dev
 
+#git lfs
+wget https://github.com/git-lfs/git-lfs/releases/download/v2.1.0/git-lfs-linux-amd64-2.1.0.tar.gz
+tar -zxvf git-lfs-linux-amd64-2.1.0.tar.gz
+cd git-lfs-2.1.0/
+bash install.sh
+cd ..
+
 echo "Checking for CUDA and installing."
 # Check for CUDA and try to install.
 if ! dpkg-query -W cuda; then
@@ -32,6 +39,7 @@ pip install seaborn
 pip install matplotlib
 pip install gensim
 pip install tensorflow
+pip install keras
 
 
 git clone http://github.com/dmlc/xgboost
