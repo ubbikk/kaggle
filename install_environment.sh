@@ -28,6 +28,9 @@ if ! dpkg-query -W cuda; then
   apt-get install linux-headers-$(uname -r) -y
 fi
 
+#gcloud compute copy-files ~/Desktop/libcudnn5_5.1.10-1+cuda8.0_amd64.deb kg1:/home/dd_petrovskiy/tmp
+#sudo dpkg -i libcudnn5_5.1.10-1+cuda8.0_amd64.deb
+
 wget https://bootstrap.pypa.io/get-pip.py
 python get-pip.py
 pip install scipy
@@ -38,8 +41,10 @@ pip install dill
 pip install seaborn
 pip install matplotlib
 pip install gensim
-pip install tensorflow
+pip install tensorflow-gpu
 pip install keras
+pip install -U nltk
+pip install h5py
 
 
 git clone http://github.com/dmlc/xgboost

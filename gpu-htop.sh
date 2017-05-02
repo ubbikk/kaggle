@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-nvidia-settings -q GPUUtilization -q useddedicatedgpumemory
+watch -n 1 nvidia-smi
