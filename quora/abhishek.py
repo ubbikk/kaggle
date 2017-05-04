@@ -57,6 +57,7 @@ def plot_errors(imp):
     ax.plot(x_axis, y_train, label='train')
     ax.plot(x_axis, y_test, label='test')
     ax.legend()
+    plt.show()
 
 def xgboost_per_tree_results(estimator):
     results_on_test = estimator.evals_result()['validation_1']['logloss']
