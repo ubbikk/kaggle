@@ -94,8 +94,8 @@ def perform_xgb_cv():
         losses.append(loss)
         stats.append(xgboost_per_tree_results(estimator))
         imp.append(estimator.feature_importances_)
+        plot_errors(stats)
 
     print np.mean(losses)
-    plot_errors(stats)
 
 perform_xgb_cv()
