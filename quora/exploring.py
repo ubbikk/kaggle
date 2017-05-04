@@ -10,8 +10,8 @@ pd.set_option('display.max_rows', 5000)
 pd.set_option('display.max_colwidth', 100)
 
 
-fp_train= '../data/quora/train.csv'
-fp_test= '../data/quora/test.csv'
+fp_train= '../../data/train.csv'
+fp_test= '../../data/test.csv'
 
 qid1,  qid2 = 'qid1',  'qid2'
 

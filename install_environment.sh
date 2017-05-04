@@ -46,6 +46,9 @@ pip install keras
 pip install -U nltk
 pip install h5py
 
+#pip install -U spacy
+#python -m spacy download en
+
 
 git clone http://github.com/dmlc/xgboost
 cd xgboost
