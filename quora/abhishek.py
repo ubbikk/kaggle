@@ -81,7 +81,10 @@ def perform_xgb_cv():
         train_arr, train_target = big[FEATURES], big[TARGET]
         test_arr, test_target = small[FEATURES], small[TARGET]
 
-        estimator = xgb.XGBClassifier(n_estimators=5000, subsample=0.8, colsample_bytree=0.8)
+        estimator = xgb.XGBClassifier(n_estimators=2000,
+                                      subsample=0.8,
+                                      colsample_bytree=0.8,
+                                      max_depth=4)
         eval_set = [(train_arr, train_target), (test_arr, test_target)]
         estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='logloss', verbose=False)
 
