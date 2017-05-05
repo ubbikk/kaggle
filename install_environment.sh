@@ -45,6 +45,7 @@ pip install tensorflow-gpu
 pip install keras
 pip install -U nltk
 pip install h5py
+pip install distance
 
 #pip install -U spacy
 #python -m spacy download en
