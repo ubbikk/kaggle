@@ -5,11 +5,10 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem.snowball import SnowballStemmer
 seed = 1024
 np.random.seed(seed)
-fp_train= '../../data/train.csv'
-fp_test= '../../data/test.csv'
+path = '../../data'
 
-train = pd.read_csv(fp_train)
-test = pd.read_csv(fp_test)
+train = pd.read_csv(path+"train.csv")
+test = pd.read_csv(path+"test.csv")
 
 def stem_str(x,stemmer=SnowballStemmer('english')):
     x = text.re.sub("[^a-zA-Z0-9]"," ", x)
