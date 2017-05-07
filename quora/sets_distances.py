@@ -29,6 +29,7 @@ REAL_METRICS = {x.__name__: x for x in
                 [cosine, cityblock, canberra, euclidean, seuclidean,
                  braycurtis, chebyshev, correlation, mahalanobis]}
 REAL_METRICS['minkowski_3']=lambda x,y: minkowski(x,y, 3)
+REAL_STATISTICS={x.__name__: x for x in [skew, kurtosis]}
 
 SEQUENCES_METRICS = {x.__name__: x for x in
                 [distance.levenshtein, distance.sorensen, distance.nlevenshtein]}

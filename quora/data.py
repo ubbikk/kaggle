@@ -24,7 +24,13 @@ stems_test_fp='../../data/test_porter.csv'
 normalized_train_fp='../../data/train_normalized.csv'
 
 
+TARGET = 'is_duplicate'
 qid1,  qid2 = 'qid1',  'qid2'
+
+question1, question2 = 'question1', 'question2'
+lemmas_q1, lemmas_q2 ='lemmas_q1', 'lemmas_q2'
+stems_q1,stems_q2='stems_q1','stems_q2'
+tokens_q1,tokens_q2='tokens_q1','tokens_q2'
 
 def normalize_str(s):
     try:
