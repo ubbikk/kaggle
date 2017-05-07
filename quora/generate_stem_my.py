@@ -5,7 +5,7 @@ from nltk.stem.porter import PorterStemmer
 from nltk.stem.snowball import SnowballStemmer
 seed = 1024
 np.random.seed(seed)
-path = '../../data'
+path = '../../data/'
 
 train = pd.read_csv(path+"train.csv")
 test = pd.read_csv(path+"test.csv")

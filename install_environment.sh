@@ -46,6 +46,11 @@ pip install keras
 pip install -U nltk
 pip install h5py
 pip install distance
+pip install eli5
+pip install tqdm
+pip install fuzzywuzzy
+pip install python-levenshtein
+pip install spacy
 
 #pip install -U spacy
 #python -m spacy download en

@@ -1,4 +1,8 @@
 import spacy
+import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 nlp = spacy.load('en', parser=False)
 
@@ -28,3 +32,25 @@ def process_df(df, cols):
         df['nlp_{}'.format(col)]=df[col].apply(postag_and_ner)
     df.to_json('processed.json')
 
+
+def normalize_str(s):
+    return ' '.join(re.sub("[^a-zA-Z0-9]", " ", s).split()).lower()
+
+
+def store_lemmas_df(df, fp):
+    df['lemmas_q1'] = df['nlp_question1'].apply(lambda s: ' '.join([x[2] for x in s[0]]))
+    df['lemmas_q1'] = df['lemmas_q1'].apply(normalize_str)
+
+    df['lemmas_q2'] = df['nlp_question2'].apply(lambda s: ' '.join([x[2] for x in s[0]]))
+    df['lemmas_q2'] = df['lemmas_q2'].apply(normalize_str)
+    df[['lemmas_q1','lemmas_q2']].to_csv(fp, index_label='id')
+
+
+def store_tokens_df(df, fp):
+    df['tokens_q1'] = df['nlp_question1'].apply(lambda s: ' '.join([x[0] for x in s[0]]))
+    df['tokens_q1'] = df['tokens_q1'].apply(normalize_str)
+
+    df['tokens_q2'] = df['nlp_question2'].apply(lambda s: ' '.join([x[0] for x in s[0]]))
+    df['tokens_q2'] = df['tokens_q2'].apply(normalize_str)
+
+    df[['tokens_q1','tokens_q2']].to_csv(fp, index_label='id')

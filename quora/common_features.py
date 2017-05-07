@@ -14,9 +14,3 @@ fp_train= '../../data/train.csv'
 fp_test= '../../data/test.csv'
 
 qid1,  qid2 = 'qid1',  'qid2'
-
-
-def load_train_test():
-    return pd.read_csv(fp_train, index_col='id'), pd.read_csv(fp_test, index_col='test_id')
-
-train_df, test_df = load_train_test()
