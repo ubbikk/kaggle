@@ -7,7 +7,11 @@ from tqdm import tqdm
 from scipy.stats import skew, kurtosis
 from scipy.spatial.distance import cosine, cityblock, jaccard, canberra, euclidean, minkowski, braycurtis
 from nltk import word_tokenize
+
 stop_words = stopwords.words('english')
+
+stop_words_with_PRON = set(stop_words)
+stop_words_with_PRON.add('PRON')
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -16,59 +20,54 @@ pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 pd.set_option('display.max_colwidth', 100)
 
+TARGET = 'is_duplicate'
+qid1, qid2 = 'qid1', 'qid2'
 
-fp_train= '../../data/train.csv'
-fp_test= '../../data/test.csv'
-
-qid1,  qid2 = 'qid1',  'qid2'
-
-BASIC_FEATURES=[
-    'len_q1', 'len_q2', 'diff_len',
-    'len_char_q1', 'len_char_q2', 'len_word_q1', 'len_word_q2',
-    'common_words'
-]
-
-"""
-Len:
-len in words(with\without stopwords), chars(with\without spaces, punkt, spec symbols etc)
-abs_diff_len, ratio_len, log(ratio_len) for different length
-num of stopwords ?
-
-Common words:
-
-common num/ratio of tokens\stems\lemms with\without stop
-
-Tfid:
-distances on tfidf ???
-share of tfidf
-
-word2vec, glove distances
-
-norm_wmd/wmd
-"""
-
-def sent2vec(s):
-    words = str(s).lower().decode('utf-8')
-    words = word_tokenize(words)
-    words = [w for w in words if not w in stop_words]
-    words = [w for w in words if w.isalpha()]
-    M = []
-    for w in words:
-        try:
-            M.append(model[w])
-        except:
-            continue
-    M = np.array(M)
-    v = M.sum(axis=0)
-    return v / np.sqrt((v ** 2).sum())
+question1, question2 = 'question1', 'question2'
+lemmas_q1, lemmas_q2 = 'lemmas_q1', 'lemmas_q2'
+stems_q1, stems_q2 = 'stems_q1', 'stems_q2'
+tokens_q1, tokens_q2 = 'tokens_q1', 'tokens_q2'
 
 
-data=None
-data['len_q1'] = data.question1.apply(lambda x: len(str(x)))
-data['len_q2'] = data.question2.apply(lambda x: len(str(x)))
-data['diff_len'] = data.len_q1 - data.len_q2
-data['len_char_q1'] = data.question1.apply(lambda x: len(''.join(set(str(x).replace(' ', '')))))
-data['len_char_q2'] = data.question2.apply(lambda x: len(''.join(set(str(x).replace(' ', '')))))
-data['len_word_q1'] = data.question1.apply(lambda x: len(str(x).split()))
-data['len_word_q2'] = data.question2.apply(lambda x: len(str(x).split()))
-data['common_words'] = data.apply(lambda x: len(set(str(x['question1']).lower().split()).intersection(set(str(x['question2'])
+def word_len(s):
+    return len(s.split())
+
+
+def word_len_except_stop(s):
+    s = set(s.split())
+    count = 0
+    for w in s:
+        if w not in stop_words_with_PRON:
+            count += 1
+
+    return count
+
+
+
+def generate_lens(df, fp):
+    df['len_char_q1'] = df[lemmas_q1].apply(len)
+    df['len_char_q2'] = df[lemmas_q2].apply(len)
+    df['len_char_diff'] = (df['len_char_q1'] - df['len_char_q2']).apply(abs)
+    df['len_char_ratio'] = (df['len_char_q1']/df['len_char_q2'].apply(lambda s: 1 if s==0 else s))
+    df['len_char_diff_log']=np.log(df['len_char_diff']+1)
+
+    df['len_word_q1'] = df[lemmas_q1].apply(word_len)
+    df['len_word_q2'] = df[lemmas_q2].apply(word_len)
+    df['len_word_diff'] = (df['len_word_q1'] - df['len_word_q2']).apply(abs)
+    df['len_word_ratio'] = (df['len_word_q1']/df['len_word_q2'].apply(lambda s: 1 if s==0 else s))
+    df['len_word_diff_log']=np.log(df['len_word_diff']+1)
+
+    df['len_word_expt_stop_q1'] = df[lemmas_q1].apply(word_len_except_stop)
+    df['len_word_expt_stop_q2'] = df[lemmas_q2].apply(word_len_except_stop)
+    df['len_word_expt_stop_diff'] = (df['len_word_expt_stop_q1'] - df['len_word_expt_stop_q2']).apply(abs)
+    df['len_word_expt_stop_ratio'] = (df['len_word_expt_stop_q1']/df['len_word_expt_stop_q2'].apply(lambda s: 1 if s==0 else s))
+    df['len_word_expt_stop_diff_log']=np.log(df['len_word_expt_stop_diff']+1)
+
+    new_cols = [
+        'len_char_q1','len_char_q2','len_char_diff','len_char_ratio','len_char_diff_log',
+        'len_word_q1','len_word_q2','len_word_diff','len_word_ratio','len_word_diff_log',
+        'len_word_expt_stop_q1','len_word_expt_stop_q2','len_word_expt_stop_diff','len_word_expt_stop_ratio','len_word_expt_stop_diff_log'
+    ]
+
+    df = df[new_cols]
+    df.to_csv(fp, index_label='id')

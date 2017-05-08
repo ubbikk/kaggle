@@ -53,6 +53,9 @@ def normalize_and_store_df(df, fp):
 def load_train():
     return pd.read_csv(fp_train, index_col='id')
 
+def load_train_all():
+    return pd.concat([load_train(), load_train_lemmas(), load_train_stems(), load_train_tokens()], axis=1)
+
 def load_train_test():
     return pd.read_csv(fp_train, index_col='id'), pd.read_csv(fp_test, index_col='test_id')
 
@@ -76,4 +79,4 @@ def load_train_stems():
 def load_train_normalized_train():
     return pd.read_csv(normalized_train_fp, index_col='id')
 
-train_df, test_df = load_train_test()
+df = load_train_all()
