@@ -7,6 +7,7 @@ import re
 import xgboost as xgb
 import matplotlib.pyplot as plt
 from sklearn.metrics import log_loss
+import json
 
 from sklearn.model_selection import StratifiedKFold
 
@@ -135,9 +136,11 @@ def xgboost_per_tree_results(estimator):
         'test': results_on_test
     }
 
-def perform_xgb_cv():
-    df = load_train_xgb()
-    target = load_train()[[TARGET]]
+def perform_xgb_cv(df, target, n_estimators, max_depth):
+    print '============================='
+    print 'n_est {}'.format(n_estimators)
+    print 'max_depth {}'.format(max_depth)
+    print
     folds =5
     seed = int(time())
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
@@ -150,10 +153,10 @@ def perform_xgb_cv():
         train_arr, train_target = big, target.iloc[big_ind].values
         test_arr, test_target = small, target.iloc[small_ind].values
 
-        estimator = xgb.XGBClassifier(n_estimators=1000,
+        estimator = xgb.XGBClassifier(n_estimators=n_estimators,
                                       subsample=0.8,
                                       colsample_bytree=0.8,
-                                      max_depth=5)
+                                      max_depth=max_depth)
         eval_set = [(train_arr, train_target), (test_arr, test_target)]
         estimator.fit(train_arr, train_target, eval_set=eval_set, eval_metric='logloss', verbose=False)
 
@@ -163,10 +166,35 @@ def perform_xgb_cv():
         losses.append(loss)
         stats.append(xgboost_per_tree_results(estimator))
         imp.append(estimator.feature_importances_)
-        xgb.plot_importance(estimator)
-        plot_errors(stats)
+        # xgb.plot_importance(estimator)
+        # plot_errors(stats)
+
+    print 'avg {}'.format(np.mean(losses))
+
+    return losses
+
+def create_grid():
+    nums = [200, 1000, 2000, 5000, 10000, 20000, 30000]
+    depths = [3,4,5,8,10]
+    grid = []
+    for n in nums:
+        for d in depths:
+            grid.append([n,d])
+
+    return grid
+
+def perform_grid():
+    grid = create_grid()
+    df = load_train_xgb()
+    target = load_train()[[TARGET]]
+    res=[]
+    for g in grid:
+        n_estimators=g[0]
+        max_depth=g[1]
+        losses = perform_xgb_cv(df, target, n_estimators, max_depth)
+        res.append({'n_estimators':n_estimators, 'max_depth':max_depth, 'losses':losses})
+        with open('results_grid_xgb.json', 'w+') as f:
+            json.dump(res, f)
 
 
-    print np.mean(losses)
-
-perform_xgb_cv()
+perform_grid()
