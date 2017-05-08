@@ -71,3 +71,7 @@ def generate_lens(df, fp):
 
     df = df[new_cols]
     df.to_csv(fp, index_label='id')
+
+
+def generate_common_words(df, fp):
+
