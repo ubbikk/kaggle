@@ -34,17 +34,74 @@ len in words(with\without stopwords), chars(with\without spaces, punkt, spec sym
 abs_diff_len, ratio_len, log(ratio_len) for different length
 num of stopwords ?
 
+=============================
+
 Common words:
 
 common num/ratio of tokens\stems\lemms with\without stop
+================================
 
 Tfid:
 distances on tfidf ???
 share of tfidf
 
+==================================
+
 word2vec, glove distances
 
 norm_wmd/wmd
+
+
+=================================
+Unigrams \ bigrams \ treegrams
+'unigram_jaccard'
+'unigram_all_jaccard'   # count each char multiple times
+'unigram_all_jaccard_max'  # norm by max
+
+'trigram_jaccard'/'trigram_all_jaccard'/'trigram_all_jaccard_max'
+
+
+'trigram_tfidf_cosine'
+'trigram_tfidf_l2_euclidean'
+'trigram_tfidf_l1_euclidean'
+trigram_tf_l2_euclidean'
+
+====================================
+1wl_tfidf_cosine
+1wl_tfidf_l2_euclidean
+
+
+
++6.639	trigram_all_jaccard
++3.131	bigram_all_jaccard_max
++1.075	unigram_all_jaccard_max
++1.017	m_w1l_tfidf_oof
++0.774	1wl_tfidf_cosine
++0.354	m_q1_q2_tf_oof
++0.266	bigram_jaccard
++0.244	trigram_tfidf_cosine
++0.221	m_vstack_svd_q1_q1_euclidean
++0.187	log_abs_diff_len1_len2
++0.141	len1
++0.130	1wl_tf_l2_euclidean
++0.024	unigram_jaccard
+-0.010	trigram_tf_l2_euclidean
+-0.044	m_vstack_svd_absdiff_q1_q2_oof
+-0.074	m_vstack_svd_mult_q1_q2_oof
+-0.099	m_q1_q2_tf_svd0
+-0.099	m_q1_q2_tf_svd1
+-0.105	m_q1_q2_tf_svd100_oof
+-0.132	len2
+-0.168	ratio_len1_len2
+-0.339	m_vstack_svd_q1_q1_cosine
+-0.351	abs_diff_len1_len2
+-0.549	trigram_tfidf_l1_euclidean
+-0.674	trigram_tfidf_l2_euclidean
+-0.975	<BIAS>
+-1.068	1wl_tfidf_l2_euclidean
+-1.402	unigram_all_jaccard
+-2.720	bigram_all_jaccard
+-6.949	trigram_all_jaccard_max
 """
 
 def sent2vec(s):
