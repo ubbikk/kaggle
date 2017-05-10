@@ -37,20 +37,20 @@ def normalize_str(s):
     return ' '.join(re.sub("[^a-zA-Z0-9]", " ", s).split()).lower()
 
 
-def store_lemmas_df(df, fp):
+def store_lemmas_df(df, fp, index_label):
     df['lemmas_q1'] = df['nlp_question1'].apply(lambda s: ' '.join([x[2] for x in s[0]]))
     df['lemmas_q1'] = df['lemmas_q1'].apply(normalize_str)
 
     df['lemmas_q2'] = df['nlp_question2'].apply(lambda s: ' '.join([x[2] for x in s[0]]))
     df['lemmas_q2'] = df['lemmas_q2'].apply(normalize_str)
-    df[['lemmas_q1','lemmas_q2']].to_csv(fp, index_label='id')
+    df[['lemmas_q1','lemmas_q2']].to_csv(fp, index_label=index_label)
 
 
-def store_tokens_df(df, fp):
+def store_tokens_df(df, fp, index_label):
     df['tokens_q1'] = df['nlp_question1'].apply(lambda s: ' '.join([x[0] for x in s[0]]))
     df['tokens_q1'] = df['tokens_q1'].apply(normalize_str)
 
     df['tokens_q2'] = df['nlp_question2'].apply(lambda s: ' '.join([x[0] for x in s[0]]))
     df['tokens_q2'] = df['tokens_q2'].apply(normalize_str)
 
-    df[['tokens_q1','tokens_q2']].to_csv(fp, index_label='id')
+    df[['tokens_q1','tokens_q2']].to_csv(fp, index_label=index_label)

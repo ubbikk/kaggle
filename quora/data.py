@@ -107,6 +107,13 @@ def load_train_stems():
     df = df.fillna('')
     return df
 
+def load_test_stems():
+    df = pd.read_csv(stems_test_fp, index_col='test_id')
+    df = df[['question1_porter', 'question2_porter']]
+    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
+    df = df.fillna('')
+    return df
+
 
 def load_train_common_words():
     df = pd.read_csv(common_words_train_fp, index_col='id')
@@ -122,4 +129,4 @@ def load_train_normalized_train():
     return pd.read_csv(normalized_train_fp, index_col='id')
 
 
-df = load_train_all()
+# df = load_train_all()

@@ -109,6 +109,12 @@ trigram_tf_l2_euclidean'
 'question1_nouns','question2_nouns','z_noun_match'
 
 z_tfidf_sum1','z_tfidf_sum2','z_tfidf_mean1','z_tfidf_mean2'
+
+
+'avg_world_len1', 'len_char_q1','len_word_q1','avg_world_len2','len_char_q2','len_word_q2',
+'diff_avg_word','avg_world_len1','avg_world_len2'
+
+	x['exactly_same'] = (df['question1'] == df['question2']).astype(int)
 """
 
 def sent2vec(s):

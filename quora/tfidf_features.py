@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import re
+import os
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.corpus import stopwords
@@ -112,18 +113,52 @@ def load_train_normalized_train():
 
 
 
-def extract_tfidf(train_df, test_df):
-    tfidf = TfidfVectorizer(stop_words=stop_words_with_PRON, ngram_range=(1, 1))
+def write_tfidf_features(train_df, test_df, col1, col2, prefix, stopwords, fp):
+    tfidf = TfidfVectorizer(stop_words=stopwords, ngram_range=(1, 1))
+    for col in [col1, col2]:
+        for df in [train_df, test_df]:
+            df[col].fillna('', inplace=True)
     #sklearn.feature_extraction.text.ENGLISH_STOP_WORDS
     def convert_series(s):
         return s[~s.isnull()].apply(lambda s: s.lower()).tolist()
 
-    bl = [train_df[question1], train_df[question2], test_df[question1], test_df[question2]]
+    bl = [train_df[col1], train_df[col2], test_df[col1], test_df[col2]]
     corpus=[]
     for x in bl:
         corpus+=convert_series(x)
     print len(corpus)
     tfidf.fit_transform(corpus)
-    idf = tfidf.idf_
-    stats= dict(zip(tfidf.get_feature_names(), idf))
+
+    for i, df in enumerate([train_df, test_df]):
+        label = 'train' if i==0 else 'test'
+        index_label = 'id' if i==0 else 'test_id'
+        new_cols=[]
+
+        new_col = '{}_tfidf_mean_q1'.format(prefix)
+        new_cols.append(new_col)
+        df[new_col] = df[col1].apply(lambda s: np.mean(tfidf.transform([s])).data)
+
+        new_col = '{}_tfidf_mean_q2'.format(prefix)
+        new_cols.append(new_col)
+        df[new_col] = df[col2].apply(lambda s: np.mean(tfidf.transform([s])).data)
+
+        new_col = '{}_tfidf_sum_q1'.format(prefix)
+        new_cols.append(new_col)
+        df[new_col] = df[col1].apply(lambda s: np.sum(tfidf.transform([s])).data)
+
+        new_col = '{}_tfidf_sum_q2'.format(prefix)
+        new_cols.append(new_col)
+        df[new_col] = df[col2].apply(lambda s: np.sum(tfidf.transform([s])).data)
+
+
+
+        df = df[new_cols]
+        df.to_csv(os.path.join(fp, '{}_tfidf_{}'.format(prefix, label)), index_label=index_label)
+
+
+
+    # idf = tfidf.idf_
+    # stats= dict(zip(tfidf.get_feature_names(), idf))
+
+
 
