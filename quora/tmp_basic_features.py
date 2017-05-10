@@ -102,6 +102,13 @@ trigram_tf_l2_euclidean'
 -1.402	unigram_all_jaccard
 -2.720	bigram_all_jaccard
 -6.949	trigram_all_jaccard_max
+
+
+
+
+'question1_nouns','question2_nouns','z_noun_match'
+
+z_tfidf_sum1','z_tfidf_sum2','z_tfidf_mean1','z_tfidf_mean2'
 """
 
 def sent2vec(s):
