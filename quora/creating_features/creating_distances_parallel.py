@@ -56,7 +56,7 @@ ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
 stems_train_fp = os.path.join(data_folder,'nlp','stems_train.csv')
 stems_test_fp = os.path.join(data_folder,'nlp','stems_test.csv')
 
-npartitions=22
+npartitions=24
 
 
 def load_train():
@@ -287,5 +287,5 @@ def write_test_distances():
     process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
 
 
-write_train_distances()
+write_test_distances()
 
