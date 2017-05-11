@@ -267,5 +267,5 @@ def write_test_distances():
     process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
 
 
-write_train_distances()
+write_test_distances()
 
