@@ -24,7 +24,7 @@ postag_q1, postag_q2 = 'postag_q1', 'postag_q2'
 ner_q1, ner_q2 = 'ner_q1', 'ner_q2'
 
 
-data_folder = '../../data/'
+data_folder = '../../../data/'
 
 fp_train = os.path.join(data_folder,'train.csv')
 fp_test = os.path.join(data_folder,'test.csv')
@@ -130,3 +130,6 @@ def write_test():
     tokens_fp, lemmas_fp, postag_fp, ner_fp = \
         'tokens_test.csv', 'lemmas_test.csv', 'postag_test.csv', 'ner_test.csv'
     process_df(df, tokens_fp, lemmas_fp, postag_fp, ner_fp, 'test_id', folder)
+
+
+write_test()
