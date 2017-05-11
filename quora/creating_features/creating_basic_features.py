@@ -52,11 +52,46 @@ postag_test_fp = os.path.join(data_folder,'nlp','postag_test.csv')
 ner_train_fp = os.path.join(data_folder,'nlp','ner_train.csv')
 ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
 
-def load_train():
-    return pd.read_csv(fp_train, index_col='id')
+stems_train_fp = os.path.join(data_folder,'nlp','stems_train.csv')
+stems_test_fp = os.path.join(data_folder,'nlp','stems_test.csv')
 
-def load_test():
-    return pd.read_csv(fp_test, index_col='test_id')
+def load_train_lemas_stems():
+    return pd.concat([load_train_lemmas(), load_train_stems()], axis=1)
+
+def load_test_lemas_stems():
+    return pd.concat([load_test_lemmas(), load_test_stems()], axis=1)
+
+def load_train_lemmas():
+    df = pd.read_csv(lemmas_train_fp, index_col='id')
+    df = df.fillna('')
+    for col in [lemmas_q1, lemmas_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+def load_test_lemmas():
+    df = pd.read_csv(lemmas_test_fp, index_col='test_id')
+    df = df.fillna('')
+    for col in [lemmas_q1, lemmas_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+def load_train_stems():
+    df = pd.read_csv(stems_train_fp, index_col='id')
+    df = df[['question1_porter', 'question2_porter']]
+    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
+    df = df.fillna('')
+    for col in [stems_q1, stems_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+def load_test_stems():
+    df = pd.read_csv(stems_test_fp, index_col='test_id')
+    df = df[['question1_porter', 'question2_porter']]
+    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
+    df = df.fillna('')
+    for col in [stems_q1, stems_q2]:
+        df[col]=df[col].apply(str)
+    return df
 
 
 def word_len(s):
@@ -186,7 +221,7 @@ def generate_common_words(df, fp, index_label):
 
 
 def write_basic_features_train():
-    df = load_train()
+    df = load_train_lemas_stems()
     index_label='id'
 
     fp=os.path.join(data_folder, 'basic', 'common_words_train.csv')
@@ -197,7 +232,7 @@ def write_basic_features_train():
 
 
 def write_basic_features_test():
-    df = load_test()
+    df = load_test_lemas_stems()
     index_label='test_id'
 
     fp=os.path.join(data_folder, 'basic', 'common_words_test.csv')
