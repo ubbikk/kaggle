@@ -178,14 +178,14 @@ def write_train_distances():
     cols = [lemmas_q1, lemmas_q2]
     prefix='lemmas'
 
-    fp=os.path.join(data_folder, 'distances', 'train_metrics_sequence_{}.csv'.format(prefix))
-    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
-
-    fp=os.path.join(data_folder, 'distances', 'train_metrics_bool_{}.csv'.format(prefix))
-    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
-
-    fp=os.path.join(data_folder, 'distances', 'train_metrics_fuzzy_{}.csv'.format(prefix))
-    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+    # fp=os.path.join(data_folder, 'distances', 'train_metrics_sequence_{}.csv'.format(prefix))
+    # process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+    #
+    # fp=os.path.join(data_folder, 'distances', 'train_metrics_bool_{}.csv'.format(prefix))
+    # process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+    #
+    # fp=os.path.join(data_folder, 'distances', 'train_metrics_fuzzy_{}.csv'.format(prefix))
+    # process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
 
 
 
@@ -267,5 +267,5 @@ def write_test_distances():
     process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
 
 
-write_test_distances()
+write_train_distances()
 
