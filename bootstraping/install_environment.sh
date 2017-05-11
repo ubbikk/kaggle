@@ -50,9 +50,9 @@ pip install eli5
 pip install tqdm
 pip install fuzzywuzzy
 pip install python-levenshtein
-#pip install spacy
 pip install jupyter
 pip install IPython
+pip install dask[complete]
 
 pip install -U spacy
 python -m spacy download en
