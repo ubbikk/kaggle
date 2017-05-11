@@ -240,3 +240,6 @@ def write_basic_features_test():
 
     fp=os.path.join(data_folder, 'basic', 'lens_test.csv')
     generate_lens(df, fp, index_label)
+
+
+write_basic_features_train()
