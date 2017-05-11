@@ -32,10 +32,8 @@ ner_q1, ner_q2 = 'ner_q1', 'ner_q2'
 
 data_folder = '../../data/'
 
-fp_train = os.path.join(data_folder,'train.csv')
-fp_test = os.path.join(data_folder,'test.csv')
-
-'tokens_train.csv', 'lemmas_train.csv', 'postag_train.csv', 'ner_train.csv'
+fp_train = data_folder + 'train.csv'
+fp_test = data_folder + 'test.csv'
 
 lemmas_train_fp = os.path.join(data_folder,'nlp','lemmas_train.csv')
 lemmas_test_fp = os.path.join(data_folder,'nlp','lemmas_test.csv')
@@ -49,11 +47,59 @@ postag_test_fp = os.path.join(data_folder,'nlp','postag_test.csv')
 ner_train_fp = os.path.join(data_folder,'nlp','ner_train.csv')
 ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
 
+stems_train_fp = os.path.join(data_folder,'nlp','stems_train.csv')
+stems_test_fp = os.path.join(data_folder,'nlp','stems_test.csv')
+
+
 def load_train():
     return pd.read_csv(fp_train, index_col='id')
 
 def load_test():
     return pd.read_csv(fp_test, index_col='test_id')
+
+def load_train_lemmas():
+    df = pd.read_csv(lemmas_train_fp, index_col='id')
+    df = df.fillna('')
+    for col in [lemmas_q1, lemmas_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+def load_test_lemmas():
+    df = pd.read_csv(lemmas_test_fp, index_col='test_id')
+    df = df.fillna('')
+    for col in [lemmas_q1, lemmas_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+
+def load_train_tokens():
+    df = pd.read_csv(tokens_train_fp, index_col='id')
+    df = df.fillna('')
+    return df
+
+def load_test_tokens():
+    df = pd.read_csv(tokens_test_fp, index_col='test_id')
+    df = df.fillna('')
+    return df
+
+
+def load_train_stems():
+    df = pd.read_csv(stems_train_fp, index_col='id')
+    df = df[['question1_porter', 'question2_porter']]
+    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
+    df = df.fillna('')
+    for col in [stems_q1, stems_q2]:
+        df[col]=df[col].apply(str)
+    return df
+
+def load_test_stems():
+    df = pd.read_csv(stems_test_fp, index_col='test_id')
+    df = df[['question1_porter', 'question2_porter']]
+    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
+    df = df.fillna('')
+    for col in [stems_q1, stems_q2]:
+        df[col]=df[col].apply(str)
+    return df
 
 BOOL_METRICS = {x.__name__: x for x in
                 [dice, kulsinski, jaccard]}
@@ -126,4 +172,100 @@ def process_sequence_metrics(df, col1, col2, prefix, fp, index_label):
 
 
 def write_train_distances():
-    df = load_train()
+    index_label = 'id'
+
+    df = load_train_lemmas()
+    cols = [lemmas_q1, lemmas_q2]
+    prefix='lemmas'
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+
+    df = load_train_stems()
+    cols = [stems_q1, stems_q2]
+    prefix='stems'
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+    df = load_train_tokens()
+    cols = [tokens_q1, tokens_q2]
+    for c in cols:
+        df[c] = df[c].apply(lambda s: s.lower())
+    prefix='tokens'
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'train_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+def write_test_distances():
+    index_label = 'test_id'
+
+    df = load_test_lemmas()
+    cols = [lemmas_q1, lemmas_q2]
+    prefix='lemmas'
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+
+    df = load_test_stems()
+    cols = [stems_q1, stems_q2]
+    prefix='stems'
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+    df = load_test_tokens()
+    cols = [tokens_q1, tokens_q2]
+    for c in cols:
+        df[c] = df[c].apply(lambda s: s.lower())
+    prefix='tokens'
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_sequence_{}.csv'.format(prefix))
+    process_sequence_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_bool_{}.csv'.format(prefix))
+    process_sets_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+    fp=os.path.join(data_folder, 'distances', 'test_metrics_fuzzy_{}.csv'.format(prefix))
+    process_fuzzy_metrics(df, cols[0], cols[1], prefix, fp, index_label)
+
+
+write_train_distances()
+

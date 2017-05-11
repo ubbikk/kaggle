@@ -123,6 +123,11 @@ def load_train_tokens():
     df = df.fillna('')
     return df
 
+def load_test_tokens():
+    df = pd.read_csv(tokens_test_fp, index_col='test_id')
+    df = df.fillna('')
+    return df
+
 
 def load_train_stems():
     df = pd.read_csv(stems_train_fp, index_col='id')
@@ -140,13 +145,6 @@ def load_test_stems():
     df = df.fillna('')
     for col in [stems_q1, stems_q2]:
         df[col]=df[col].apply(str)
-    return df
-
-def load_test_stems():
-    df = pd.read_csv(stems_test_fp, index_col='test_id')
-    df = df[['question1_porter', 'question2_porter']]
-    df = df.rename(columns={'question1_porter': 'stems_q1', 'question2_porter': 'stems_q2'})
-    df = df.fillna('')
     return df
 
 
