@@ -242,4 +242,4 @@ def write_basic_features_test():
     generate_lens(df, fp, index_label)
 
 
-write_basic_features_train()
+write_basic_features_test()
