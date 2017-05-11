@@ -33,6 +33,6 @@ test['question1_porter'] = test['question1'].astype(str).apply(lambda x:stem_str
 train['question2_porter'] = train['question2'].astype(str).apply(lambda x:stem_str(x.lower(),porter))
 test['question2_porter'] = test['question2'].astype(str).apply(lambda x:stem_str(x.lower(),porter))
 
-train.to_csv(os.path.join(path, 'nlp1', 'stems_train.csv'), index_label='id')
-test.to_csv(os.path.join(path, 'nlp1', 'stems_test.csv'), index_label='test_id')
+train.to_csv(os.path.join(path, 'nlp', 'stems_train.csv'), index_label='id')
+test.to_csv(os.path.join(path, 'nlp', 'stems_test.csv'), index_label='test_id')
 
