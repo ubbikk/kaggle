@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import re
+import os
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -10,30 +11,41 @@ pd.set_option('display.width', 5000)
 pd.set_option('display.max_rows', 5000)
 pd.set_option('display.max_colwidth', 100)
 
-fp_train = '../../data/train.csv'
-fp_test = '../../data/test.csv'
+data_folder = '../../data/'
 
-lemmas_train_fp = '../../data/train_lemmas.csv'
-tokens_train_fp = '../../data/train_tokens.csv'
-nlp_train_fp = '../../data/postag_ner_train.json'
+fp_train = data_folder + 'train.csv'
+fp_test = data_folder + 'test.csv'
 
-stems_train_fp = '../../data/train_porter.csv'
-stems_test_fp = '../../data/test_porter.csv'
+lemmas_train_fp = os.path.join(data_folder,'nlp','lemmas_train.csv')
+lemmas_test_fp = os.path.join(data_folder,'nlp','lemmas_test.csv')
 
-normalized_train_fp = '../../data/train_normalized.csv'
-common_words_train_fp = '../../data/train_common_words.csv'
-length_train_fp = '../../data/train_length.csv'
+tokens_train_fp = os.path.join(data_folder,'nlp','tokens_train.csv')
+tokens_test_fp = os.path.join(data_folder,'nlp','tokens_test.csv')
+
+postag_train_fp = os.path.join(data_folder,'nlp','postag_train.csv')
+postag_test_fp = os.path.join(data_folder,'nlp','postag_test.csv')
+
+ner_train_fp = os.path.join(data_folder,'nlp','ner_train.csv')
+ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
+
+stems_train_fp = os.path.join(data_folder,'nlp','stems_train.csv')
+stems_test_fp = os.path.join(data_folder,'nlp','stems_test.csv')
+
+
+normalized_train_fp = data_folder + 'train_normalized.csv'
+common_words_train_fp = data_folder + 'train_common_words.csv'
+length_train_fp = data_folder + 'train_length.csv'
 
 METRICS_FP = [
-    '../../data/train_metrics_bool_lemmas.csv',
-    '../../data/train_metrics_bool_stems.csv',
-    '../../data/train_metrics_bool_tokens.csv',
-    '../../data/train_metrics_fuzzy_lemmas.csv',
-    '../../data/train_metrics_fuzzy_stems.csv',
-    '../../data/train_metrics_fuzzy_tokens.csv',
-    '../../data/train_metrics_sequence_lemmas.csv',
-    '../../data/train_metrics_sequence_stems.csv',
-    '../../data/train_metrics_sequence_tokens.csv'
+    data_folder + 'train_metrics_bool_lemmas.csv',
+    data_folder + 'train_metrics_bool_stems.csv',
+    data_folder + 'train_metrics_bool_tokens.csv',
+    data_folder + 'train_metrics_fuzzy_lemmas.csv',
+    data_folder + 'train_metrics_fuzzy_stems.csv',
+    data_folder + 'train_metrics_fuzzy_tokens.csv',
+    data_folder + 'train_metrics_sequence_lemmas.csv',
+    data_folder + 'train_metrics_sequence_stems.csv',
+    data_folder + 'train_metrics_sequence_tokens.csv'
 ]
 
 TARGET = 'is_duplicate'
@@ -65,6 +77,9 @@ def normalize_and_store_df(df, fp):
 
 def load_train():
     return pd.read_csv(fp_train, index_col='id')
+
+def load_test():
+    return pd.read_csv(fp_test, index_col='test_id')
 
 
 def load__train_metrics():

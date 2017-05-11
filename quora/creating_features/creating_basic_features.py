@@ -7,11 +7,13 @@ from tqdm import tqdm
 from scipy.stats import skew, kurtosis
 from scipy.spatial.distance import cosine, cityblock, jaccard, canberra, euclidean, minkowski, braycurtis
 from nltk import word_tokenize
+import os
 
 stop_words = stopwords.words('english')
 
 stop_words_with_PRON = set(stop_words)
 stop_words_with_PRON.add('PRON')
+stop_words_with_PRON.add('-PRON-')
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -27,6 +29,34 @@ question1, question2 = 'question1', 'question2'
 lemmas_q1, lemmas_q2 = 'lemmas_q1', 'lemmas_q2'
 stems_q1, stems_q2 = 'stems_q1', 'stems_q2'
 tokens_q1, tokens_q2 = 'tokens_q1', 'tokens_q2'
+postag_q1, postag_q2 = 'postag_q1', 'postag_q2'
+ner_q1, ner_q2 = 'ner_q1', 'ner_q2'
+
+
+data_folder = '../../data/'
+
+fp_train = os.path.join(data_folder,'train.csv')
+fp_test = os.path.join(data_folder,'test.csv')
+
+'tokens_train.csv', 'lemmas_train.csv', 'postag_train.csv', 'ner_train.csv'
+
+lemmas_train_fp = os.path.join(data_folder,'nlp','lemmas_train.csv')
+lemmas_test_fp = os.path.join(data_folder,'nlp','lemmas_test.csv')
+
+tokens_train_fp = os.path.join(data_folder,'nlp','tokens_train.csv')
+tokens_test_fp = os.path.join(data_folder,'nlp','tokens_test.csv')
+
+postag_train_fp = os.path.join(data_folder,'nlp','postag_train.csv')
+postag_test_fp = os.path.join(data_folder,'nlp','postag_test.csv')
+
+ner_train_fp = os.path.join(data_folder,'nlp','ner_train.csv')
+ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
+
+def load_train():
+    return pd.read_csv(fp_train, index_col='id')
+
+def load_test():
+    return pd.read_csv(fp_test, index_col='test_id')
 
 
 def word_len(s):
@@ -44,7 +74,7 @@ def word_len_except_stop(s):
 
 
 
-def generate_lens(df, fp):
+def generate_lens(df, fp, index_label):
     df['len_char_q1'] = df[lemmas_q1].apply(len)
     df['len_char_q2'] = df[lemmas_q2].apply(len)
     df['len_char_diff'] = (df['len_char_q1'] - df['len_char_q2']).apply(abs)
@@ -70,7 +100,7 @@ def generate_lens(df, fp):
     ]
 
     df = df[new_cols]
-    df.to_csv(fp, index_label='id')
+    df.to_csv(fp, index_label=index_label)
 
 
 def get_common_tokens_ratio(a,b):
@@ -129,7 +159,7 @@ def get_stop_words_ratio(a):
         return 0
     return 1.0*len(a)/l
 
-def generate_common_words(df, fp):
+def generate_common_words(df, fp, index_label):
     df['common_lemmas_num']=df[[lemmas_q1, lemmas_q2]].apply(lambda s: get_common_tokens_num(s[lemmas_q1], s[lemmas_q2]), axis=1)
     df['common_stems_num']=df[[stems_q1, stems_q2]].apply(lambda s: get_common_tokens_num(s[stems_q1], s[stems_q2]), axis=1)
 
@@ -152,4 +182,26 @@ def generate_common_words(df, fp):
                 ]
 
     df = df[new_cols]
-    df.to_csv(fp, index_label='id')
+    df.to_csv(fp, index_label=index_label)
+
+
+def write_basic_features_train():
+    df = load_train()
+    index_label='id'
+
+    fp=os.path.join(data_folder, 'basic', 'common_words_train.csv')
+    generate_common_words(df, fp, index_label)
+
+    fp=os.path.join(data_folder, 'basic', 'lens_train.csv')
+    generate_lens(df, fp, index_label)
+
+
+def write_basic_features_test():
+    df = load_test()
+    index_label='test_id'
+
+    fp=os.path.join(data_folder, 'basic', 'common_words_test.csv')
+    generate_common_words(df, fp, index_label)
+
+    fp=os.path.join(data_folder, 'basic', 'lens_test.csv')
+    generate_lens(df, fp, index_label)

@@ -30,7 +30,7 @@ def process_df(df, cols):
         return [pos, ner]
     for col in cols:
         df['nlp_{}'.format(col)]=df[col].apply(postag_and_ner)
-    df.to_json('processed.json')
+    df.to_json('nlp_processed_test.json')
 
 
 def normalize_str(s):
