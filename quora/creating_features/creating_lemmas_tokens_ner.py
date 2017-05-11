@@ -132,4 +132,4 @@ def write_test():
     process_df(df, tokens_fp, lemmas_fp, postag_fp, ner_fp, 'test_id', folder)
 
 
-write_test()
+write_train()
