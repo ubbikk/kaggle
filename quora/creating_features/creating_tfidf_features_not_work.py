@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import scipy
 import seaborn as sns
 import re
 import os
@@ -154,9 +153,7 @@ def load_train_lengths():
 #==============================================================================
 
 
-def get_tf_idf_share_ratio(t1, t2, tfidf):
-    t1=tfidf.transform([t1])
-    t2=tfidf.transform([t2])
+def get_tf_idf_share_ratio(t1, t2):
     s = t1+t2
     diff = (s-np.abs(t1-t2))/2
 
@@ -168,9 +165,7 @@ def get_tf_idf_share_ratio(t1, t2, tfidf):
     return diff/s
 
 
-def get_tf_idf_share(t1, t2, tfidf):
-    t1=tfidf.transform([t1])
-    t2=tfidf.transform([t2])
+def get_tf_idf_share(t1, t2):
     s = t1+t2
     diff = (s-np.abs(t1-t2))/2
 
@@ -209,91 +204,75 @@ def write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, f
         df[tf_q2] = from_pandas(df[col2], npartitions=npartitions).apply(lambda s: tfidf.transform([s])).compute()
         print tf_q2
 
-        def my_mean(s):
-            return np.mean(tfidf.transform([s]).data)
+        print set(df[tf_q1].apply(type))
+        print set(df[tf_q2].apply(type))
 
         new_col = '{}_tfidf_mean_q1'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col] = from_pandas(df[col1], npartitions=npartitions).apply(my_mean).compute()
+        # df[new_col] = from_pandas(df[tf_q1], npartitions=npartitions).apply(lambda s: np.mean(s)).compute()
+        df[new_col] = df[tf_q1].apply(lambda s: np.mean(s))
 
         new_col = '{}_tfidf_mean_q2'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col] = from_pandas(df[col2], npartitions=npartitions).apply(my_mean).compute()
+        # df[new_col] = from_pandas(df[tf_q2], npartitions=npartitions).apply(lambda s: np.mean(s)).compute()
+        df[new_col] = df[tf_q2].apply(lambda s: np.mean(s))
 
 
-        def my_sum(s):
-            return np.sum(tfidf.transform([s]).data)
+        def blja(s):
+            print '==========================='
+            print s
+            try:
+                return np.sum(s)
+            except:
+                print 'blja, {}, {}'.format(s, type(s))
+
+        meta=df[tf_q1].head()
+
 
         new_col = '{}_tfidf_sum_q1'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col] = from_pandas(df[col1], npartitions=npartitions).apply(my_sum).compute()
+        df[new_col] = from_pandas(df[tf_q1], npartitions=npartitions).apply(blja, meta=meta).compute()
 
         new_col = '{}_tfidf_sum_q2'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col] = from_pandas(df[col2], npartitions=npartitions).apply(my_sum).compute()
-
+        df[new_col] = from_pandas(df[tf_q2], npartitions=npartitions).apply(lambda s: np.sum(s)).compute()
 
         new_col='{}_tfidf_share'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col]=from_pandas(df[[col1, col2]], npartitions=npartitions).apply(
-            lambda s: get_tf_idf_share(s[col1], s[col2], tfidf),
-            axis=1,
-            ).compute()
+        df[new_col]=from_pandas(df[[tf_q1, tf_q2]], npartitions=npartitions).apply(
+            lambda s: get_tf_idf_share(s[tf_q1], s[tf_q2]), axis=1).compute()
 
         new_col='{}_tfidf_share_ratio'.format(prefix)
         print label, new_col
         new_cols.append(new_col)
-        df[new_col]=from_pandas(df[[col1, col2]], npartitions=npartitions).apply(
-            lambda s: get_tf_idf_share_ratio(s[col1], s[col2],tfidf),
-            axis=1
-        ).compute()
+        df[new_col]=from_pandas(df[[tf_q1, tf_q2]], npartitions=npartitions).apply(
+            lambda s: get_tf_idf_share_ratio(s[tf_q1], s[tf_q2]), axis=1).compute()
 
 
 
         df = df[new_cols]
-        df.to_csv(os.path.join(fp, '{}_tfidf_{}.csv'.format(prefix, label)), index_label=index_label)
+        df.to_csv(os.path.join(fp, '{}_tfidf_{}'.format(prefix, label)), index_label=index_label)
 
 
 
 npartitions=4
 
 def write_tfidf_features():
-    fp=os.path.join(data_folder,'tfidf')
-
+    prefix='tokens_with_stop_words'
+    stopwords = ENGLISH_STOP_WORDS
     col1='tokens_q1'
     col2='tokens_q2'
+    fp=os.path.join(data_folder,'tfidf')
 
-    train_df = load_train_tokens().head(2000)
-    test_df = load_test_tokens().head(2000)
+    train_df = load_train_tokens().iloc[2000:2200]
+    test_df = load_test_tokens().iloc[2000:2200]
 
-    stopwords = ENGLISH_STOP_WORDS
-    prefix='tokens_with_stop_words'
     write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, fp)
-
-    stopwords = None
-    prefix='tokens'
-    write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, fp)
-
-
-    col1='lemmas_q1'
-    col2='lemmas_q2'
-
-    train_df = load_train_lemmas().head(2000)
-    test_df = load_test_lemmas().head(2000)
-
-    stopwords = ENGLISH_STOP_WORDS
-    prefix='lemmas_with_stop_words'
-    write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, fp)
-
-    stopwords = None
-    prefix='lemmas'
-    write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, fp)
-
 
 
 write_tfidf_features()

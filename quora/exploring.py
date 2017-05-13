@@ -9,7 +9,6 @@ pd.set_option('display.width', 1000)
 pd.set_option('display.max_rows', 5000)
 pd.set_option('display.max_colwidth', 100)
 
-
 fp_train= '../../data/train.csv'
 fp_test= '../../data/test.csv'
 
