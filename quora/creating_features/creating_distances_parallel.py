@@ -56,7 +56,7 @@ ner_test_fp = os.path.join(data_folder,'nlp','ner_test.csv')
 stems_train_fp = os.path.join(data_folder,'nlp','stems_train.csv')
 stems_test_fp = os.path.join(data_folder,'nlp','stems_test.csv')
 
-npartitions=24
+npartitions=23
 
 
 def load_train():
