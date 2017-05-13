@@ -268,8 +268,8 @@ def write_tfidf_features():
     col1='tokens_q1'
     col2='tokens_q2'
 
-    train_df = load_train_tokens().head(2000)
-    test_df = load_test_tokens().head(2000)
+    train_df = load_train_tokens()
+    test_df = load_test_tokens()
 
     stopwords = ENGLISH_STOP_WORDS
     prefix='tokens_with_stop_words'
@@ -283,8 +283,8 @@ def write_tfidf_features():
     col1='lemmas_q1'
     col2='lemmas_q2'
 
-    train_df = load_train_lemmas().head(2000)
-    test_df = load_test_lemmas().head(2000)
+    train_df = load_train_lemmas()
+    test_df = load_test_lemmas()
 
     stopwords = ENGLISH_STOP_WORDS
     prefix='lemmas_with_stop_words'
