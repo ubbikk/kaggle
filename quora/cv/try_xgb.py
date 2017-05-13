@@ -1,13 +1,8 @@
-from time import time
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import re
 import os
-
-from sklearn.metrics import log_loss
-from sklearn.model_selection import StratifiedKFold
 
 sns.set(color_codes=True)
 sns.set(style="whitegrid", color_codes=True)
@@ -47,15 +42,15 @@ common_words_test_fp = os.path.join(data_folder, 'basic','common_words_test.csv'
 length_test_fp = os.path.join(data_folder, 'basic','lens_test.csv')
 
 METRICS_FP = [
-    data_folder + 'train_metrics_bool_lemmas.csv',
-    data_folder + 'train_metrics_bool_stems.csv',
-    data_folder + 'train_metrics_bool_tokens.csv',
-    data_folder + 'train_metrics_fuzzy_lemmas.csv',
-    data_folder + 'train_metrics_fuzzy_stems.csv',
-    data_folder + 'train_metrics_fuzzy_tokens.csv',
-    data_folder + 'train_metrics_sequence_lemmas.csv',
-    data_folder + 'train_metrics_sequence_stems.csv',
-    data_folder + 'train_metrics_sequence_tokens.csv'
+    data_folder + 'distances/'+ 'train_metrics_bool_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_bool_stems.csv',
+    data_folder + 'distances/'+'train_metrics_bool_tokens.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_stems.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_tokens.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_stems.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_tokens.csv'
 ]
 
 TARGET = 'is_duplicate'
@@ -90,21 +85,6 @@ def load_train_all():
         load__train_metrics(),
         load_train_tfidf()
     ], axis=1)
-
-def load_train_all_xgb():
-    train_df = pd.concat([
-        load_train(),
-        load_train_lengths(),
-        load_train_common_words(),
-        load__train_metrics(),
-        load_train_tfidf()
-    ], axis=1)
-
-    cols_to_del = [qid1, qid2, question1, question2]
-    for col in cols_to_del:
-        del train_df[col]
-
-    return train_df
 
 
 def load_train_test():
@@ -175,6 +155,10 @@ def load_train_lengths():
     return df
 
 
+
+# df = load_train_all()
+
+
 ############################################################3
 ############################################################3
 ############################################################3
@@ -235,6 +219,23 @@ def oversample(train_df, test_df, random_state=42):
 ############################################################3
 import xgboost as xgb
 import matplotlib.pyplot as plt
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import log_loss
+
+def load_train_all_xgb():
+    train_df = pd.concat([
+        load_train(),
+        load_train_lengths(),
+        load_train_common_words(),
+        load__train_metrics(),
+        load_train_tfidf()
+    ], axis=1)
+
+    cols_to_del = [qid1, qid2, question1, question2]
+    for col in cols_to_del:
+        del train_df[col]
+
+    return train_df
 
 def plot_errors(imp):
     train_runs= [x['train'] for x in imp]
@@ -273,6 +274,7 @@ def perform_xgb_cv():
     print df.columns.values
     folds =5
     seed = 42
+
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
     losses = []
     stats = []
@@ -304,6 +306,7 @@ def perform_xgb_cv():
         )
 
         proba = estimator.predict_proba(test_arr)
+
         loss = log_loss(test_target, proba)
         out_loss(loss)
         losses.append(loss)

@@ -42,15 +42,15 @@ common_words_test_fp = os.path.join(data_folder, 'basic','common_words_test.csv'
 length_test_fp = os.path.join(data_folder, 'basic','lens_test.csv')
 
 METRICS_FP = [
-    data_folder + 'train_metrics_bool_lemmas.csv',
-    data_folder + 'train_metrics_bool_stems.csv',
-    data_folder + 'train_metrics_bool_tokens.csv',
-    data_folder + 'train_metrics_fuzzy_lemmas.csv',
-    data_folder + 'train_metrics_fuzzy_stems.csv',
-    data_folder + 'train_metrics_fuzzy_tokens.csv',
-    data_folder + 'train_metrics_sequence_lemmas.csv',
-    data_folder + 'train_metrics_sequence_stems.csv',
-    data_folder + 'train_metrics_sequence_tokens.csv'
+    data_folder + 'distances/'+ 'train_metrics_bool_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_bool_stems.csv',
+    data_folder + 'distances/'+'train_metrics_bool_tokens.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_stems.csv',
+    data_folder + 'distances/'+'train_metrics_fuzzy_tokens.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_lemmas.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_stems.csv',
+    data_folder + 'distances/'+'train_metrics_sequence_tokens.csv'
 ]
 
 TARGET = 'is_duplicate'
@@ -156,4 +156,4 @@ def load_train_lengths():
 
 
 
-df = load_train_all()
+# df = load_train_all()
