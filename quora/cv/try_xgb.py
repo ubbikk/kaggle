@@ -271,7 +271,6 @@ def out_loss(loss):
 
 def perform_xgb_cv():
     df = load_train_all_xgb()
-    print df.columns.values
     folds =5
     seed = 42
 
@@ -282,7 +281,7 @@ def perform_xgb_cv():
     for big_ind, small_ind in skf.split(np.zeros(len(df)), df[TARGET]):
         big = df.iloc[big_ind]
         small = df.iloc[small_ind]
-        big, small = oversample(big, small, seed)
+        # big, small = oversample(big, small, seed)
 
         train_target = big[TARGET]
         del big[TARGET]
@@ -292,10 +291,13 @@ def perform_xgb_cv():
         del small[TARGET]
         test_arr = small
 
-        estimator = xgb.XGBClassifier(n_estimators=10000,
+        estimator = xgb.XGBClassifier(n_estimators=20000,
                                       subsample=0.8,
                                       colsample_bytree=0.8,
                                       max_depth=5)
+        print test_arr.columns.values
+        print len(train_arr)
+        print len(test_arr)
         eval_set = [(test_arr, test_target), (train_arr, train_target)]
         estimator.fit(
             train_arr, train_target,
