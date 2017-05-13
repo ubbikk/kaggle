@@ -260,7 +260,7 @@ def write_tfidf_features_dfs(train_df, test_df, col1, col2, prefix, stopwords, f
 
 
 
-npartitions=4
+npartitions=23
 
 def write_tfidf_features():
     fp=os.path.join(data_folder,'tfidf')
