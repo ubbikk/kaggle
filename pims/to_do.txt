@@ -1,5 +1,0 @@
-1)Street popularity
-2)Mean\Median Mngr Nei\Street Popularity
-3)Minute popularity 3\5\10\30 minute popularity
-4)month free
-5)exclamation marks in descr
